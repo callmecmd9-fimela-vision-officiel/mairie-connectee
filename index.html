@@ -68,18 +68,20 @@ const P=["Au rythme des pirogues, {c} s’éveille…","{c}, terre de sel et de 
 const sb=supabase.createClient("https://aiqegpijisspankpkwfj.supabase.co","sb_publishable__Zc0adl_eD_PyMkaR5ACzA_-_yjwmbI");
 const TS_KEY="VOTRE_CLE_TURNSTILE";window.tsReady=()=>{if(S.role=="cit")render()};
 const MC=["a_repondre","a_signer","urgent","suivi","classe"],RC=["nouvelle","en_cours","traitee"],E0={rdv:[],mail:[],req:[],posts:[]};
-let S={co:"Fimela",role:null,view:"dash",f:"in",tr:"",ok:"",err:"",res:null,pub:[],cid:null,db:E0};
-const D=()=>S.db,slug=()=>S.co.toLowerCase();
+let S={cs:[{slug:"fimela",nom:"Fimela"},{slug:"diofior",nom:"Diofior"},{slug:"joal",nom:"Joal"},{slug:"fatick",nom:"Fatick"}],sa:false,adm:[],co:"Fimela",role:null,view:"dash",f:"in",tr:"",ok:"",err:"",res:null,pub:[],cid:null,db:E0};
+const D=()=>S.db,slug=()=>(S.cs.find(c=>c.nom==S.co)||{slug:S.co.toLowerCase()}).slug;
+const lc=async()=>{S.cs=(await sb.from("communes").select("id,slug,nom").order("nom")).data||S.cs};
 async function profil(){
 const u=(await sb.auth.getUser()).data.user;if(!u)return false;
 const p=(await sb.from("profiles").select("role,commune_id").eq("id",u.id).single()).data;
 const cs=(await sb.from("communes").select("id,slug,nom")).data||[];
 if(!p||!["maire","cabinet","super_admin"].includes(p.role)){S.err="Compte créé. L’administrateur doit d’abord l’activer.";await sb.auth.signOut();return false}
 if(p.role!="super_admin"){const c=cs.find(x=>x.id==p.commune_id);if(c)S.co=c.nom}
-S.cid=(cs.find(x=>x.slug==slug())||{}).id;S.role="cab";S.view="dash";return true}
+S.cs=cs;S.sa=p.role=="super_admin";S.cid=(cs.find(x=>x.nom==S.co)||{}).id;S.role="cab";S.view="dash";return true}
 async function load(){
 if(S.role=="cit"){S.pub=(await sb.rpc("actualites",{p_commune:slug()})).data||[];return}
 if(S.role!="cab"||!S.cid)return;
+if(S.sa)S.adm=(await sb.rpc("admin_utilisateurs")).data||[];
 const q=t=>sb.from(t).select("*").eq("commune_id",S.cid);
 const [a,b,c,e]=await Promise.all([q("rdv").order("jour").order("heure"),q("courrier").order("created_at",{ascending:false}),q("demandes").order("created_at",{ascending:false}),q("publications").order("jour")]);
 S.db={rdv:(a.data||[]).map(x=>({id:x.id,d:x.jour,h:x.heure.slice(0,5),t:x.titre})),mail:(b.data||[]).map(x=>({id:x.id,s:x.sens,f:x.correspondant,o:x.objet,st:MS[MC.indexOf(x.statut)]})),req:(c.data||[]).map(x=>({id:x.id,n:x.numero,t:x.type,w:x.nom,m:x.message,st:RS[RC.indexOf(x.statut)]})),posts:(e.data||[]).map(x=>({id:x.id,r:x.reseau,d:x.jour,t:x.texte,st:x.statut}))}}
@@ -88,6 +90,7 @@ const tag=(t,a,i,f)=>`<button class="tag${f?" f":""}" data-a="${a}" data-i="${i}
 const bar=(l,r)=>`<div class="top"><span class="cap">${l}</span><span><button class="tag" data-a="theme">Thème</button> <button class="tag" data-a="out">${r}</button></span></div>`;
 const N=[["dash","Tableau de bord","Accueil"],["agenda","Agenda","Agenda"],["mail","Courrier","Courrier"],["req","Demandes","Demandes"],["img","Image du Maire","Image"]];
 const v={
+adm:()=>`<h1>Administration</h1><h2>Communes</h2>${S.cs.map((c,i)=>`<div class="row"><div><span class="sr">${esc(c.nom)}</span> <span class="mut">${esc(c.slug)}</span></div>${tag(c.nom==S.co?"Active":"Ouvrir","sw",i,c.nom==S.co)}</div>`).join("")}<div class="fr"><div><label for="cn">Nouvelle commune</label><input id="cn"></div><button class="b" data-a="addcom">Ajouter</button></div><h2>Utilisateurs</h2>${(S.adm||[]).map(u=>`<div class="row"><div>${esc(u.email)}<div class="mut">${esc(u.role)}${u.commune?", "+esc(u.commune):""}</div></div></div>`).join("")}<div class="fr"><div><label for="ae">E-mail du compte</label><input id="ae" type="email"></div><div><label for="ar">Rôle</label><select id="ar"><option value="maire">Maire</option><option value="cabinet">Cabinet</option><option value="agent">Agent</option></select></div><div><label for="ac">Commune</label><select id="ac">${S.cs.map(c=>`<option value="${esc(c.slug)}">${esc(c.nom)}</option>`).join("")}</select></div><button class="b" data-a="attr">Attribuer</button></div>`,
 dash:()=>{const d=D(),c=k=>d.req.filter(r=>r.st==k).length,p=d.posts.findIndex(x=>x.st=="valider"),ag=d.rdv.filter(r=>r.d>=T).sort(cmp).slice(0,4);
 return `<h1>Bonjour,<br>Monsieur le Maire</h1><div class="stats"><div><b>${c("Nouvelle")}</b><span>Nouvelles demandes</span></div><div><b>${c("En cours")}</b><span>En cours</span></div><div><b>${d.mail.filter(m=>m.st=="Urgent").length}</b><span>Courriers urgents</span></div></div>
 <div class="g2"><section><h2>À valider</h2>${p<0?'<p class="mut">Rien à valider pour le moment.</p>':`<div class="art">${esc(d.posts[p].t)}</div><p class="mut">${esc(d.posts[p].r)}, ${fd(d.posts[p].d)}</p><button class="b" data-a="nextp" data-i="${p}">Valider</button>`}</section>
@@ -96,8 +99,8 @@ agenda:()=>`<h1>Agenda</h1><div class="fr"><div><label for="rd">Date</label><inp
 mail:()=>`<h1>Courrier</h1><div class="top" style="justify-content:flex-start"><button class="tag${S.f=="in"?" f":""}" data-a="filt" data-f="in">Entrant</button><button class="tag${S.f=="out"?" f":""}" data-a="filt" data-f="out">Sortant</button></div><div class="fr"><div><label for="ms">Type</label><select id="ms"><option value="in">Entrant</option><option value="out">Sortant</option></select></div><div><label for="mf">Expéditeur ou destinataire</label><input id="mf"></div><div><label for="mo">Objet</label><input id="mo"></div><button class="b" data-a="addmail">Ajouter</button></div>${D().mail.map((m,i)=>[m,i]).filter(x=>x[0].s==S.f).map(([m,i])=>`<div class="row"><div><div class="sr">${esc(m.o)}</div><div class="mut">${esc(m.f)}</div></div>${tag(m.st,"cycm",i,m.st=="Urgent")}</div>`).join("")||'<p class="mut">Aucun courrier dans cette boîte.</p>'}`,
 req:()=>`<h1>Demandes citoyennes</h1>${D().req.map((r,i)=>`<div class="row"><div><div class="sr">${esc(r.t)}</div><div class="mut">${esc(r.n)}, ${esc(r.w)}</div><div>${esc(r.m)}</div></div>${tag(r.st,"cycr",i,r.st=="Nouvelle")}</div>`).join("")||'<p class="mut">Aucune demande reçue.</p>'}`,
 img:()=>`<h1>Image du Maire</h1><div class="fr"><div><label for="pr">Réseau</label><select id="pr"><option>Facebook</option><option>Instagram</option><option>TikTok</option><option>YouTube</option></select></div><div><label for="pd">Date</label><input id="pd" type="date" value="${T}"></div></div><label for="pt">Texte poétique</label><textarea id="pt" rows="3"></textarea><div class="fr"><button class="o" data-a="idea">Inspirer-moi</button><button class="b" data-a="addpost">Ajouter en brouillon</button></div>${D().posts.map((p,i)=>[p,i]).sort((a,b)=>cmp(a[0],b[0])).map(([p,i])=>`<div class="row"><div><div class="mut">${esc(p.r)}, ${fd(p.d)}</div><div class="sr"><i>${esc(p.t)}</i></div><div style="margin-top:8px"><button class="tag" data-a="copy" data-i="${i}">Copier</button> ${tag("Retirer","delp",i)}</div></div>${tag(PL[PS.indexOf(p.st)],"nextp",i,p.st=="valider")}</div>`).join("")||'<p class="mut">Aucune publication. Écrivez la première.</p>'}`};
-const login=()=>`<main class="login"><p class="cap">Mairie connectée</p><h1>Votre mairie,<br><i>plus proche de vous</i></h1><div><label for="co">Commune</label><select id="co">${CO.map(c=>`<option${c==S.co?" selected":""}>${c}</option>`).join("")}</select></div>${S.err?`<p role="alert"><b>${esc(S.err)}</b></p>`:""}<button class="b" data-a="enter" data-r="cit">Espace citoyen</button><div class="card"><p class="cap">Cabinet de la mairie</p><label for="em">E-mail</label><input id="em" type="email" autocomplete="username"><label for="pw" style="margin-top:10px">Mot de passe</label><input id="pw" type="password" autocomplete="current-password"><p><button class="o" data-a="enter" data-r="cab" data-m="in">Se connecter</button> <button class="tag" data-a="enter" data-r="cab" data-m="up">Créer un compte</button></p></div></main>`;
-const cab=()=>`<div class="sh"><nav class="nv" aria-label="Navigation"><div class="br"><div class="sr" style="font-size:28px">Mairie de ${esc(S.co)}</div><p class="cap" style="margin:4px 0 28px">Cabinet du Maire</p></div>${N.map(n=>`<button class="${S.view==n[0]?"on":""}" data-a="go" data-v="${n[0]}"><span class="l">${n[1]}</span><span class="s">${n[2]}</span></button>`).join("")}</nav><main>${bar("Cabinet, "+esc(S.co),"Quitter")}${S.err?`<p role="alert"><b>${esc(S.err)}</b></p>`:""}${v[S.view]()}</main></div>`;
+const login=()=>`<main class="login"><p class="cap">Mairie connectée</p><h1>Votre mairie,<br><i>plus proche de vous</i></h1><div><label for="co">Commune</label><select id="co">${S.cs.map(x=>x.nom).map(c=>`<option${c==S.co?" selected":""}>${c}</option>`).join("")}</select></div>${S.err?`<p role="alert"><b>${esc(S.err)}</b></p>`:""}<button class="b" data-a="enter" data-r="cit">Espace citoyen</button><div class="card"><p class="cap">Cabinet de la mairie</p><label for="em">E-mail</label><input id="em" type="email" autocomplete="username"><label for="pw" style="margin-top:10px">Mot de passe</label><input id="pw" type="password" autocomplete="current-password"><p><button class="o" data-a="enter" data-r="cab" data-m="in">Se connecter</button> <button class="tag" data-a="enter" data-r="cab" data-m="up">Créer un compte</button></p></div></main>`;
+const cab=()=>`<div class="sh"><nav class="nv" aria-label="Navigation"><div class="br"><div class="sr" style="font-size:28px">Mairie de ${esc(S.co)}</div><p class="cap" style="margin:4px 0 28px">Cabinet du Maire</p></div>${N.concat(S.sa?[["adm","Administration","Admin"]]:[]).map(n=>`<button class="${S.view==n[0]?"on":""}" data-a="go" data-v="${n[0]}"><span class="l">${n[1]}</span><span class="s">${n[2]}</span></button>`).join("")}</nav><main>${bar("Cabinet, "+esc(S.co),"Quitter")}${S.err?`<p role="alert"><b>${esc(S.err)}</b></p>`:""}${v[S.view]()}</main></div>`;
 const cit=()=>{const r=S.tr&&S.res?{t:S.res.type,st:RS[RC.indexOf(S.res.statut)]}:null,nw=S.pub;
 return `<div class="hero">${bar("Commune de "+esc(S.co),"Changer")}<h1>Votre mairie,<br><i>plus proche de vous</i></h1><p>Démarches, rendez-vous et informations, à toute heure.</p></div><main class="cm">
 <div class="card"><label for="tk">Suivre ma demande</label><div class="top"><input id="tk" placeholder="Numéro de suivi" value="${esc(S.tr)}"><button class="b" data-a="track">Suivre</button></div>${S.tr?(r?`<p><b>${esc(r.t)}</b> : ${esc(r.st)}</p><div class="steps">${RS.map((x,i)=>`<i class="${i<=RS.indexOf(r.st)?"on":""}"></i>`).join("")}</div>`:'<p class="mut">Aucune demande avec ce numéro. Vérifiez-le et réessayez.</p>'):""}</div>
@@ -115,7 +118,7 @@ if(t.dataset.r=="cit"){S.role="cit";S.view="home";await load()}
 else{const em=g("em"),pw=($("#pw")||{}).value||"",up=t.dataset.m=="up";
 const r=up?await sb.auth.signUp({email:em,password:pw,options:{data:{commune:slug()}}}):await sb.auth.signInWithPassword({email:em,password:pw});
 if(r.error)S.err=r.error.message;else if(up&&!r.data.session)S.err="Compte créé. Confirmez votre e-mail, puis connectez-vous.";else if(await profil())await load()}}
-else if(a=="out"){await sb.auth.signOut();S.role=null;S.cid=null;S.db=E0}
+else if(a=="out"){await sb.auth.signOut();S.role=null;S.cid=null;S.sa=false;S.db=E0}
 else if(a=="go")S.view=t.dataset.v;
 else if(a=="filt")S.f=t.dataset.f;
 else if(a=="theme"){const h=document.documentElement,dk=h.dataset.theme?h.dataset.theme=="dark":matchMedia("(prefers-color-scheme:dark)").matches;h.dataset.theme=dk?"light":"dark"}
@@ -127,6 +130,9 @@ else{const ty=g("qt"),sg=await sb.auth.signInAnonymously({options:{captchaToken:
 if(sg.error)S.err="Vérification refusée. Réessayez.";
 else{const r=await sb.rpc("creer_demande",{p_commune:slug(),p_type:ty,p_nom:g("qn"),p_message:g("qm")});await sb.auth.signOut();
 if(r.error)S.err="Envoi impossible. Vérifiez les champs et réessayez.";else{S.tr=r.data;S.ok=r.data;S.res={type:ty,statut:"nouvelle"}}}}}}
+else if(a=="sw"){const c=S.cs[i];S.co=c.nom;S.cid=c.id;await load()}
+else if(a=="addcom"){const n=g("cn"),sl=n.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");if(n&&sl){await run(sb.from("communes").insert({slug:sl,nom:n}));await lc();await load()}}
+else if(a=="attr"){await run(sb.rpc("admin_attribuer",{p_email:g("ae"),p_role:g("ar"),p_slug:g("ac")}));await load()}
 else{
 if(a=="addrdv"){if(g("rt"))await run(sb.from("rdv").insert({commune_id:c,jour:g("rd")||T,heure:g("rh")||"09:00",titre:g("rt")}))}
 else if(a=="delrdv")await run(sb.from("rdv").delete().eq("id",d.rdv[i].id));
@@ -139,5 +145,5 @@ else if(a=="delp")await run(sb.from("publications").delete().eq("id",d.posts[i].
 await load()}
 }catch(x){S.err="Erreur réseau. Réessayez."}
 render();window.scrollTo(0,0)});
-(async()=>{try{const x=(await sb.auth.getSession()).data.session;if(x&&await profil())await load()}catch(e){}render()})();
+(async()=>{try{await lc();const x=(await sb.auth.getSession()).data.session;if(x&&await profil())await load()}catch(e){}render()})();
 </script></body></html>
