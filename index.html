@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mairie Connectée</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#F6F1E6;--fg:#0B1A1A;--mut:#566663;--card:#fff;--line:#D9CFB8;--gd:#7A5C22;--gold:#C9A86A;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B1A1A;--fg:#F4EEE1;--mut:#A9B8B3;--card:#10292A;--line:rgba(201,168,106,.28);--gd:#C9A86A;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0B1A1A;--fg:#F4EEE1;--mut:#A9B8B3;--card:#10292A;--line:rgba(201,168,106,.28);--gd:#C9A86A;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 15px/1.55 Inter,system-ui,sans-serif}
+h1,h2,.sr{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500}
+h1{font-size:clamp(34px,6vw,54px);line-height:1.05;margin:12px 0 22px}
+h2{font-size:26px;margin:0 0 10px}
+.cap{font:500 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gd);margin:0}
+.mut{color:var(--mut)}
+.sr{font-size:21px;line-height:1.25}
+button,input,select,textarea{font:inherit;color:inherit}
+input,select,textarea{width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--line);background:var(--card);border-radius:2px}
+label{display:block;font:500 11px Inter;letter-spacing:.12em;text-transform:uppercase;color:var(--gd);margin:0 0 4px}
+.b,.o{min-height:46px;padding:0 22px;font:600 12px Inter;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;border-radius:2px}
+.b{border:0;background:var(--gold);color:#0B1A1A}
+.o{border:1px solid var(--gd);background:transparent;color:var(--gd)}
+.tag{font:600 10px Inter;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--gd);color:var(--gd);background:transparent;padding:8px 12px;min-height:36px;cursor:pointer;white-space:nowrap}
+.tag.f{background:var(--gold);color:#0B1A1A}
+:focus-visible{outline:2px solid var(--gd);outline-offset:2px}
+.fr{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin:14px 0 22px;align-items:end}
+.row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+.stats{display:flex;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px 0;margin-bottom:26px}
+.stats div{flex:1}.stats b{display:block;font:500 40px 'Cormorant Garamond',serif;color:var(--gd)}
+.stats span{font-size:12px;color:var(--mut)}
+.g2{display:grid;gap:30px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.art{min-height:160px;background:radial-gradient(120% 100% at 80% 0%,#C9A86A 0%,#2F6F6A 40%,#0F3D3E 72%,#0B1A1A 100%);display:flex;align-items:flex-end;padding:20px;color:#fff;font:italic 500 25px/1.25 'Cormorant Garamond',serif;margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--line);padding:18px;margin:14px 0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.steps{display:flex;gap:6px;margin:10px 0}.steps i{flex:1;height:4px;background:var(--line)}.steps i.on{background:var(--gold)}
+.login{max-width:440px;margin:0 auto;padding:56px 24px;display:grid;gap:14px}
+.sh main{max-width:1000px;padding:24px 22px 120px}
+.nv{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;justify-content:space-around;background:var(--bg);border-top:1px solid var(--line);padding:6px 0 calc(6px + env(safe-area-inset-bottom,0px))}
+.nv button{background:none;border:0;color:var(--mut);min-height:48px;min-width:56px;padding:0 6px;font:500 10px Inter;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.nv .on{color:var(--gd);font-weight:600}
+.nv .br,.l{display:none}
+.hero{background:radial-gradient(120% 100% at 85% 0%,#C9A86A 0%,#2F6F6A 42%,#0F3D3E 74%,#0B1A1A 100%);color:#F4EEE1;padding:24px 22px 76px}
+.hero .cap{color:#F0DDB0}.hero .tag{color:#F0DDB0;border-color:#F0DDB0}
+.hero>*{max-width:760px;margin-left:auto;margin-right:auto}
+.cm{max-width:760px;margin:-44px auto 0;padding:0 22px 60px}
+@media(min-width:860px){
+.nv{top:0;right:auto;width:250px;flex-direction:column;justify-content:flex-start;border-top:0;border-right:1px solid var(--line);padding:40px 28px}
+.nv .br{display:block}.nv button{text-align:left;width:100%;font-size:12px;border-bottom:1px solid var(--line)}
+.l{display:inline}.s{display:none}.sh main{margin-left:250px;padding:36px 48px 60px}}
+</style></head><body><div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=tsReady" async defer></script>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const CO=["Fimela","Diofior","Joal","Fatick"],T=new Date().toISOString().slice(0,10);
+const fd=d=>new Date(d+"T00:00").toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"});
+const MS=["À répondre","À signer","Urgent","Suivi","Classé"],RS=["Nouvelle","En cours","Traitée"],PS=["brouillon","valider","planifie","publie"],PL=["Brouillon","À valider","Planifié","Publié"];
+const P=["Au rythme des pirogues, {c} s’éveille…","{c}, terre de sel et de lumière, où chaque marée raconte nos racines.","Entre mangrove et horizon, {c} tisse son avenir avec patience et fierté.","Le soleil se couche sur {c} ; demain, nous bâtirons encore.","Chaque main tendue à {c} est une promesse tenue."];
+const sb=supabase.createClient("https://aiqegpijisspankpkwfj.supabase.co","sb_publishable__Zc0adl_eD_PyMkaR5ACzA_-_yjwmbI");
+const TS_KEY="VOTRE_CLE_TURNSTILE";window.tsReady=()=>{if(S.role=="cit")render()};
+const MC=["a_repondre","a_signer","urgent","suivi","classe"],RC=["nouvelle","en_cours","traitee"],E0={rdv:[],mail:[],req:[],posts:[]};
+let S={co:"Fimela",role:null,view:"dash",f:"in",tr:"",ok:"",err:"",res:null,pub:[],cid:null,db:E0};
+const D=()=>S.db,slug=()=>S.co.toLowerCase();
+async function profil(){
+const u=(await sb.auth.getUser()).data.user;if(!u)return false;
+const p=(await sb.from("profiles").select("role,commune_id").eq("id",u.id).single()).data;
+const cs=(await sb.from("communes").select("id,slug,nom")).data||[];
+if(!p||!["maire","cabinet","super_admin"].includes(p.role)){S.err="Compte créé. L’administrateur doit d’abord l’activer.";await sb.auth.signOut();return false}
+if(p.role!="super_admin"){const c=cs.find(x=>x.id==p.commune_id);if(c)S.co=c.nom}
+S.cid=(cs.find(x=>x.slug==slug())||{}).id;S.role="cab";S.view="dash";return true}
+async function load(){
+if(S.role=="cit"){S.pub=(await sb.rpc("actualites",{p_commune:slug()})).data||[];return}
+if(S.role!="cab"||!S.cid)return;
+const q=t=>sb.from(t).select("*").eq("commune_id",S.cid);
+const [a,b,c,e]=await Promise.all([q("rdv").order("jour").order("heure"),q("courrier").order("created_at",{ascending:false}),q("demandes").order("created_at",{ascending:false}),q("publications").order("jour")]);
+S.db={rdv:(a.data||[]).map(x=>({id:x.id,d:x.jour,h:x.heure.slice(0,5),t:x.titre})),mail:(b.data||[]).map(x=>({id:x.id,s:x.sens,f:x.correspondant,o:x.objet,st:MS[MC.indexOf(x.statut)]})),req:(c.data||[]).map(x=>({id:x.id,n:x.numero,t:x.type,w:x.nom,m:x.message,st:RS[RC.indexOf(x.statut)]})),posts:(e.data||[]).map(x=>({id:x.id,r:x.reseau,d:x.jour,t:x.texte,st:x.statut}))}}
+const cmp=(a,b)=>(a.d+(a.h||"")).localeCompare(b.d+(b.h||""));
+const tag=(t,a,i,f)=>`<button class="tag${f?" f":""}" data-a="${a}" data-i="${i}">${esc(t)}</button>`;
+const top=(l,r)=>`<div class="top"><span class="cap">${l}</span><span><button class="tag" data-a="theme">Thème</button> <button class="tag" data-a="out">${r}</button></span></div>`;
+const N=[["dash","Tableau de bord","Accueil"],["agenda","Agenda","Agenda"],["mail","Courrier","Courrier"],["req","Demandes","Demandes"],["img","Image du Maire","Image"]];
+const v={
+dash:()=>{const d=D(),c=k=>d.req.filter(r=>r.st==k).length,p=d.posts.findIndex(x=>x.st=="valider"),ag=d.rdv.filter(r=>r.d>=T).sort(cmp).slice(0,4);
+return `<h1>Bonjour,<br>Monsieur le Maire</h1><div class="stats"><div><b>${c("Nouvelle")}</b><span>Nouvelles demandes</span></div><div><b>${c("En cours")}</b><span>En cours</span></div><div><b>${d.mail.filter(m=>m.st=="Urgent").length}</b><span>Courriers urgents</span></div></div>
+<div class="g2"><section><h2>À valider</h2>${p<0?'<p class="mut">Rien à valider pour le moment.</p>':`<div class="art">${esc(d.posts[p].t)}</div><p class="mut">${esc(d.posts[p].r)}, ${fd(d.posts[p].d)}</p><button class="b" data-a="nextp" data-i="${p}">Valider</button>`}</section>
+<section><h2>Agenda</h2>${ag.map(r=>`<div class="row"><span class="sr">${esc(r.h)}</span><span>${esc(r.t)}</span></div>`).join("")||'<p class="mut">Aucun rendez-vous à venir.</p>'}</section></div>`},
+agenda:()=>`<h1>Agenda</h1><div class="fr"><div><label for="rd">Date</label><input id="rd" type="date" value="${T}"></div><div><label for="rh">Heure</label><input id="rh" type="time" value="09:00"></div><div><label for="rt">Rendez-vous</label><input id="rt" placeholder="Intitulé"></div><button class="b" data-a="addrdv">Ajouter</button></div>${D().rdv.map((r,i)=>[r,i]).sort((a,b)=>cmp(a[0],b[0])).map(([r,i])=>`<div class="row"><div><span class="sr">${esc(r.h)}</span> <span class="mut">${fd(r.d)}</span><div>${esc(r.t)}</div></div>${tag("Retirer","delrdv",i)}</div>`).join("")||'<p class="mut">Aucun rendez-vous. Ajoutez le premier ci-dessus.</p>'}`,
+mail:()=>`<h1>Courrier</h1><div class="top" style="justify-content:flex-start"><button class="tag${S.f=="in"?" f":""}" data-a="filt" data-f="in">Entrant</button><button class="tag${S.f=="out"?" f":""}" data-a="filt" data-f="out">Sortant</button></div><div class="fr"><div><label for="ms">Type</label><select id="ms"><option value="in">Entrant</option><option value="out">Sortant</option></select></div><div><label for="mf">Expéditeur ou destinataire</label><input id="mf"></div><div><label for="mo">Objet</label><input id="mo"></div><button class="b" data-a="addmail">Ajouter</button></div>${D().mail.map((m,i)=>[m,i]).filter(x=>x[0].s==S.f).map(([m,i])=>`<div class="row"><div><div class="sr">${esc(m.o)}</div><div class="mut">${esc(m.f)}</div></div>${tag(m.st,"cycm",i,m.st=="Urgent")}</div>`).join("")||'<p class="mut">Aucun courrier dans cette boîte.</p>'}`,
+req:()=>`<h1>Demandes citoyennes</h1>${D().req.map((r,i)=>`<div class="row"><div><div class="sr">${esc(r.t)}</div><div class="mut">${esc(r.n)}, ${esc(r.w)}</div><div>${esc(r.m)}</div></div>${tag(r.st,"cycr",i,r.st=="Nouvelle")}</div>`).join("")||'<p class="mut">Aucune demande reçue.</p>'}`,
+img:()=>`<h1>Image du Maire</h1><div class="fr"><div><label for="pr">Réseau</label><select id="pr"><option>Facebook</option><option>Instagram</option><option>TikTok</option><option>YouTube</option></select></div><div><label for="pd">Date</label><input id="pd" type="date" value="${T}"></div></div><label for="pt">Texte poétique</label><textarea id="pt" rows="3"></textarea><div class="fr"><button class="o" data-a="idea">Inspirer-moi</button><button class="b" data-a="addpost">Ajouter en brouillon</button></div>${D().posts.map((p,i)=>[p,i]).sort((a,b)=>cmp(a[0],b[0])).map(([p,i])=>`<div class="row"><div><div class="mut">${esc(p.r)}, ${fd(p.d)}</div><div class="sr"><i>${esc(p.t)}</i></div><div style="margin-top:8px"><button class="tag" data-a="copy" data-i="${i}">Copier</button> ${tag("Retirer","delp",i)}</div></div>${tag(PL[PS.indexOf(p.st)],"nextp",i,p.st=="valider")}</div>`).join("")||'<p class="mut">Aucune publication. Écrivez la première.</p>'}`};
+const login=()=>`<main class="login"><p class="cap">Mairie connectée</p><h1>Votre mairie,<br><i>plus proche de vous</i></h1><div><label for="co">Commune</label><select id="co">${CO.map(c=>`<option${c==S.co?" selected":""}>${c}</option>`).join("")}</select></div>${S.err?`<p role="alert"><b>${esc(S.err)}</b></p>`:""}<button class="b" data-a="enter" data-r="cit">Espace citoyen</button><div class="card"><p class="cap">Cabinet de la mairie</p><label for="em">E-mail</label><input id="em" type="email" autocomplete="username"><label for="pw" style="margin-top:10px">Mot de passe</label><input id="pw" type="password" autocomplete="current-password"><p><button class="o" data-a="enter" data-r="cab" data-m="in">Se connecter</button> <button class="tag" data-a="enter" data-r="cab" data-m="up">Créer un compte</button></p></div></main>`;
+const cab=()=>`<div class="sh"><nav class="nv" aria-label="Navigation"><div class="br"><div class="sr" style="font-size:28px">Mairie de ${esc(S.co)}</div><p class="cap" style="margin:4px 0 28px">Cabinet du Maire</p></div>${N.map(n=>`<button class="${S.view==n[0]?"on":""}" data-a="go" data-v="${n[0]}"><span class="l">${n[1]}</span><span class="s">${n[2]}</span></button>`).join("")}</nav><main>${top("Cabinet, "+esc(S.co),"Quitter")}${S.err?`<p role="alert"><b>${esc(S.err)}</b></p>`:""}${v[S.view]()}</main></div>`;
+const cit=()=>{const r=S.tr&&S.res?{t:S.res.type,st:RS[RC.indexOf(S.res.statut)]}:null,nw=S.pub;
+return `<div class="hero">${top("Commune de "+esc(S.co),"Changer")}<h1>Votre mairie,<br><i>plus proche de vous</i></h1><p>Démarches, rendez-vous et informations, à toute heure.</p></div><main class="cm">
+<div class="card"><label for="tk">Suivre ma demande</label><div class="top"><input id="tk" placeholder="Numéro de suivi" value="${esc(S.tr)}"><button class="b" data-a="track">Suivre</button></div>${S.tr?(r?`<p><b>${esc(r.t)}</b> : ${esc(r.st)}</p><div class="steps">${RS.map((x,i)=>`<i class="${i<=RS.indexOf(r.st)?"on":""}"></i>`).join("")}</div>`:'<p class="mut">Aucune demande avec ce numéro. Vérifiez-le et réessayez.</p>'):""}</div>
+<div class="card"><h2>Nouvelle demande</h2>${S.err?`<p role="alert"><b>${esc(S.err)}</b></p>`:""}${S.ok?`<p><b>Demande enregistrée.</b> Votre numéro de suivi : ${esc(S.ok)}</p>`:""}<div class="fr"><div><label for="qt">Type de demande</label><select id="qt"><option>État civil</option><option>Rendez-vous avec le Maire</option><option>Signalement</option><option>Autre demande</option></select></div><div><label for="qn">Votre nom</label><input id="qn"></div></div><label for="qm">Votre message</label><textarea id="qm" rows="4"></textarea><div id="ts"></div><p><button class="b" data-a="newreq">Envoyer ma demande</button></p></div>
+<h2>Actualités</h2>${nw.map(p=>`<div class="row"><div class="sr"><i>${esc(p.texte)}</i></div></div>`).join("")}${nw.length?"":'<p class="mut">Pas encore d’actualité publiée.</p>'}</main>`};
+function render(){$("#app").innerHTML=!S.role?login():S.role=="cab"?cab():cit();S.tok="";if($("#ts")&&window.turnstile&&!TS_KEY.startsWith("VOTRE"))try{turnstile.render("#ts",{sitekey:TS_KEY,language:"fr",callback:x=>{S.tok=x}})}catch(e){}}
+document.addEventListener("click",async e=>{const t=e.target.closest("[data-a]");if(!t)return;
+const a=t.dataset.a,i=+t.dataset.i,g=id=>(($("#"+id)||{}).value||"").trim(),d=D(),c=S.cid,run=async p=>{const r=await p;if(r.error)S.err=r.error.message;return r};
+if(a=="idea"){$("#pt").value=P[Math.floor(Math.random()*P.length)].replace("{c}",S.co);return}
+if(a=="copy"){try{navigator.clipboard.writeText(d.posts[i].t);t.textContent="Copié"}catch(x){}return}
+S.err="";
+try{
+if(a=="enter"){S.co=g("co")||S.co;S.tr="";S.ok="";S.res=null;
+if(t.dataset.r=="cit"){S.role="cit";S.view="home";await load()}
+else{const em=g("em"),pw=($("#pw")||{}).value||"",up=t.dataset.m=="up";
+const r=up?await sb.auth.signUp({email:em,password:pw,options:{data:{commune:slug()}}}):await sb.auth.signInWithPassword({email:em,password:pw});
+if(r.error)S.err=r.error.message;else if(up&&!r.data.session)S.err="Compte créé. Confirmez votre e-mail, puis connectez-vous.";else if(await profil())await load()}}
+else if(a=="out"){await sb.auth.signOut();S.role=null;S.cid=null;S.db=E0}
+else if(a=="go")S.view=t.dataset.v;
+else if(a=="filt")S.f=t.dataset.f;
+else if(a=="theme"){const h=document.documentElement,dk=h.dataset.theme?h.dataset.theme=="dark":matchMedia("(prefers-color-scheme:dark)").matches;h.dataset.theme=dk?"light":"dark"}
+else if(a=="track"){S.tr=g("tk").toUpperCase();S.ok="";S.res=((await run(sb.rpc("suivre_demande",{p_commune:slug(),p_numero:S.tr}))).data||[])[0]||null}
+else if(a=="newreq"){if(g("qn")&&g("qm")){
+if(TS_KEY.startsWith("VOTRE"))S.err="Protection anti-spam non configurée.";
+else if(!S.tok)S.err="Veuillez valider la vérification anti-spam, puis réessayer.";
+else{const ty=g("qt"),sg=await sb.auth.signInAnonymously({options:{captchaToken:S.tok}});
+if(sg.error)S.err="Vérification refusée. Réessayez.";
+else{const r=await sb.rpc("creer_demande",{p_commune:slug(),p_type:ty,p_nom:g("qn"),p_message:g("qm")});await sb.auth.signOut();
+if(r.error)S.err="Envoi impossible. Vérifiez les champs et réessayez.";else{S.tr=r.data;S.ok=r.data;S.res={type:ty,statut:"nouvelle"}}}}}}
+else{
+if(a=="addrdv"){if(g("rt"))await run(sb.from("rdv").insert({commune_id:c,jour:g("rd")||T,heure:g("rh")||"09:00",titre:g("rt")}))}
+else if(a=="delrdv")await run(sb.from("rdv").delete().eq("id",d.rdv[i].id));
+else if(a=="addmail"){if(g("mo"))await run(sb.from("courrier").insert({commune_id:c,sens:g("ms"),correspondant:g("mf")||"Non précisé",objet:g("mo")}));S.f=g("ms")||S.f}
+else if(a=="cycm"){const m=d.mail[i];await run(sb.from("courrier").update({statut:MC[(MS.indexOf(m.st)+1)%MS.length]}).eq("id",m.id))}
+else if(a=="cycr"){const m=d.req[i];await run(sb.from("demandes").update({statut:RC[(RS.indexOf(m.st)+1)%RS.length]}).eq("id",m.id))}
+else if(a=="addpost"){if(g("pt"))await run(sb.from("publications").insert({commune_id:c,reseau:g("pr"),jour:g("pd")||T,texte:g("pt")}))}
+else if(a=="nextp"){const p=d.posts[i],k=PS.indexOf(p.st);if(k<3)await run(sb.from("publications").update({statut:PS[k+1]}).eq("id",p.id))}
+else if(a=="delp")await run(sb.from("publications").delete().eq("id",d.posts[i].id));
+await load()}
+}catch(x){S.err="Erreur réseau. Réessayez."}
+render();window.scrollTo(0,0)});
+(async()=>{try{const x=(await sb.auth.getSession()).data.session;if(x&&await profil())await load()}catch(e){}render()})();
+</script></body></html>
