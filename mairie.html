@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="fr" data-mode="cab"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Espace mairie</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#F6F1E6;--fg:#0B1A1A;--mut:#566663;--card:#fff;--line:#D9CFB8;--gd:#7A5C22;--gold:#C9A86A;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B1A1A;--fg:#F4EEE1;--mut:#A9B8B3;--card:#10292A;--line:rgba(201,168,106,.28);--gd:#C9A86A;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0B1A1A;--fg:#F4EEE1;--mut:#A9B8B3;--card:#10292A;--line:rgba(201,168,106,.28);--gd:#C9A86A;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 15px/1.55 Inter,system-ui,sans-serif}
+h1,h2,.sr{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500}
+h1{font-size:clamp(34px,6vw,54px);line-height:1.05;margin:12px 0 22px}
+h2{font-size:26px;margin:0 0 10px}
+.cap{font:500 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gd);margin:0}
+.mut{color:var(--mut)}
+.sr{font-size:21px;line-height:1.25}
+button,input,select,textarea{font:inherit;color:inherit}
+input,select,textarea{width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--line);background:var(--card);border-radius:2px}
+label{display:block;font:500 11px Inter;letter-spacing:.12em;text-transform:uppercase;color:var(--gd);margin:0 0 4px}
+.b,.o{min-height:46px;padding:0 22px;font:600 12px Inter;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;border-radius:2px}
+.b{border:0;background:var(--gold);color:#0B1A1A}
+.o{border:1px solid var(--gd);background:transparent;color:var(--gd)}
+.tag{font:600 10px Inter;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--gd);color:var(--gd);background:transparent;padding:8px 12px;min-height:36px;cursor:pointer;white-space:nowrap}
+.tag.f{background:var(--gold);color:#0B1A1A}
+:focus-visible{outline:2px solid var(--gd);outline-offset:2px}
+.fr{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin:14px 0 22px;align-items:end}
+.row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+.stats{display:flex;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px 0;margin-bottom:26px}
+.stats div{flex:1}.stats b{display:block;font:500 40px 'Cormorant Garamond',serif;color:var(--gd)}
+.stats span{font-size:12px;color:var(--mut)}
+.g2{display:grid;gap:30px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.art{min-height:160px;background:radial-gradient(120% 100% at 80% 0%,#C9A86A 0%,#2F6F6A 40%,#0F3D3E 72%,#0B1A1A 100%);display:flex;align-items:flex-end;padding:20px;color:#fff;font:italic 500 25px/1.25 'Cormorant Garamond',serif;margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--line);padding:18px;margin:14px 0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.steps{display:flex;gap:6px;margin:10px 0}.steps i{flex:1;height:4px;background:var(--line)}.steps i.on{background:var(--gold)}
+.login{max-width:440px;margin:0 auto;padding:56px 24px;display:grid;gap:14px}
+.sh main{max-width:1000px;padding:24px 22px 120px}
+.nv{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;justify-content:space-around;background:var(--bg);border-top:1px solid var(--line);padding:6px 0 calc(6px + env(safe-area-inset-bottom,0px))}
+.nv button{background:none;border:0;color:var(--mut);min-height:48px;min-width:0;flex:1;padding:0 2px;font:500 9px Inter;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+.nv .on{color:var(--gd);font-weight:600}
+.nv .br,.l{display:none}
+.hero{background:radial-gradient(120% 100% at 85% 0%,#C9A86A 0%,#2F6F6A 42%,#0F3D3E 74%,#0B1A1A 100%);color:#F4EEE1;padding:24px 22px 76px}
+.hero .cap{color:#F0DDB0}.hero .tag{color:#F0DDB0;border-color:#F0DDB0}
+.hero>*{max-width:760px;margin-left:auto;margin-right:auto}
+.cm{max-width:760px;margin:-44px auto 0;padding:0 22px 60px}
+@media(min-width:860px){
+.nv{top:0;right:auto;width:250px;flex-direction:column;justify-content:flex-start;border-top:0;border-right:1px solid var(--line);padding:40px 28px}
+.nv .br{display:block}.nv button{text-align:left;width:100%;font-size:12px;border-bottom:1px solid var(--line)}
+.l{display:inline}.s{display:none}.sh main{margin-left:250px;padding:36px 48px 60px}}
+</style></head><body><div id="app"></div>
+<script>
+(function(){var show=function(m){var a=document.getElementById("app");if(a&&!a.children.length)a.innerHTML='<p style="padding:28px;font:15px/1.5 sans-serif">Le chargement a échoué.<br><b>'+String(m).replace(/[<>&]/g,"")+'</b></p>'};
+addEventListener("error",function(e){show(e.message||("Ressource bloquée : "+(e.target&&(e.target.src||e.target.href))))},true);
+addEventListener("securitypolicyviolation",function(e){show("CSP : "+e.blockedURI)});
+setTimeout(function(){if(typeof supabase==="undefined")show("Bibliothèque Supabase introuvable")},4000)})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=tsReady" async defer></script>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const CO=["Fimela","Diofior","Joal","Fatick"],T=new Date().toISOString().slice(0,10);
+const fd=d=>new Date(d+"T00:00").toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"});
+const MS=["À répondre","À signer","Urgent","Suivi","Classé"],RS=["Nouvelle","En cours","Traitée"],PS=["brouillon","valider","planifie","publie"],PL=["Brouillon","À valider","Planifié","Publié"];
+const P=["Au rythme des pirogues, {c} s’éveille…","{c}, terre de sel et de lumière, où chaque marée raconte nos racines.","Entre mangrove et horizon, {c} tisse son avenir avec patience et fierté.","Le soleil se couche sur {c} ; demain, nous bâtirons encore.","Chaque main tendue à {c} est une promesse tenue."];
+const MODE=document.documentElement.dataset.mode;
+const sb=supabase.createClient("https://aiqegpijisspankpkwfj.supabase.co","sb_publishable__Zc0adl_eD_PyMkaR5ACzA_-_yjwmbI");
+const TS_KEY="0x4AAAAAAF7OVwUkBsAvSANV";window.tsReady=()=>{if(!S.role||S.role=="cit")render()};
+const MC=["a_repondre","a_signer","urgent","suivi","classe"],RC=["nouvelle","en_cours","traitee"],E0={rdv:[],mail:[],req:[],posts:[],med:[]};
+let S={cs:[{slug:"fimela",nom:"Fimela"},{slug:"diofior",nom:"Diofior"},{slug:"joal",nom:"Joal"},{slug:"fatick",nom:"Fatick"}],sa:false,adm:[],co:"",role:MODE=="cit"?"cit":null,view:"dash",f:"in",tr:"",ok:"",err:"",res:null,pub:[],cid:null,db:E0};
+const D=()=>S.db,slug=()=>(S.cs.find(c=>c.nom==S.co)||{slug:S.co.toLowerCase()}).slug;
+const fn=async b=>{const r=await sb.functions.invoke("admin-comptes",{body:b});if(r.error){try{S.err=(await r.error.context.json()).error}catch(e){S.err="Action impossible."}return false}return true};
+const comp=async f=>{const im=await createImageBitmap(f);let k=Math.min(1,1920/Math.max(im.width,im.height)),q=.82,b;
+for(let n=0;n<6;n++){const c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+b=await new Promise(r=>c.toBlob(r,"image/webp",q));if(b.type!="image/webp")b=await new Promise(r=>c.toBlob(r,"image/jpeg",q));
+if(b.size<=450000)break;if(q>.7)q-=.04;else k*=.88}
+return b},kb=n=>n>1e6?(n/1e6).toFixed(1)+" Mo":Math.round(n/1e3)+" Ko";
+const lc=async()=>{S.cs=(await sb.from("communes").select("id,slug,nom").order("nom")).data||S.cs};
+async function profil(){
+const u=(await sb.auth.getUser()).data.user;if(!u)return false;
+const p=(await sb.from("profiles").select("role,commune_id").eq("id",u.id).single()).data;
+const cs=(await sb.from("communes").select("id,slug,nom")).data||[];
+if(!p||!["maire","cabinet","super_admin"].includes(p.role)){S.err="Compte créé. L’administrateur doit d’abord l’activer.";await sb.auth.signOut();return false}
+if(p.role!="super_admin"){const c=cs.find(x=>x.id==p.commune_id);if(c)S.co=c.nom}
+S.cs=cs;S.sa=p.role=="super_admin";S.cid=(cs.find(x=>x.nom==S.co)||{}).id;S.role="cab";S.view="dash";return true}
+async function load(){
+if(S.role=="cit"){S.pub=(await sb.rpc("actualites",{p_commune:slug()})).data||[];return}
+if(S.role!="cab"||!S.cid)return;
+if(S.sa)S.adm=(await sb.rpc("admin_utilisateurs")).data||[];
+const q=t=>sb.from(t).select("*").eq("commune_id",S.cid);
+const [a,b,c,e,f]=await Promise.all([q("rdv").order("jour").order("heure"),q("courrier").order("created_at",{ascending:false}),q("demandes").order("created_at",{ascending:false}),q("publications").order("jour"),q("medias").order("created_at",{ascending:false})]);
+const ph=(f.data||[]).filter(x=>x.type=="photo"),su=ph.length?((await sb.storage.from("medias").createSignedUrls(ph.map(x=>x.chemin),3600)).data||[]):[];
+S.db={rdv:(a.data||[]).map(x=>({id:x.id,d:x.jour,h:x.heure.slice(0,5),t:x.titre})),mail:(b.data||[]).map(x=>({id:x.id,s:x.sens,f:x.correspondant,o:x.objet,st:MS[MC.indexOf(x.statut)]})),req:(c.data||[]).map(x=>({id:x.id,n:x.numero,t:x.type,w:x.nom,m:x.message,st:RS[RC.indexOf(x.statut)]})),posts:(e.data||[]).map(x=>({id:x.id,r:x.reseau,d:x.jour,t:x.texte,st:x.statut,m:x.media_id})),med:(f.data||[]).map(x=>({id:x.id,ty:x.type,t:x.titre,p:x.chemin,u:x.url,src:((su.find(y=>y.path==x.chemin)||{}).signedUrl)||""}))}}
+const cmp=(a,b)=>(a.d+(a.h||"")).localeCompare(b.d+(b.h||""));
+const mt=p=>{const m=D().med.find(x=>x.id==p.m);return m?(m.ty=="photo"&&m.src?`<img src="${esc(m.src)}" alt="${esc(m.t)}" style="width:120px;aspect-ratio:4/3;object-fit:cover;display:block;margin:6px 0">`:`<div class="mut">Vidéo : ${esc(m.t)}</div>`):""};
+const tag=(t,a,i,f)=>`<button class="tag${f?" f":""}" data-a="${a}" data-i="${i}">${esc(t)}</button>`;
+const bar=(l,r,a="out")=>`<div class="top"><span class="cap">${l}</span><span><button class="tag" data-a="theme">Thème</button> <button class="tag" data-a="${a}">${r}</button></span></div>`;
+const N=[["dash","Tableau de bord","Accueil"],["agenda","Agenda","Agenda"],["mail","Courrier","Courrier"],["req","Demandes","Demandes"],["img","Image du Maire","Image"],["med","Médiathèque","Médias"]];
+const v={
+med:()=>`<h1>Médiathèque</h1><div class="card"><h2>Ajouter une photo</h2><div class="fr"><div><label for="pt2">Titre</label><input id="pt2"></div><div><label for="pf">Fichier</label><input id="pf" type="file" accept="image/*"></div><button class="b" data-a="addphoto">Envoyer</button></div><p class="mut" style="margin:0">Les photos sont optimisées automatiquement : taille réduite, qualité conservée, localisation GPS effacée.</p></div><div class="card"><h2>Ajouter une vidéo</h2><div class="fr"><div><label for="vt">Titre</label><input id="vt"></div><div><label for="vu">Lien https (YouTube non répertorié…)</label><input id="vu" type="url" placeholder="https://"></div><button class="b" data-a="addvideo">Ajouter</button></div></div><div class="g2">${D().med.map((m,i)=>`<div>${m.ty=="photo"?(m.src?`<img src="${esc(m.src)}" alt="${esc(m.t)}" loading="lazy" style="width:100%;aspect-ratio:4/3;object-fit:cover;display:block">`:'<div class="art"></div>'):`<a class="art" href="${esc(m.u)}" target="_blank" rel="noopener noreferrer">Vidéo : ouvrir le lien</a>`}<div class="top"><span class="sr">${esc(m.t)}</span>${tag("Retirer","delmed",i)}</div></div>`).join("")||'<p class="mut">Aucun média. Ajoutez la première photo ou vidéo.</p>'}</div>`,
+adm:()=>`<h1>Administration</h1><h2>Communes</h2>${S.cs.map((c,i)=>`<div class="row"><div><span class="sr">${esc(c.nom)}</span> <span class="mut">${esc(c.slug)}</span></div>${tag(c.nom==S.co?"Active":"Ouvrir","sw",i,c.nom==S.co)}</div>`).join("")}<div class="fr"><div><label for="cn">Nouvelle commune</label><input id="cn"></div><button class="b" data-a="addcom">Ajouter</button></div><h2>Utilisateurs</h2>${(S.adm||[]).map((u,i)=>`<div class="row"><div>${esc(u.email)}<div class="mut">${esc(u.role)}${u.commune?", "+esc(u.commune):""}</div></div>${u.role=="super_admin"?"":tag("Supprimer","deluser",i)}</div>`).join("")}<div class="fr"><div><label for="ae">E-mail du compte</label><input id="ae" type="email"></div><div><label for="ar">Rôle</label><select id="ar"><option value="maire">Maire</option><option value="cabinet">Cabinet</option><option value="agent">Agent</option></select></div><div><label for="ac">Commune</label><select id="ac">${S.cs.map(c=>`<option value="${esc(c.slug)}">${esc(c.nom)}</option>`).join("")}</select></div><button class="b" data-a="attr">Attribuer</button></div><h2>Créer un compte</h2><div class="fr"><div><label for="nn">Nom</label><input id="nn"></div><div><label for="ne">E-mail</label><input id="ne" type="email" autocomplete="off"></div><div><label for="np">Mot de passe (12 caractères min.)</label><input id="np" type="password" autocomplete="new-password"></div><div><label for="nr">Rôle</label><select id="nr"><option value="maire">Maire</option><option value="cabinet">Cabinet</option><option value="agent">Agent</option></select></div><div><label for="nc">Commune</label><select id="nc">${S.cs.map(c=>`<option value="${esc(c.slug)}">${esc(c.nom)}</option>`).join("")}</select></div><button class="b" data-a="mk">Créer le compte</button></div>`,
+dash:()=>{const d=D(),c=k=>d.req.filter(r=>r.st==k).length,p=d.posts.findIndex(x=>x.st=="valider"),ag=d.rdv.filter(r=>r.d>=T).sort(cmp).slice(0,4);
+return `<h1>Bonjour,<br>Monsieur le Maire</h1><div class="stats"><div><b>${c("Nouvelle")}</b><span>Nouvelles demandes</span></div><div><b>${c("En cours")}</b><span>En cours</span></div><div><b>${d.mail.filter(m=>m.st=="Urgent").length}</b><span>Courriers urgents</span></div></div>
+<div class="g2"><section><h2>À valider</h2>${p<0?'<p class="mut">Rien à valider pour le moment.</p>':`<div class="art">${esc(d.posts[p].t)}</div><p class="mut">${esc(d.posts[p].r)}, ${fd(d.posts[p].d)}</p>${mt(d.posts[p])}<button class="b" data-a="nextp" data-i="${p}">Valider</button>`}</section>
+<section><h2>Agenda</h2>${ag.map(r=>`<div class="row"><span class="sr">${esc(r.h)}</span><span>${esc(r.t)}</span></div>`).join("")||'<p class="mut">Aucun rendez-vous à venir.</p>'}</section></div>`},
+agenda:()=>`<h1>Agenda</h1><div class="fr"><div><label for="rd">Date</label><input id="rd" type="date" value="${T}"></div><div><label for="rh">Heure</label><input id="rh" type="time" value="09:00"></div><div><label for="rt">Rendez-vous</label><input id="rt" placeholder="Intitulé"></div><button class="b" data-a="addrdv">Ajouter</button></div>${D().rdv.map((r,i)=>[r,i]).sort((a,b)=>cmp(a[0],b[0])).map(([r,i])=>`<div class="row"><div><span class="sr">${esc(r.h)}</span> <span class="mut">${fd(r.d)}</span><div>${esc(r.t)}</div></div>${tag("Retirer","delrdv",i)}</div>`).join("")||'<p class="mut">Aucun rendez-vous. Ajoutez le premier ci-dessus.</p>'}`,
+mail:()=>`<h1>Courrier</h1><div class="top" style="justify-content:flex-start"><button class="tag${S.f=="in"?" f":""}" data-a="filt" data-f="in">Entrant</button><button class="tag${S.f=="out"?" f":""}" data-a="filt" data-f="out">Sortant</button></div><div class="fr"><div><label for="ms">Type</label><select id="ms"><option value="in">Entrant</option><option value="out">Sortant</option></select></div><div><label for="mf">Expéditeur ou destinataire</label><input id="mf"></div><div><label for="mo">Objet</label><input id="mo"></div><button class="b" data-a="addmail">Ajouter</button></div>${D().mail.map((m,i)=>[m,i]).filter(x=>x[0].s==S.f).map(([m,i])=>`<div class="row"><div><div class="sr">${esc(m.o)}</div><div class="mut">${esc(m.f)}</div></div>${tag(m.st,"cycm",i,m.st=="Urgent")}</div>`).join("")||'<p class="mut">Aucun courrier dans cette boîte.</p>'}`,
+req:()=>`<h1>Demandes citoyennes</h1>${D().req.map((r,i)=>`<div class="row"><div><div class="sr">${esc(r.t)}</div><div class="mut">${esc(r.n)}, ${esc(r.w)}</div><div>${esc(r.m)}</div></div>${tag(r.st,"cycr",i,r.st=="Nouvelle")}</div>`).join("")||'<p class="mut">Aucune demande reçue.</p>'}`,
+img:()=>`<h1>Image du Maire</h1><div class="fr"><div><label for="pr">Réseau</label><select id="pr"><option>Facebook</option><option>Instagram</option><option>TikTok</option><option>YouTube</option></select></div><div><label for="pd">Date</label><input id="pd" type="date" value="${T}"></div><div><label for="pm">Média joint</label><select id="pm"><option value="">Aucun</option>${D().med.map(m=>`<option value="${m.id}">${esc((m.ty=="photo"?"Photo : ":"Vidéo : ")+m.t)}</option>`).join("")}</select></div></div><label for="ps">Sujet (facultatif)</label><input id="ps" placeholder="Ex. inauguration du marché, hommage aux pêcheurs"><p><button class="b" data-a="ia">Générer 3 propositions avec l’IA</button></p><div id="iar"></div><label for="pt">Texte poétique</label><textarea id="pt" rows="3"></textarea><div class="fr"><button class="o" data-a="idea">Inspirer-moi</button><button class="b" data-a="addpost">Ajouter en brouillon</button></div>${D().posts.map((p,i)=>[p,i]).sort((a,b)=>cmp(a[0],b[0])).map(([p,i])=>`<div class="row"><div><div class="mut">${esc(p.r)}, ${fd(p.d)}</div>${mt(p)}<div class="sr"><i>${esc(p.t)}</i></div><div style="margin-top:8px"><button class="tag" data-a="copy" data-i="${i}">Copier</button> ${tag("Retirer","delp",i)}</div></div>${tag(PL[PS.indexOf(p.st)],"nextp",i,p.st=="valider")}</div>`).join("")||'<p class="mut">Aucune publication. Écrivez la première.</p>'}`};
+const login=()=>`<main class="login"><p class="cap">Espace de la mairie</p><h1>Connexion</h1>${S.err?`<p role="alert"><b>${esc(S.err)}</b></p>`:""}<div><label for="em">E-mail</label><input id="em" type="email" autocomplete="username"></div><div><label for="pw">Mot de passe</label><input id="pw" type="password" autocomplete="current-password"></div><div id="ts"></div><button class="b" data-a="enter" data-r="cab" data-m="in">Se connecter</button><p class="mut" style="font-size:13px">Les comptes sont créés par l’administrateur. Contactez-le si vous n’avez pas encore vos accès.</p></main>`;
+const pick=()=>`<main class="login"><p class="cap">Mairie connectée</p><h1>Choisissez<br><i>votre commune</i></h1>${S.cs.map((c,i)=>`<button class="o" data-a="pickco" data-i="${i}">${esc(c.nom)}</button>`).join("")}</main>`;
+const cab=()=>`<div class="sh"><nav class="nv" aria-label="Navigation"><div class="br"><div class="sr" style="font-size:28px">Mairie de ${esc(S.co)}</div><p class="cap" style="margin:4px 0 28px">Cabinet du Maire</p></div>${N.concat(S.sa?[["adm","Administration","Admin"]]:[]).map(n=>`<button class="${S.view==n[0]?"on":""}" data-a="go" data-v="${n[0]}"><span class="l">${n[1]}</span><span class="s">${n[2]}</span></button>`).join("")}</nav><main>${bar("Cabinet, "+esc(S.co),"Quitter")}${S.err?`<p role="alert"><b>${esc(S.err)}</b></p>`:""}${v[S.view]()}</main></div>`;
+const cit=()=>{const r=S.tr&&S.res?{t:S.res.type,st:RS[RC.indexOf(S.res.statut)]}:null,nw=S.pub;
+return `<div class="hero">${bar("Commune de "+esc(S.co),"Changer","chg")}<h1>Votre mairie,<br><i>plus proche de vous</i></h1><p>Démarches, rendez-vous et informations, à toute heure.</p></div><main class="cm">
+<div class="card"><label for="tk">Suivre ma demande</label><div class="top"><input id="tk" placeholder="Numéro de suivi" value="${esc(S.tr)}"><button class="b" data-a="track">Suivre</button></div>${S.tr?(r?`<p><b>${esc(r.t)}</b> : ${esc(r.st)}</p><div class="steps">${RS.map((x,i)=>`<i class="${i<=RS.indexOf(r.st)?"on":""}"></i>`).join("")}</div>`:'<p class="mut">Aucune demande avec ce numéro. Vérifiez-le et réessayez.</p>'):""}</div>
+<div class="card"><h2>Nouvelle demande</h2>${S.err?`<p role="alert"><b>${esc(S.err)}</b></p>`:""}${S.ok?`<p><b>Demande enregistrée.</b> Votre numéro de suivi : ${esc(S.ok)}</p>`:""}<div class="fr"><div><label for="qt">Type de demande</label><select id="qt"><option>État civil</option><option>Rendez-vous avec le Maire</option><option>Signalement</option><option>Autre demande</option></select></div><div><label for="qn">Votre nom</label><input id="qn"></div></div><label for="qm">Votre message</label><textarea id="qm" rows="4"></textarea><div id="ts"></div><p><button class="b" data-a="newreq">Envoyer ma demande</button></p></div>
+<h2>Actualités</h2>${nw.map(p=>`<div class="row"><div class="sr"><i>${esc(p.texte)}</i></div></div>`).join("")}${nw.length?"":'<p class="mut">Pas encore d’actualité publiée.</p>'}</main>`};
+function render(){$("#app").innerHTML=MODE=="cit"?(S.co?cit():pick()):(S.role=="cab"?cab():login());S.tok="";if($("#ts")&&window.turnstile&&!TS_KEY.startsWith("VOTRE"))try{turnstile.render("#ts",{sitekey:TS_KEY,language:"fr",callback:x=>{S.tok=x}})}catch(e){}}
+document.addEventListener("click",async e=>{const t=e.target.closest("[data-a]");if(!t)return;
+const a=t.dataset.a,i=+t.dataset.i,g=id=>(($("#"+id)||{}).value||"").trim(),d=D(),c=S.cid,run=async p=>{const r=await p;if(r.error)S.err=r.error.message;return r};
+if(a=="pickco"){const c=S.cs[i];S.co=c.nom;try{history.replaceState(null,"","?c="+c.slug);localStorage.setItem("mc_co",c.slug)}catch(x){}await load();render();window.scrollTo(0,0);return}
+if(a=="chg"){S.co="";S.tr="";S.ok="";S.res=null;try{history.replaceState(null,"",location.pathname);localStorage.removeItem("mc_co")}catch(x){}render();return}
+if(a=="ia"){const out=$("#iar");try{out.textContent="Écriture en cours…";t.disabled=true;const r=await sb.functions.invoke("ia-texte",{body:{commune:slug(),sujet:g("ps"),reseau:g("pr")}});t.disabled=false;
+if(r.error){let m="IA indisponible pour le moment.";try{m=(await r.error.context.json()).error||m}catch(x){}out.textContent=m;return}
+S.ia=r.data.textes||[];out.innerHTML=S.ia.map((x,i)=>`<div class="card"><i>${esc(x)}</i><p><button class="tag" data-a="useia" data-i="${i}">Utiliser ce texte</button></p></div>`).join("")}catch(x){t.disabled=false;if(out)out.textContent="IA indisponible pour le moment."}return}
+if(a=="useia"){$("#pt").value=(S.ia||[])[i]||"";return}
+if(a=="idea"){$("#pt").value=P[Math.floor(Math.random()*P.length)].replace("{c}",S.co);return}
+if(a=="copy"){try{navigator.clipboard.writeText(d.posts[i].t);t.textContent="Copié"}catch(x){}return}
+S.err="";
+try{
+if(a=="enter"){S.co=g("co")||S.co;S.tr="";S.ok="";S.res=null;
+if(t.dataset.r=="cit"){S.role="cit";S.view="home";await load()}
+else{const em=g("em"),pw=($("#pw")||{}).value||"",up=t.dataset.m=="up";
+if(!S.tok){S.err="Veuillez valider la vérification anti-spam, puis réessayer."}else{
+const r=up?await sb.auth.signUp({email:em,password:pw,options:{data:{commune:slug()},captchaToken:S.tok}}):await sb.auth.signInWithPassword({email:em,password:pw,options:{captchaToken:S.tok}});
+if(r.error)S.err=r.error.message;else if(up&&!r.data.session)S.err="Compte créé. Confirmez votre e-mail, puis connectez-vous.";else if(await profil())await load()}}}
+else if(a=="out"){await sb.auth.signOut();S.role=null;S.cid=null;S.sa=false;S.db=E0}
+else if(a=="go")S.view=t.dataset.v;
+else if(a=="filt")S.f=t.dataset.f;
+else if(a=="theme"){const h=document.documentElement,dk=h.dataset.theme?h.dataset.theme=="dark":matchMedia("(prefers-color-scheme:dark)").matches;h.dataset.theme=dk?"light":"dark"}
+else if(a=="track"){S.tr=g("tk").toUpperCase();S.ok="";S.res=((await run(sb.rpc("suivre_demande",{p_commune:slug(),p_numero:S.tr}))).data||[])[0]||null}
+else if(a=="newreq"){if(g("qn")&&g("qm")){
+if(TS_KEY.startsWith("VOTRE"))S.err="Protection anti-spam non configurée.";
+else if(!S.tok)S.err="Veuillez valider la vérification anti-spam, puis réessayer.";
+else{const ty=g("qt"),sg=await sb.auth.signInAnonymously({options:{captchaToken:S.tok}});
+if(sg.error)S.err="Vérification refusée. Réessayez.";
+else{const r=await sb.rpc("creer_demande",{p_commune:slug(),p_type:ty,p_nom:g("qn"),p_message:g("qm")});await sb.auth.signOut();
+if(r.error)S.err="Envoi impossible. Vérifiez les champs et réessayez.";else{S.tr=r.data;S.ok=r.data;S.res={type:ty,statut:"nouvelle"}}}}}}
+else if(a=="sw"){const c=S.cs[i];S.co=c.nom;S.cid=c.id;await load()}
+else if(a=="addcom"){const n=g("cn"),sl=n.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");if(n&&sl){await run(sb.from("communes").insert({slug:sl,nom:n}));await lc();await load()}}
+else if(a=="deluser"){const u=S.adm[i];if(u&&confirm("Supprimer définitivement le compte "+u.email+" ?")){if(await fn({action:"supprimer",id:u.id}))S.err="Compte supprimé.";await load()}}
+else if(a=="mk"){if(await fn({action:"creer",nom:g("nn"),email:g("ne"),password:($("#np")||{}).value||"",role:g("nr"),commune:g("nc")}))S.err="Compte créé. Communiquez-lui son mot de passe de façon sûre.";await load()}
+else if(a=="addphoto"){const f=($("#pf")||{}).files&&$("#pf").files[0],ti=g("pt2");if(f&&ti){const bl=await comp(f),pa=c+"/"+crypto.randomUUID()+"."+(bl.type=="image/webp"?"webp":"jpg"),up=await sb.storage.from("medias").upload(pa,bl,{contentType:bl.type});if(up.error)S.err="Envoi impossible : "+up.error.message;else{const r=await run(sb.from("medias").insert({commune_id:c,type:"photo",titre:ti,chemin:pa}));if(!r.error)S.err="Photo enregistrée : "+kb(f.size)+" réduits à "+kb(bl.size)+"."}}else S.err="Choisissez une photo et un titre.";await load()}
+else if(a=="addvideo"){if(g("vt")&&/^https:\/\//.test(g("vu")))await run(sb.from("medias").insert({commune_id:c,type:"video",titre:g("vt"),url:g("vu")}));else S.err="Indiquez un titre et un lien commençant par https://";await load()}
+else if(a=="delmed"){const m=d.med[i];if(m&&confirm("Retirer ce média ?")){if(m.ty=="photo")await sb.storage.from("medias").remove([m.p]);await run(sb.from("medias").delete().eq("id",m.id));await load()}}
+else if(a=="attr"){await run(sb.rpc("admin_attribuer",{p_email:g("ae"),p_role:g("ar"),p_slug:g("ac")}));await load()}
+else{
+if(a=="addrdv"){if(g("rt"))await run(sb.from("rdv").insert({commune_id:c,jour:g("rd")||T,heure:g("rh")||"09:00",titre:g("rt")}))}
+else if(a=="delrdv")await run(sb.from("rdv").delete().eq("id",d.rdv[i].id));
+else if(a=="addmail"){if(g("mo"))await run(sb.from("courrier").insert({commune_id:c,sens:g("ms"),correspondant:g("mf")||"Non précisé",objet:g("mo")}));S.f=g("ms")||S.f}
+else if(a=="cycm"){const m=d.mail[i];await run(sb.from("courrier").update({statut:MC[(MS.indexOf(m.st)+1)%MS.length]}).eq("id",m.id))}
+else if(a=="cycr"){const m=d.req[i];await run(sb.from("demandes").update({statut:RC[(RS.indexOf(m.st)+1)%RS.length]}).eq("id",m.id))}
+else if(a=="addpost"){if(g("pt"))await run(sb.from("publications").insert({commune_id:c,reseau:g("pr"),jour:g("pd")||T,texte:g("pt"),media_id:g("pm")||null}))}
+else if(a=="nextp"){const p=d.posts[i],k=PS.indexOf(p.st);if(k<3)await run(sb.from("publications").update({statut:PS[k+1]}).eq("id",p.id))}
+else if(a=="delp")await run(sb.from("publications").delete().eq("id",d.posts[i].id));
+await load()}
+}catch(x){S.err="Erreur réseau. Réessayez."}
+render();window.scrollTo(0,0)});
+(async()=>{try{await lc();
+if(MODE=="cit"){let sl=new URLSearchParams(location.search).get("c");try{sl=sl||localStorage.getItem("mc_co")}catch(e){}const c=S.cs.find(x=>x.slug==sl);if(c){S.co=c.nom;await load()}}
+else{const x=(await sb.auth.getSession()).data.session;if(x&&await profil())await load()}}catch(e){}render()})();
+</script></body></html>
