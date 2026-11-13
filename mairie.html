@@ -132,7 +132,7 @@ async function profil(){
 const u=(await sb.auth.getUser()).data.user;if(!u)return false;S.uid=u.id;S.email=u.email||"";
 const p=(await sb.from("profiles").select("role,commune_id").eq("id",u.id).maybeSingle()).data;await lcm();
 if(!p||!AL.concat("super_admin").includes(p.role)){S.err="Ce compte n’a pas encore d’accès à l’espace mairie. Contactez l’administrateur.";await sb.auth.signOut();return false}
-const c=S.cs.find(x=>x.id==p.commune_id)||(p.role=="super_admin"?S.cs[0]:null);if(!c){S.err="Aucune commune n’est associée à ce compte. Contactez l’administrateur.";await sb.auth.signOut();return false}S.sa=p.role=="super_admin";S.pr=p.role;S.co=c?c.nom:"";S.cid=c?c.id:null;S.role="cab";S.view=p.role=="adjoint"?"a_dash":p.role=="secretariat"?"s_dash":"dash";S.menu=false;return true}
+const c=S.cs.find(x=>x.id==p.commune_id)||(p.role=="super_admin"?S.cs[0]:null);if(!c){S.err="Aucune commune n’est associée à ce compte. Contactez l’administrateur.";await sb.auth.signOut();return false}S.sa=p.role=="super_admin";S.pr=p.role;S.co=c?c.nom:"";S.cid=c?c.id:null;S.role="cab";S.view=p.role=="adjoint"?"a_dash":p.role=="secretariat"?"s_dash":"dash";S.menu=false;LOGIN_AT=Date.now();return true}
 async function load(){
 if(S.role!="cab"||!S.cid)return;
 if(S.sa){const ad=await sb.rpc("admin_utilisateurs");if(ad.error)S.err="Liste des comptes indisponible : "+ad.error.message;else S.adm=ad.data||[]}
@@ -416,7 +416,7 @@ S.ia=r.data.textes||[];out.innerHTML=S.ia.map((x,k)=>`<div class="pn" style="pad
 S.err="";
 try{
 if(a=="enter"){if(!S.tok)S.err="Veuillez valider la vérification anti-spam, puis réessayer.";else{const r=await sb.auth.signInWithPassword({email:g("em"),password:($("#pw")||{}).value||"",options:{captchaToken:S.tok}});if(r.error)S.err=r.error.message;else if(await profil())await load()}}
-else if(a=="out"){S.role=null;S.cid=null;S.sa=false;S.db=E0;S.ind={};await sb.auth.signOut()}
+else if(a=="out"){S.role=null;S.cid=null;S.uid=null;S.sa=false;S.db=E0;S.ind={};await sb.auth.signOut()}
 else if(a=="menu")S.menu=!S.menu;
 else if(a=="go"){S.view=t.dataset.v;S.menu=false}
 else if(a=="tab")S.tab[t.dataset.g]=t.dataset.v;
@@ -547,7 +547,12 @@ await load()}
 }catch(x){S.err=x&&x.message&&!/fetch|network|Failed/i.test(x.message)?x.message:"Erreur réseau. Réessayez."}
 render();if(a!="menu")window.scrollTo(0,0)});
 document.addEventListener("change",async e=>{const t=e.target.closest("[data-ch]");if(!t)return;const p=D().proj[+t.dataset.i];if(t.dataset.ch=="avc"&&p){const v=Math.max(0,Math.min(100,+t.value||0));S.err="";await run(sb.from("projets").update({avancement:v,statut:v>=100?"termine":p.statut=="termine"?"en_cours":p.statut}).eq("id",p.id));await load();render()}});
-sb.auth.onAuthStateChange((ev,ses)=>{if(S.role=="cab"&&(ev=="SIGNED_OUT"||(ses&&S.uid&&ses.user.id!==S.uid))){S.role=null;S.cid=null;S.sa=false;S.err="Votre session a changé (autre onglet ou autre compte). Reconnectez-vous.";render()}});
+let LOGIN_AT=0;
+sb.auth.onAuthStateChange((ev,ses)=>{
+if(S.role!="cab"||Date.now()-LOGIN_AT<5000)return;
+if(ev=="SIGNED_OUT"||(ses&&S.uid&&ses.user.id!==S.uid)){
+setTimeout(async()=>{try{const x=(await sb.auth.getSession()).data.session;
+if(!x||x.user.id!==S.uid){S.role=null;S.cid=null;S.sa=false;S.uid=null;S.err="Votre session a expiré ou a changé ("+ev+"). Reconnectez-vous.";render()}}catch(e){}},0)}});
 setInterval(()=>{const e=$(".dc div");if(e)e.innerHTML=dt()},30000);
 (async()=>{try{await lcm();const x=(await sb.auth.getSession()).data.session;if(x&&await profil())await load()}catch(e){}render()})();
 </script></body></html>
