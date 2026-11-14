@@ -1,19 +1,14 @@
 <!doctype html>
 <html lang="fr" data-mode="cab"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="manifest" href="/manifest-mairie.webmanifest"><meta name="theme-color" content="#073A1E"><link rel="icon" type="image/png" href="/icon-mairie-192.png"><link rel="apple-touch-icon" href="/icon-mairie-192.png"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><script>window.tsReady=function(){};</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><script src="/js/pwa-init.js"></script>
+<link rel="manifest" href="/manifest-mairie.webmanifest"><meta name="theme-color" content="#073A1E"><link rel="icon" type="image/png" href="/icon-mairie-192.png"><link rel="apple-touch-icon" href="/icon-mairie-192.png"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="robots" content="noindex,nofollow">
 <title>Espace mairie</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&family=Dancing+Script:wght@600&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link rel="stylesheet" href="/css/mairie.css?v=1794653822"></head><body><div id="app"></div><div id="prt"></div>
-<script>
-(function(){var show=function(m){var a=document.getElementById("app");if(a&&!a.children.length)a.innerHTML='<p style="padding:28px;font:15px/1.5 sans-serif">Le chargement a échoué.<br><b>'+String(m).replace(/[<>&]/g,"")+'</b></p>'};
-addEventListener("error",function(e){show(e.message||("Ressource bloquée : "+(e.target&&(e.target.src||e.target.href))))},true);
-addEventListener("securitypolicyviolation",function(e){show("CSP : "+e.blockedURI)});
-setTimeout(function(){if(typeof supabase==="undefined")show("Bibliothèque Supabase introuvable")},4000)})();
-</script>
+<link rel="stylesheet" href="/css/mairie.css?v=1794657023"></head><body><div id="app"></div><div id="prt"></div>
+<script src="/js/guard.js?v=1794657023"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=tsReady" async defer></script>
-<script src="/js/core.js?v=1794653822"></script><script src="/js/adjoints.js?v=1794653822"></script><script src="/js/secretariat.js?v=1794653822"></script><script src="/js/actions.js?v=1794653822"></script><script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){})})</script></body></html> 
+<script src="/js/core.js?v=1794657023"></script><script src="/js/adjoints.js?v=1794657023"></script><script src="/js/secretariat.js?v=1794657023"></script><script src="/js/actions.js?v=1794657023"></script></body></html>
