@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="fr" data-mode="cit"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="/manifest-citoyen.webmanifest"><meta name="theme-color" content="#0B5A2E"><link rel="icon" type="image/png" href="/icon-citoyen-192.png"><link rel="apple-touch-icon" href="/icon-citoyen-192.png"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><script>window.tsReady=function(){};</script>
 <title>Mairie Connectée</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap">
 <style>
@@ -109,4 +110,4 @@ else if(a=="open"||a=="track"){const n=a=="open"?t.dataset.n:(($("#tk")||{}).val
 render();window.scrollTo(0,0)});
 document.addEventListener("input",e=>{if(e.target.id=="q"){S.q=e.target.value;const tl=$("#tl");if(tl)tl.innerHTML=tiles()}});
 (async()=>{try{S.cs=(await sb.from("communes").select("id,slug,nom").order("nom")).data||[];let sl=new URLSearchParams(location.search).get("c");try{sl=sl||localStorage.getItem("mc_co")}catch(e){}const c=S.cs.find(x=>x.slug==sl);if(c)await choose(c)}catch(e){}render()})(); 
-</script></body></html>
+</script><script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){})})</script></body></html>
