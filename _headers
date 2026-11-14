@@ -1,8 +1,14 @@
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src https://fonts.gstatic.com; connect-src https://aiqegpijisspankpkwfj.supabase.co wss://aiqegpijisspankpkwfj.supabase.co https://challenges.cloudflare.com; img-src 'self' data: blob: https://aiqegpijisspankpkwfj.supabase.co https://server.arcgisonline.com https://cdnjs.cloudflare.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://challenges.cloudflare.com; worker-src 'self'; manifest-src 'self'; frame-src https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src https://fonts.gstatic.com; connect-src https://aiqegpijisspankpkwfj.supabase.co wss://aiqegpijisspankpkwfj.supabase.co https://challenges.cloudflare.com; img-src 'self' data: blob: https://aiqegpijisspankpkwfj.supabase.co https://server.arcgisonline.com https://cdnjs.cloudflare.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   Permissions-Policy: camera=(), microphone=(), geolocation=(self)
 /mairie*
   X-Robots-Tag: noindex, nofollow
+/sw.js
+  Cache-Control: no-cache
+/js/*
+  Cache-Control: no-cache
+/css/*
+  Cache-Control: no-cache
