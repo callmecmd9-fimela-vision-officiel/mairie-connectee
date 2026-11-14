@@ -3,7 +3,7 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Strict-Transport-Security: max-age=31536000; includeSubDomains
-  Permissions-Policy: camera=(), microphone=(), geolocation=(self)
+  Permissions-Policy: camera=(self), microphone=(), geolocation=(self)
 /mairie*
   X-Robots-Tag: noindex, nofollow
 /sw.js
