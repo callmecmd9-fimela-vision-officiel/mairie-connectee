@@ -1,4 +1,12 @@
 /* actions */
+const TBA=(()=>{const o={},s=(t,l)=>l.split(" ").forEach(k=>o[k]=t);
+s(["adjoints"],"adjsave adjphoto adjlink adjoff");s(["delegations"],"delsave delacte delval delend deldl");s(["projets"],"pjassign pjsuivi addproj cycp delproj");
+s(["reunions","reunion_participants"],"rusave rudel ruconv");s(["reunions"],"rucr");s(["instructions"],"insave inrep incl sinsave sinaff sinst sinobs sinrel");
+s(["rapports"],"rpsave rpobs rparch");s(["messages"],"mssend msopen");s(["notifications"],"ntall ntgo");
+s(["courrier"],"cinsave cinaff cinadj cintrm cinst cinobs cosave costatut coatt coenv codel addmail cycm");s(["actes"],"acsave acst acsign acpreuve actrans acdel");
+s(["sessions_conseil"],"sesave secv sedoc sepv setrans sesuites sest");s(["session_presences"],"sepres");s(["deliberations"],"sedel sedtr adddel cycd deldel");
+s(["conseillers"],"cnsave cnoff");s(["services"],"svsave svdel");s(["dossiers"],"dosave dost dosdoc dosobs");s(["documents"],"arsave arst");
+s(["rdv"],"addrdv delrdv");s(["publications"],"addpost nextp delp");s(["medias","publications"],"addphoto addvideo delmed");s(["finances"],"addfin delfin");s(["indicateurs"],"saveind upimg");return o})();
 document.addEventListener("click",async e=>{const t=e.target.closest("[data-a]");if(!t)return;
 const a=t.dataset.a,i=+t.dataset.i,g=id=>(($("#"+id)||{}).value||"").trim(),d=D(),c=S.cid,n=id=>+g(id)||0;
 if(a=="idea"){$("#pt").value=P[Math.floor(Math.random()*P.length)].replace("{c}",S.co);return}
@@ -23,7 +31,7 @@ else if(a=="addcom"){const nmv=g("cn"),sl=nmv.normalize("NFD").replace(/[\u0300-
 else if(a=="opend"){S.dd=d.req[i].id;await openD()}
 else if(a=="cld"){S.dd=null}
 else if(a=="dact"){const r=d.req.find(x=>x.id==S.dd);if(r){const u={};if(t.dataset.s)u.statut=t.dataset.s;if(t.dataset.o)u.service=g("dsv");if(t.dataset.r)u.reponse=g("drp")||null;
-if((u.statut=="traitee"||u.statut=="redirigee")&&!u.reponse)S.err="Rédigez d’abord la réponse destinée au citoyen.";else{await run(sb.from("demandes").update(u).eq("id",r.id));await load();await openD()}}}
+if((u.statut=="traitee"||u.statut=="redirigee")&&!u.reponse)S.err="Rédigez d’abord la réponse destinée au citoyen.";else{await run(sb.from("demandes").update(u).eq("id",r.id));await load(["demandes"]);await openD()}}}
 else if(UIB.includes(a)){
 if(a=="sopen"){S.sel[t.dataset.k]=t.dataset.id||null;S.hk=null}
 else if(a=="gos"){const v=t.dataset.v;if(t.dataset.r){printTab(REP[t.dataset.r]());return}if(isS())S.view=v;else{S.view="s_sec";S.tab.secretariat=SMAP[v]||"sdash"}S.menu=false}
@@ -78,7 +86,7 @@ else if(a=="dosobs"){await upd("dossiers",{observations:g("d_o2")||null},sx.dos)
 else if(a=="arsave"){const e=S.ed&&S.ed.e=="dc",f=($("#ar_fi")||{}).files&&$("#ar_fi").files[0],ti=g("ar_ti");if(!f||!ti)S.err="Choisissez un fichier et indiquez un titre.";else{const cf=g("ar_cf"),u=await upa("ar_fi",cf=="confidentiel"?"confidentiel":"documents"),o={commune_id:c,titre:ti,annee:n("ar_an")||Y,service:g("ar_sv")||null,categorie:g("ar_ca")||null,type_doc:g("ar_ty")||null,confidentialite:cf,chemin:u.p,mime:u.mime,taille:u.size,conservation_ans:g("ar_cs")===""?null:n("ar_cs")};if(e){const root=S.ed.r.parent_id||S.ed.r.id,mx=Math.max.apply(null,d.dc.filter(x=>x.id==root||x.parent_id==root).map(x=>x.version));o.reference=S.ed.r.reference;o.parent_id=root;o.version=mx+1}const r=await run(sb.from("documents").insert(o));if(!r.error){S.ed={};S.err=e?"Nouvelle version enregistrée.":"Document archivé."}}}
 else if(a=="arst"){await upd("documents",{statut:"archive"},id)}
 else if(a=="ruconv"){await run(sb.rpc("convoquer_reunion",{p_id:S.rd}));if(!S.err)S.err="Convocations envoyées."}
-await load()}
+await load(TBA[a])}
 else if(UIA.includes(a)){
 if(a=="adjv"){S.adjv=t.dataset.id||null;if(S.adjv){S.view="s_adj";S.tab.adjoints="adjlist"}}
 else if(a=="edit"){S.ed={e:t.dataset.e,r:d[t.dataset.e].find(x=>x.id==t.dataset.id)}}
@@ -115,7 +123,7 @@ else if(a=="mssend"){const o={sujet:g("m_su"),corps:g("m_co"),a:g("m_to")||null,
 else if(a=="msopen"){S.mo=S.mo==id?null:id;const m=d.ms.find(x=>x.id==id);if(m&&m.a==S.uid&&!m.lu)await run(sb.from("messages").update({lu:true}).eq("id",id))}
 else if(a=="ntall"){await run(sb.from("notifications").update({lu:true}).eq("user_id",S.uid).eq("lu",false))}
 else if(a=="ntgo"){await run(sb.from("notifications").update({lu:true}).eq("id",id));const M2={instr:["a_instr","instr"],rapp:["a_rapp","rapp"],reun:["a_reun","reun"],deleg:["a_deleg","deleg"],msg:["a_msg","msg"]}[t.dataset.l];const L2=t.dataset.l||"";if(L2.startsWith("s_")){if(isS())S.view=L2;else if(isM()){S.view="s_sec";S.tab.secretariat=SMAP[L2]||"sdash"}}else if(M2){if(isA())S.view=M2[0];else if(!isS()){S.view="s_adj";S.tab.adjoints=M2[1]}}}
-await load()}
+await load(TBA[a])}
 else if(a=="deluser"){const u=S.adm[i];if(u&&confirm("Supprimer définitivement le compte "+u.email+" ?")){const r=await sb.functions.invoke("admin-comptes",{body:{action:"supprimer",id:u.id}});if(r.error){try{S.err=(await r.error.context.json()).error}catch(x){S.err="Action impossible."}}else S.err="Compte supprimé.";await load()}}
 else if(a=="mk"){const r=await sb.functions.invoke("admin-comptes",{body:{action:"creer",nom:g("nn"),email:g("ne"),password:($("#np")||{}).value||"",role:g("nr"),commune:g("nc")}});if(r.error){try{S.err=(await r.error.context.json()).error}catch(x){S.err="Action impossible."}}else S.err="Compte créé. Communiquez-lui son mot de passe de façon sûre.";await load()}
 else{
@@ -140,10 +148,10 @@ else if(a=="cycp"){const p=d.proj[i],s2=PST[(PST.indexOf(p.statut)+1)%3];await r
 else if(a=="delproj"){if(confirm("Retirer ce projet ?"))await run(sb.from("projets").delete().eq("id",d.proj[i].id))}
 else if(a=="saveind"){const la=g("pla").replace(",","."),lo=g("plo").replace(",",".");await run(sb.from("indicateurs").upsert({commune_id:c,population:n("pp"),croissance:+g("pg")||0,villages:n("pv"),menages:n("pm"),agents:n("pa"),budget_annuel:n("pb"),slogan:g("psl")||null,devise:g("pdv")||null,contact_tel:g("ptl")||null,contact_adresse:g("pad")||null,centre_lat:la&&!isNaN(la)?+la:null,centre_lng:lo&&!isNaN(lo)?+lo:null,zoom:n("pz")||11}));if(!S.err)S.err="Paramètres enregistrés."}
 else if(a=="upimg"){const k=t.dataset.k,f=($("#"+t.dataset.f)||{}).files&&$("#"+t.dataset.f).files[0];if(f){const bl=await comp(f,k=="blason"?600:1600,k=="blason"?150000:400000),pa=c+"/"+k+"-"+crypto.randomUUID()+"."+(bl.type=="image/webp"?"webp":"jpg"),up=await sb.storage.from("medias").upload(pa,bl,{contentType:bl.type});if(up.error)S.err="Envoi impossible : "+up.error.message;else{if(S.ind[k])await sb.storage.from("medias").remove([S.ind[k]]);const o={commune_id:c};o[k]=pa;await run(sb.from("indicateurs").upsert(o));if(!S.err)S.err="Image enregistrée ("+kb(bl.size)+")."}}else S.err="Choisissez d’abord une image."}
-await load()}
+await load(TBA[a])}
 }catch(x){S.err=x&&x.message&&!/fetch|network|Failed/i.test(x.message)?x.message:"Erreur réseau. Réessayez."}
 render();if(a!="menu")window.scrollTo(0,0)});
-document.addEventListener("change",async e=>{const t=e.target.closest("[data-ch]");if(!t)return;const p=D().proj[+t.dataset.i];if(t.dataset.ch=="avc"&&p){const v=Math.max(0,Math.min(100,+t.value||0));S.err="";await run(sb.from("projets").update({avancement:v,statut:v>=100?"termine":p.statut=="termine"?"en_cours":p.statut}).eq("id",p.id));await load();render()}});
+document.addEventListener("change",async e=>{const t=e.target.closest("[data-ch]");if(!t)return;const p=D().proj[+t.dataset.i];if(t.dataset.ch=="avc"&&p){const v=Math.max(0,Math.min(100,+t.value||0));S.err="";await run(sb.from("projets").update({avancement:v,statut:v>=100?"termine":p.statut=="termine"?"en_cours":p.statut}).eq("id",p.id));await load(["projets"]);render()}});
 let LOGIN_AT=0;
 sb.auth.onAuthStateChange((ev,ses)=>{
 if(S.role!="cab"||Date.now()-LOGIN_AT<5000)return;

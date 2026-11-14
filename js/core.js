@@ -37,34 +37,57 @@ const IC={home:'<path d="M3 11l9-8 9 8v10h-6v-6H9v6H3z"/>',user:'<circle cx="12"
 const ic=(n,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${IC[n]||""}</svg>`;
 async function lcm(){S.cs=(await sb.from("communes").select("id,slug,nom").order("nom")).data||S.cs}
 async function profil(){
-const u=(await sb.auth.getUser()).data.user;if(!u){S.err="Connexion impossible : session introuvable. R\u00e9essayez.";return false}S.uid=u.id;S.email=u.email||"";
+const u=(await sb.auth.getUser()).data.user;if(!u){S.err="Connexion impossible : session introuvable. R\u00e9essayez.";return false}Object.keys(SGN).forEach(k=>delete SGN[k]);S.uid=u.id;S.email=u.email||"";
 const p=(await sb.from("profiles").select("role,commune_id").eq("id",u.id).maybeSingle()).data;await lcm();
 if(!p||!AL.concat("super_admin").includes(p.role)){S.err="Ce compte n\u2019a pas encore d\u2019acc\u00e8s \u00e0 l\u2019espace mairie. Contactez l\u2019administrateur.";await sb.auth.signOut();return false}
 const c=S.cs.find(x=>x.id==p.commune_id)||(p.role=="super_admin"?S.cs[0]:null);if(!c){S.err="Aucune commune n\u2019est associ\u00e9e \u00e0 ce compte. Contactez l\u2019administrateur.";await sb.auth.signOut();return false}await loadSys(c.id);if(((S.sys.maintenance||{}).actif&&p.role!="super_admin")||(p.role=="adjoint"&&S.mod.portail_adjoint===false)||(p.role=="secretariat"&&S.mod.portail_secretariat===false)){S.err=(S.sys.maintenance||{}).actif?((S.sys.maintenance||{}).message||"L\u2019application est en maintenance. R\u00e9essayez plus tard."):"Ce module est d\u00e9sactiv\u00e9 par l\u2019administrateur.";await sb.auth.signOut();return false}S.sa=p.role=="super_admin";S.pr=p.role;S.co=c?c.nom:"";S.cid=c?c.id:null;S.role="cab";S.view=p.role=="super_admin"?"sa_dash":p.role=="adjoint"?"a_dash":p.role=="secretariat"?"s_dash":"dash";S.menu=false;LOGIN_AT=Date.now();return true}
-async function load(){
+const SGN={};
+async function sign(bk,paths){const now=Date.now(),k=p=>bk+"|"+p,need=[...new Set(paths)].filter(p=>!(SGN[k(p)]&&SGN[k(p)].t>now));
+for(let i=0;i<need.length;i+=100){const r=(await sb.storage.from(bk).createSignedUrls(need.slice(i,i+100),3600)).data||[];r.forEach(x=>{if(x.signedUrl)SGN[k(x.path)]={u:x.signedUrl,t:now+3300000}})}
+const o={};paths.forEach(p=>{const c=SGN[k(p)];if(c)o[p]=c.u});return o}
+const LQ=t=>sb.from(t).select("*").eq("commune_id",S.cid),DE={ascending:false},AS_=(t,o)=>()=>LQ(t).order(o,DE),SL_=(t,k)=>[()=>sb.from(t).select("*"),r=>{S.db[k]=r||[]}];
+const LG={
+rdv:[()=>LQ("rdv").order("jour").order("heure"),r=>{S.db.rdv=(r||[]).map(x=>({id:x.id,d:x.jour,h:x.heure.slice(0,5),t:x.titre}))}],
+courrier:[AS_("courrier","created_at"),r=>{r=r||[];S.db.cr=r;S.db.mail=r.map(x=>({id:x.id,s:x.sens,f:x.correspondant,o:x.objet,st:MS[MC.indexOf(x.statut)]||CSL[x.statut]||x.statut}))}],
+demandes:[AS_("demandes","created_at"),r=>{S.db.req=(r||[]).map(x=>({id:x.id,n:x.numero,t:x.type,w:x.nom,m:x.message,st:RS[RC.indexOf(x.statut)],c:x.created_at,o:x.objet,ct:x.contact,sv:x.service,rp:x.reponse,pc:x.pieces||[]}))}],
+publications:[()=>LQ("publications").order("jour"),r=>{S.db.posts=(r||[]).map(x=>({id:x.id,r:x.reseau,d:x.jour,t:x.texte,st:x.statut,m:x.media_id}))}],
+medias:[AS_("medias","created_at"),r=>{S.db.med=(r||[]).map(x=>({id:x.id,ty:x.type,t:x.titre,p:x.chemin,u:x.url,src:""}))}],
+projets:[AS_("projets","created_at"),r=>{S.db.proj=r||[]}],
+finances:[()=>LQ("finances").eq("annee",Y).order("mois"),r=>{S.db.fin=r||[]}],
+deliberations:[AS_("deliberations","jour"),r=>{S.db.del=r||[]}],
+indicateurs:[()=>sb.from("indicateurs").select("*").eq("commune_id",S.cid).maybeSingle(),r=>{S.ind=r||{}}],
+adjoints:[()=>LQ("adjoints").order("rang"),r=>{S.db.adj=r||[]}],
+delegations:[AS_("delegations","created_at"),r=>{S.db.dl=r||[]}],
+reunions:[()=>LQ("reunions").order("jour").order("heure"),r=>{S.db.ru=r||[]}],
+reunion_participants:SL_("reunion_participants","rpa"),
+instructions:[AS_("instructions","created_at"),r=>{S.db.ins=r||[]}],
+rapports:[AS_("rapports","created_at"),r=>{S.db.rap=r||[]}],
+messages:[()=>sb.from("messages").select("*").order("created_at",DE).limit(100),r=>{S.db.ms=r||[]}],
+notifications:[()=>sb.from("notifications").select("*").order("created_at",DE).limit(60),r=>{S.db.nt=r||[]}],
+annuaire:[()=>sb.rpc("annuaire"),r=>{S.db.an=r||[]}],
+actes:[AS_("actes","created_at"),r=>{S.db.act=r||[]}],
+dossiers:[AS_("dossiers","created_at"),r=>{S.db.dos=r||[]}],
+services:[()=>LQ("services").order("nom"),r=>{S.db.sv=r||[]}],
+conseillers:[()=>LQ("conseillers").order("nom"),r=>{S.db.cn=r||[]}],
+sessions_conseil:[AS_("sessions_conseil","jour"),r=>{S.db.se=r||[]}],
+session_presences:SL_("session_presences","pr"),
+documents:[()=>LQ("documents").order("created_at",DE).limit(500),r=>{S.db.dc=r||[]}],
+ops_historique:[()=>sb.from("ops_historique").select("*").order("created_at",DE).limit(12),r=>{S.db.op=r||[]}]};
+/* load() = tout recharger ; load(["projets"]) = seulement ces tables (+ notifications et historique) */
+async function load(only){
 if(S.role!="cab"||!S.cid)return;
-if(S.sa)await saLoad();
-const q=t=>sb.from(t).select("*").eq("commune_id",S.cid);
-const R=await Promise.all([q("rdv").order("jour").order("heure"),q("courrier").order("created_at",{ascending:false}),q("demandes").order("created_at",{ascending:false}),q("publications").order("jour"),q("medias").order("created_at",{ascending:false}),q("projets").order("created_at",{ascending:false}),q("finances").eq("annee",Y).order("mois"),q("deliberations").order("jour",{ascending:false}),sb.from("indicateurs").select("*").eq("commune_id",S.cid).maybeSingle()]);
+const ks=only?[...new Set(only.concat(["notifications","ops_historique"]))].filter(k=>LG[k]):Object.keys(LG);
+if(!only&&S.sa)await saLoad();
+const R=await Promise.all(ks.map(k=>LG[k][0]()));
 const er=R.find(x=>x.error);if(er){S.err="Chargement impossible : "+er.error.message+". Reconnectez-vous si le probl\u00e8me persiste.";return}
-const I=R[8].data||{};S.ind=I;
-const paths=(R[4].data||[]).filter(x=>x.type=="photo").map(x=>x.chemin).concat([I.blason,I.photo_maire,I.bandeau].filter(Boolean));
-S.urls={};if(paths.length)((await sb.storage.from("medias").createSignedUrls(paths,3600)).data||[]).forEach(x=>{S.urls[x.path]=x.signedUrl});
-S.db={rdv:(R[0].data||[]).map(x=>({id:x.id,d:x.jour,h:x.heure.slice(0,5),t:x.titre})),
-mail:(R[1].data||[]).map(x=>({id:x.id,s:x.sens,f:x.correspondant,o:x.objet,st:MS[MC.indexOf(x.statut)]||CSL[x.statut]||x.statut})),
-req:(R[2].data||[]).map(x=>({id:x.id,n:x.numero,t:x.type,w:x.nom,m:x.message,st:RS[RC.indexOf(x.statut)],c:x.created_at,o:x.objet,ct:x.contact,sv:x.service,rp:x.reponse,pc:x.pieces||[]})),
-posts:(R[3].data||[]).map(x=>({id:x.id,r:x.reseau,d:x.jour,t:x.texte,st:x.statut,m:x.media_id})),
-med:(R[4].data||[]).map(x=>({id:x.id,ty:x.type,t:x.titre,p:x.chemin,u:x.url,src:S.urls[x.chemin]||""})),
-proj:R[5].data||[],fin:R[6].data||[],del:R[7].data||[]};
-const R2=await Promise.all([q("adjoints").order("rang"),q("delegations").order("created_at",{ascending:false}),q("reunions").order("jour").order("heure"),sb.from("reunion_participants").select("*"),q("instructions").order("created_at",{ascending:false}),q("rapports").order("created_at",{ascending:false}),sb.from("messages").select("*").order("created_at",{ascending:false}).limit(100),sb.from("notifications").select("*").order("created_at",{ascending:false}).limit(60),sb.rpc("annuaire")]);
-const er2=R2.find(x=>x.error);if(er2){S.err="Chargement impossible : "+er2.error.message;return}
-Object.assign(S.db,{adj:R2[0].data||[],dl:R2[1].data||[],ru:R2[2].data||[],rpa:R2[3].data||[],ins:R2[4].data||[],rap:R2[5].data||[],ms:R2[6].data||[],nt:R2[7].data||[],an:R2[8].data||[]});
-S.mine=(S.db.adj.find(a=>a.user_id==S.uid)||{}).id||null;
-const ap=[].concat(S.db.adj.map(a=>a.photo),S.db.dl.map(x=>x.acte),S.db.ins.flatMap(x=>x.pieces||[]),S.db.rap.flatMap(x=>(x.photos||[]).concat(x.docs||[])),S.db.proj.flatMap(x=>(x.photos||[]).concat(x.docs||[])),S.db.ru.flatMap(x=>x.docs||[])).filter(Boolean);
-S.au={};if(ap.length)((await sb.storage.from("adjoints").createSignedUrls(ap.slice(0,200),3600)).data||[]).forEach(x=>{if(x.signedUrl)S.au[x.path]=x.signedUrl});
-const R3=await Promise.all([q("actes").order("created_at",{ascending:false}),q("dossiers").order("created_at",{ascending:false}),q("services").order("nom"),q("conseillers").order("nom"),q("sessions_conseil").order("jour",{ascending:false}),sb.from("session_presences").select("*"),q("documents").order("created_at",{ascending:false}).limit(500),sb.from("ops_historique").select("*").order("created_at",{ascending:false}).limit(12)]);
-const er3=R3.find(x=>x.error);if(er3){S.err="Chargement impossible : "+er3.error.message;return}
-Object.assign(S.db,{act:R3[0].data||[],dos:R3[1].data||[],sv:R3[2].data||[],cn:R3[3].data||[],se:R3[4].data||[],pr:R3[5].data||[],dc:R3[6].data||[],op:R3[7].data||[],cr:R[1].data||[]})}
+if(S.db===E0)S.db=Object.assign({},E0);
+ks.forEach((k,i)=>LG[k][1](R[i].data));
+const d=D(),I=S.ind;
+S.mine=(d.adj.find(a=>a.user_id==S.uid)||{}).id||null;
+const mp=d.med.filter(x=>x.ty=="photo").map(x=>x.p).concat([I.blason,I.photo_maire,I.bandeau].filter(Boolean)),
+ap=[].concat(d.adj.map(a=>a.photo),d.dl.map(x=>x.acte),d.ins.flatMap(x=>x.pieces||[]),d.rap.flatMap(x=>(x.photos||[]).concat(x.docs||[])),d.proj.flatMap(x=>(x.photos||[]).concat(x.docs||[])),d.ru.flatMap(x=>x.docs||[])).filter(Boolean);
+const U=await Promise.all([sign("medias",mp),sign("adjoints",ap)]);S.urls=U[0];S.au=U[1];
+d.med.forEach(m=>{m.src=S.urls[m.p]||""})}
 const comp=async(f,mx=1920,tg=450000)=>{const im=await createImageBitmap(f);let k=Math.min(1,mx/Math.max(im.width,im.height)),q=.82,b;
 for(let n=0;n<6;n++){const c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);
 b=await new Promise(r=>c.toBlob(r,"image/webp",q));if(b.type!="image/webp")b=await new Promise(r=>c.toBlob(r,"image/jpeg",q));
