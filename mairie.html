@@ -109,7 +109,7 @@ const MOIS=["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Août","Sep","Oct","No
 const P=["Au rythme des pirogues, {c} s’éveille…","{c}, terre de sel et de lumière, où chaque marée raconte nos racines.","Entre mangrove et horizon, {c} tisse son avenir avec patience et fierté.","Le soleil se couche sur {c} ; demain, nous bâtirons encore.","Chaque main tendue à {c} est une promesse tenue."];
 const E0={rdv:[],mail:[],req:[],posts:[],med:[],proj:[],fin:[],del:[],adj:[],dl:[],ru:[],rpa:[],ins:[],rap:[],ms:[],nt:[],an:[],act:[],dos:[],sv:[],cn:[],se:[],pr:[],dc:[],op:[],cr:[]};
 let S={cs:[],sa:false,adm:[],co:"",role:null,pr:"",view:"dash",f:"in",tab:{cab:"agenda",com:"pub"},dd:null,dh:[],dp:[],sel:{},fl:{},dch:null,adjv:null,ed:{},hi:[],hk:null,rd:null,ri:null,rr:null,mo:null,au:{},mine:null,pre:null,menu:false,err:"",tok:"",cid:null,uid:null,email:"",db:E0,ind:{},urls:{},ia:[],map:null};
-const D=()=>S.db,slug=()=>(S.cs.find(c=>c.nom==S.co)||{slug:S.co.toLowerCase()}).slug;
+const D=()=>{for(const k in E0)if(!S.db[k])S.db[k]=[];return S.db},slug=()=>(S.cs.find(c=>c.nom==S.co)||{slug:S.co.toLowerCase()}).slug;
 const run=async p=>{const r=await p;if(r.error)S.err=r.error.message;return r};
 const AL=["maire","adjoint","cabinet","secretariat","finances","rh","etat_civil","technique","agent"];
 const RL={maire:"Maire",adjoint:"Adjoint",cabinet:"Cabinet",secretariat:"Secrétariat",finances:"Finances",rh:"RH",etat_civil:"État civil",technique:"Technique",agent:"Agent",super_admin:"Super-admin",citoyen:"Citoyen"};
@@ -129,7 +129,7 @@ const IC={home:'<path d="M3 11l9-8 9 8v10h-6v-6H9v6H3z"/>',user:'<circle cx="12"
 const ic=(n,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${IC[n]||""}</svg>`;
 async function lcm(){S.cs=(await sb.from("communes").select("id,slug,nom").order("nom")).data||S.cs}
 async function profil(){
-const u=(await sb.auth.getUser()).data.user;if(!u)return false;S.uid=u.id;S.email=u.email||"";
+const u=(await sb.auth.getUser()).data.user;if(!u){S.err="Connexion impossible : session introuvable. Réessayez.";return false}S.uid=u.id;S.email=u.email||"";
 const p=(await sb.from("profiles").select("role,commune_id").eq("id",u.id).maybeSingle()).data;await lcm();
 if(!p||!AL.concat("super_admin").includes(p.role)){S.err="Ce compte n’a pas encore d’accès à l’espace mairie. Contactez l’administrateur.";await sb.auth.signOut();return false}
 const c=S.cs.find(x=>x.id==p.commune_id)||(p.role=="super_admin"?S.cs[0]:null);if(!c){S.err="Aucune commune n’est associée à ce compte. Contactez l’administrateur.";await sb.auth.signOut();return false}S.sa=p.role=="super_admin";S.pr=p.role;S.co=c?c.nom:"";S.cid=c?c.id:null;S.role="cab";S.view=p.role=="adjoint"?"a_dash":p.role=="secretariat"?"s_dash":"dash";S.menu=false;LOGIN_AT=Date.now();return true}
@@ -398,7 +398,8 @@ const spacePage=k=>{const s=SP[k],sub=s.subs.filter(x=>can(x[0]));if(!sub.length
 Object.entries(SP).forEach(([k,x])=>{V[x.v]=()=>spacePage(k)});
 const cab=()=>{const V0=okv(S.view)?V[S.view]:(isA()?V.a_dash:isS()?V.s_dash:V.dash);return `<aside class="sb${S.menu?" open":""}">${brand()}<nav>${NAV().map(n=>`<button class="nvb${S.view==n[0]?" on":""}" data-a="go" data-v="${n[0]}">${ic(n[2],22)}<span>${n[1]}</span></button>`).join("")}</nav><div class="sp"></div><hr><button class="nvb" data-a="out">${ic("out",22)}<span>Déconnexion</span></button><div class="dv">${esc(S.ind.devise||"")}</div></aside><div class="ov${S.menu?" on":""}" data-a="menu"></div><div class="mn">${V0()}</div>`};
 const login=()=>`<div class="lg"><main class="lc"><div class="lh"><p class="mut" style="font-weight:800;letter-spacing:.1em;font-size:12px">MAIRIE CONNECTÉE</p><h1>Espace de la mairie</h1></div><div class="lb">${S.err?`<div class="al" role="alert" style="margin:0">${esc(S.err)}</div>`:""}${inp("em","E-mail","email","","","autocomplete=\"username\"")}${inp("pw","Mot de passe","password","","","autocomplete=\"current-password\"")}<div id="ts"></div><button class="bt" data-a="enter">Se connecter</button><p class="mut" style="font-size:13px;margin:0">Les comptes sont créés par l’administrateur. Contactez-le si vous n’avez pas encore vos accès.</p></div></main></div>`;
-function render(){$("#app").innerHTML=S.role=="cab"?cab():login();S.tok="";
+function render(){try{render0()}catch(e){$("#app").innerHTML=`<div class="lg"><main class="lc"><div class="lb"><div class="al" role="alert">Erreur d’affichage (${esc(S.view)}) : ${esc(e.message)}</div><button class="bt" data-a="out">Se déconnecter</button></div></main></div>`}}
+function render0(){$("#app").innerHTML=S.role=="cab"?cab():login();S.tok="";
 if($("#ts")&&window.turnstile)try{turnstile.render("#ts",{sitekey:TS_KEY,language:"fr",callback:x=>{S.tok=x}})}catch(e){}
 if(S.map){try{S.map.remove()}catch(e){}S.map=null}if($("#map"))initMap()}
 /* actions */
