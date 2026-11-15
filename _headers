@@ -6,6 +6,8 @@
   Permissions-Policy: camera=(self), microphone=(), geolocation=(self)
 /mairie*
   X-Robots-Tag: noindex, nofollow
+/saas*
+  X-Robots-Tag: noindex, nofollow
 /sw.js
   Cache-Control: no-cache
 /js/*
