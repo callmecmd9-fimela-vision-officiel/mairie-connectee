@@ -125,7 +125,7 @@ async cgdec(t){await okq(sb.from("conges").update({statut:t.dataset.s,decide_par
 async cgdel(t){if(!confirm("Supprimer cette demande ?"))return;await okq(sb.from("conges").delete().eq("id",t.dataset.id).eq("statut","demande"));await load(["conges"])},
 async rmedit(t){const d=D();S.ed={e:"rem",r:Object.assign({personnel_id:t.dataset.id},d.rem.find(r=>r.personnel_id==t.dataset.id)||{})}},
 async rmsave(t,g){const o={personnel_id:S.ed.r.personnel_id,commune_id:S.cid,salaire_base:+g("rm_sb")||0,indemnites:+g("rm_in")||0,retenues:+g("rm_re")||0,date_effet:g("rm_de")||null,observations:g("rm_os")||null,updated_at:new Date().toISOString()};if(o.retenues>o.salaire_base+o.indemnites)throw new Error("Les retenues ne peuvent pas dépasser le brut.");await okq(sb.from("remunerations").upsert(o,{onConflict:"personnel_id"}));S.ed={};await load(["remunerations"]);S.err="Rémunération enregistrée."},
-async pgen(t,g){const m=t.dataset.mo||(g("pa_mo")?g("pa_mo")+"-01":"");if(!m)throw new Error("Choisissez un mois.");const r=await okq(sb.rpc("paie_generer",{p_mois:m}));S.sel.pai=r.data;await load(["paies","paie_lignes"]);S.err="Paie préparée à partir des rémunérations."},
+async pgen(t,g){if(t.dataset.mo&&!confirm("Régénérer la paie ? Les montants saisis manuellement seront remplacés."))return;const m=t.dataset.mo||(g("pa_mo")?g("pa_mo")+"-01":"");if(!m)throw new Error("Choisissez un mois.");const r=await okq(sb.rpc("paie_generer",{p_mois:m}));S.sel.pai=r.data;await load(["paies","paie_lignes"]);S.err="Paie préparée à partir des rémunérations."},
 async plsave(t,g){const id=t.dataset.id;await okq(sb.rpc("paie_maj_ligne",{p_ligne:id,p_brut:+g("pl_b_"+id)||0,p_retenues:+g("pl_r_"+id)||0}));await load(["paies","paie_lignes"]);S.err="Ligne enregistrée."},
 async pval(t){await okq(sb.rpc("paie_valider",{p_paie:t.dataset.id}));await load(["paies"]);S.err="Paie validée : en attente d’ordonnancement par le Maire."},
 async pret(t){await okq(sb.rpc("paie_retour_brouillon",{p_paie:t.dataset.id}));await load(["paies"]);S.err="Paie renvoyée en brouillon."},
@@ -140,4 +140,4 @@ async mdel(t){const tb=t.dataset.tb;if(!["patrimoine","commissions"].includes(tb
 document.addEventListener("click",async e=>{const t=e.target.closest("[data-m]"),f=t&&MAC[t.dataset.m];if(!f||S.sa)return;const g=id=>(($("#"+id)||{}).value||"").trim();S.err="";
 try{await f(t,g)}catch(x){S.err=x&&x.message&&!/fetch|network|Failed/i.test(x.message)?x.message:"Erreur réseau. Réessayez."}
 render();window.scrollTo(0,0)});
-setInterval(()=>{if(S.role=="cab"&&S.pr=="maire"&&!S.sa&&S.view=="dash"&&!document.hidden)load(["demandes","courrier","notifications","projets","finances"]).then(()=>{if(S.view=="dash")render()}).catch(()=>{})},60000);
+setInterval(()=>{if(S.role=="cab"&&S.pr=="maire"&&!S.sa&&S.view=="dash"&&!document.hidden)load(["demandes","courrier","notifications","projets","finances","rapports","instructions","paies"]).then(()=>{if(S.view=="dash")render()}).catch(()=>{})},60000);
