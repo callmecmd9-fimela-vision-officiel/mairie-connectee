@@ -15,7 +15,7 @@ const PST=["programme","en_cours","en_attente","en_retard","termine","suspendu"]
 const CAT=["\u00c9ducation","Sant\u00e9","Infrastructures","Autres"],CCOL={"\u00c9ducation":"#2563EB","Sant\u00e9":"#16A34A","Infrastructures":"#F59E0B","Autres":"#8B5CF6"};
 const MOIS=["Jan","F\u00e9v","Mar","Avr","Mai","Juin","Juil","Ao\u00fbt","Sep","Oct","Nov","D\u00e9c"];
 const P=["Au rythme des pirogues, {c} s\u2019\u00e9veille\u2026","{c}, terre de sel et de lumi\u00e8re, o\u00f9 chaque mar\u00e9e raconte nos racines.","Entre mangrove et horizon, {c} tisse son avenir avec patience et fiert\u00e9.","Le soleil se couche sur {c} ; demain, nous b\u00e2tirons encore.","Chaque main tendue \u00e0 {c} est une promesse tenue."];
-const E0={per:[],cg:[],mar:[],pat:[],com:[],dec:[],rdv:[],mail:[],req:[],posts:[],med:[],proj:[],fin:[],del:[],adj:[],dl:[],ru:[],rpa:[],ins:[],rap:[],ms:[],nt:[],an:[],act:[],dos:[],sv:[],cn:[],se:[],pr:[],dc:[],op:[],cr:[]};
+const E0={rem:[],pai:[],pli:[],per:[],cg:[],mar:[],pat:[],com:[],dec:[],rdv:[],mail:[],req:[],posts:[],med:[],proj:[],fin:[],del:[],adj:[],dl:[],ru:[],rpa:[],ins:[],rap:[],ms:[],nt:[],an:[],act:[],dos:[],sv:[],cn:[],se:[],pr:[],dc:[],op:[],cr:[]};
 let S={cs:[],sa:false,co:"",role:null,pr:"",view:"dash",f:"in",tab:{cab:"agenda",com:"pub"},dd:null,dh:[],dp:[],sel:{},fl:{},dch:null,adjv:null,ed:{},hi:[],hk:null,rd:null,ri:null,rr:null,mo:null,au:{},mine:null,pre:null,menu:false,err:"",tok:"",cid:null,uid:null,email:"",db:E0,ind:{},urls:{},ia:[],map:null};
 const D=()=>{for(const k in E0)if(!S.db[k])S.db[k]=[];return S.db},slug=()=>(S.cs.find(c=>c.nom==S.co)||{slug:S.co.toLowerCase()}).slug;
 const run=async p=>{const r=await p;if(r.error)S.err=r.error.message;return r};
@@ -32,7 +32,7 @@ citoyens:{v:"s_citoyens",n:"Citoyens",i:"mail",c:"k5",d:"Demandes, communication
 pilotage:{v:"s_pilot",n:"Pilotage",i:"chart",c:"k6",d:"Rapports, statistiques",subs:[["rapports","Rapports et statistiques"]]}};
 const SP={
 maire:{v:"s_maire",n:"Espace du Maire",i:"user",c:"k6",d:"Agenda, validations, d\u00e9cisions",subs:[["mdash","Mon tableau de bord"],["agenda","Agenda"],["aud","Audiences"],["reun","R\u00e9unions et activit\u00e9s"],["valid","\u00c0 valider et \u00e0 signer"],["instr","Instructions aux adjoints"],["rapp","Rapports des adjoints"],["msg","Messagerie"],["notif","Notifications"],["decis","Mes d\u00e9cisions"]]},
-finances:{v:"s_finances",n:"Finances",i:"coins",c:"k1",d:"Budget, march\u00e9s, rapports",subs:[["budget","Budget et recettes"],["marches","March\u00e9s publics"],["rapb","Rapports budg\u00e9taires"]]},
+finances:{v:"s_finances",n:"Finances",i:"coins",c:"k1",d:"Budget, march\u00e9s, rapports",subs:[["budget","Budget et recettes"],["marches","March\u00e9s publics"],["rapb","Rapports budg\u00e9taires"],["paie","Paie du personnel"],["remun","R\u00e9mun\u00e9rations"]]},
 administration:{v:"s_admin",n:"Administration",i:"brief",c:"k2",d:"Courrier, actes, personnel, patrimoine",subs:[["civil","\u00c9tat civil"],["personnel","Personnel"],["conges","Cong\u00e9s et absences"],["cin","Courrier entrant"],["cout","Courrier sortant"],["actes","Actes administratifs"],["patrimoine","Patrimoine"],["serv","Services"],["adjlist","Adjoints"],["deleg","D\u00e9l\u00e9gations"],["dossiers","Dossiers"],["archives","Archives"],["params","Param\u00e8tres"]]},
 developpement:{v:"s_dev",n:"D\u00e9veloppement communal",i:"tools",c:"k3",d:"Projets, travaux, territoire",subs:[["projets","Projets et travaux"],["projA","Suivi par les adjoints"],["devdom","Par domaine"],["territoire","Territoire et foncier"]]},
 conseil:{v:"s_conseil",n:"Conseil municipal",i:"users",c:"k4",d:"Sessions, commissions, d\u00e9lib\u00e9rations",subs:[["sconseil","Sessions et d\u00e9lib\u00e9rations"],["conseil","D\u00e9lib\u00e9rations"],["commissions","Commissions"]]},
@@ -82,6 +82,9 @@ conseillers:[()=>LQ("conseillers").order("nom"),r=>{S.db.cn=r||[]}],
 sessions_conseil:[AS_("sessions_conseil","jour"),r=>{S.db.se=r||[]}],
 session_presences:SL_("session_presences","pr"),
 documents:[()=>LQ("documents").order("created_at",DE).limit(500),r=>{S.db.dc=r||[]}],
+remunerations:[()=>LQ("remunerations"),r=>{S.db.rem=r||[]}],
+paies:[()=>LQ("paies").order("mois",DE),r=>{S.db.pai=r||[]}],
+paie_lignes:[()=>LQ("paie_lignes").limit(500),r=>{S.db.pli=r||[]}],
 personnel:[()=>LQ("personnel").order("nom"),r=>{S.db.per=r||[]}],
 conges:[AS_("conges","date_debut"),r=>{S.db.cg=r||[]}],
 marches:[AS_("marches","created_at"),r=>{S.db.mar=r||[]}],
@@ -92,7 +95,7 @@ ops_historique:[()=>sb.from("ops_historique").select("*").order("created_at",DE)
 /* load() = tout recharger ; load(["projets"]) = seulement ces tables (+ notifications et historique) */
 async function load(only){
 if(S.role!="cab"||!S.cid)return;
-const ks=only?[...new Set(only.concat(["notifications","ops_historique"]))].filter(k=>LG[k]):Object.keys(LG).filter(k=>!["personnel","conges"].includes(k)||["maire","rh"].includes(S.pr));
+const ks=only?[...new Set(only.concat(["notifications","ops_historique"]))].filter(k=>LG[k]):Object.keys(LG).filter(k=>!["personnel","conges","remunerations","paie_lignes"].includes(k)||["maire","rh"].includes(S.pr)).filter(k=>k!="paies"||["maire","rh","finances"].includes(S.pr));
 if(!only&&S.sa)await saLoad();
 const R=await Promise.all(ks.map(k=>LG[k][0]()));
 const er=R.find(x=>x.error);if(er){S.err="Chargement impossible : "+er.error.message+". Reconnectez-vous si le probl\u00e8me persiste.";return}
