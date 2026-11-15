@@ -1,4 +1,4 @@
-const C="mc-v2",CDN=["cdn.jsdelivr.net","cdnjs.cloudflare.com","fonts.googleapis.com","fonts.gstatic.com"];
+const C="mc-v3",CDN=["cdn.jsdelivr.net","cdnjs.cloudflare.com","fonts.googleapis.com","fonts.gstatic.com"];
 self.addEventListener("install",e=>e.waitUntil(self.skipWaiting()));
 self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!=C).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
 const put=async(r,res)=>{const c=await caches.open(C),p=new URL(r.url).pathname;for(const k of await c.keys())if(k.url!=r.url&&new URL(k.url).pathname==p&&new URL(k.url).origin==location.origin)await c.delete(k);await c.put(r,res)};
