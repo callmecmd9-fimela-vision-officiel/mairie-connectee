@@ -26,8 +26,6 @@ else if(a=="menu")S.menu=!S.menu;
 else if(a=="go"){S.view=t.dataset.v;S.menu=false}
 else if(a=="tab")S.tab[t.dataset.g]=t.dataset.v;
 else if(a=="filt")S.f=t.dataset.f;
-else if(a=="sw"){const x=S.cs[i];S.co=x.name||x.nom;S.cid=x.id;await load()}
-else if(a=="addcom"){const nmv=g("cn"),sl=nmv.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");if(nmv&&sl){await run(sb.from("communes").insert({slug:sl,nom:nmv}));await lcm();await load()}}
 else if(a=="opend"){S.dd=d.req[i].id;await openD()}
 else if(a=="cld"){S.dd=null}
 else if(a=="dact"){const r=d.req.find(x=>x.id==S.dd);if(r){const u={};if(t.dataset.s)u.statut=t.dataset.s;if(t.dataset.o)u.service=g("dsv");if(t.dataset.r)u.reponse=g("drp")||null;
@@ -88,7 +86,7 @@ else if(a=="arst"){await upd("documents",{statut:"archive"},id)}
 else if(a=="ruconv"){await run(sb.rpc("convoquer_reunion",{p_id:S.rd}));if(!S.err)S.err="Convocations envoyées."}
 await load(TBA[a])}
 else if(UIA.includes(a)){
-if(a=="adjv"){S.adjv=t.dataset.id||null;if(S.adjv){S.view="s_adj";S.tab.adjoints="adjlist"}}
+if(a=="adjv"){S.adjv=t.dataset.id||null;if(S.adjv){S.view=SP.administration.v;S.tab.administration="adjlist"}}
 else if(a=="edit"){S.ed={e:t.dataset.e,r:d[t.dataset.e].find(x=>x.id==t.dataset.id)}}
 else if(a=="ecl")S.ed={};
 else if(a=="ruopen")S.rd=t.dataset.id||null;
@@ -122,10 +120,8 @@ else if(a=="rparch"){await run(sb.from("rapports").update({statut:"archive"}).eq
 else if(a=="mssend"){const o={sujet:g("m_su"),corps:g("m_co"),a:g("m_to")||null,commune_id:c};if(!o.sujet||!o.corps)S.err="Le sujet et le message sont obligatoires.";else{await run(sb.from("messages").insert(o));if(!S.err)S.err="Message envoyé."}}
 else if(a=="msopen"){S.mo=S.mo==id?null:id;const m=d.ms.find(x=>x.id==id);if(m&&m.a==S.uid&&!m.lu)await run(sb.from("messages").update({lu:true}).eq("id",id))}
 else if(a=="ntall"){await run(sb.from("notifications").update({lu:true}).eq("user_id",S.uid).eq("lu",false))}
-else if(a=="ntgo"){await run(sb.from("notifications").update({lu:true}).eq("id",id));const M2={instr:["a_instr","instr"],rapp:["a_rapp","rapp"],reun:["a_reun","reun"],deleg:["a_deleg","deleg"],msg:["a_msg","msg"]}[t.dataset.l];const L2=t.dataset.l||"";if(L2.startsWith("s_")){if(isS())S.view=L2;else if(isM()){S.view="s_sec";S.tab.secretariat=SMAP[L2]||"sdash"}}else if(M2){if(isA())S.view=M2[0];else if(!isS()){S.view="s_adj";S.tab.adjoints=M2[1]}}}
+else if(a=="ntgo"){await run(sb.from("notifications").update({lu:true}).eq("id",id));const M2={instr:["a_instr","instr"],rapp:["a_rapp","rapp"],reun:["a_reun","reun"],deleg:["a_deleg","deleg"],msg:["a_msg","msg"]}[t.dataset.l];const L2=t.dataset.l||"";if(L2.startsWith("s_")){if(isS())S.view=L2;else if(isM()){S.view="s_sec";S.tab.secretariat=SMAP[L2]||"sdash"}}else if(M2){if(isA())S.view=M2[0];else if(!isS()){const T2={instr:["maire","instr"],rapp:["maire","rapp"],reun:["maire","aud"],deleg:["administration","deleg"],msg:["maire","msg"]}[t.dataset.l];S.view=SP[T2[0]].v;S.tab[T2[0]]=T2[1]}}}
 await load(TBA[a])}
-else if(a=="deluser"){const u=S.adm[i];if(u&&confirm("Supprimer définitivement le compte "+u.email+" ?")){const r=await sb.functions.invoke("admin-comptes",{body:{action:"supprimer",id:u.id}});if(r.error){try{S.err=(await r.error.context.json()).error}catch(x){S.err="Action impossible."}}else S.err="Compte supprimé.";await load()}}
-else if(a=="mk"){const r=await sb.functions.invoke("admin-comptes",{body:{action:"creer",nom:g("nn"),email:g("ne"),password:($("#np")||{}).value||"",role:g("nr"),commune:g("nc")}});if(r.error){try{S.err=(await r.error.context.json()).error}catch(x){S.err="Action impossible."}}else S.err="Compte créé. Communiquez-lui son mot de passe de façon sûre.";await load()}
 else{
 if(a=="addrdv"){if(g("rt"))await run(sb.from("rdv").insert({commune_id:c,jour:g("rd")||T,heure:g("rh")||"09:00",titre:g("rt")}))}
 else if(a=="delrdv")await run(sb.from("rdv").delete().eq("id",d.rdv[i].id));
@@ -146,7 +142,7 @@ else if(a=="delfin")await run(sb.from("finances").delete().eq("id",d.fin[i].id))
 else if(a=="addproj"){if(g("jt")){const la=g("jy").replace(",","."),lo=g("jx").replace(",",".");await run(sb.from("projets").insert({commune_id:c,titre:g("jt"),localite:g("jl")||null,categorie:g("jc"),statut:g("js"),avancement:g("js")=="termine"?100:Math.min(100,n("ja")),budget:n("jb"),domaine:g("jdm")||null,adjoint_id:g("jaj")||null,date_debut:g("jd1")||null,date_fin:g("jd2")||null,financement:g("jfi")||null,responsable:g("jre")||null,description:g("jds")||null,lat:la&&!isNaN(la)?+la:null,lng:lo&&!isNaN(lo)?+lo:null}))}}
 else if(a=="cycp"){const p=d.proj[i],s2=PST[(PST.indexOf(p.statut)+1)%3];await run(sb.from("projets").update({statut:s2,avancement:s2=="termine"?100:(p.statut=="termine"?90:p.avancement)}).eq("id",p.id))}
 else if(a=="delproj"){if(confirm("Retirer ce projet ?"))await run(sb.from("projets").delete().eq("id",d.proj[i].id))}
-else if(a=="saveind"){const la=g("pla").replace(",","."),lo=g("plo").replace(",",".");await run(sb.from("indicateurs").upsert({commune_id:c,population:n("pp"),croissance:+g("pg")||0,villages:n("pv"),menages:n("pm"),agents:n("pa"),budget_annuel:n("pb"),slogan:g("psl")||null,devise:g("pdv")||null,contact_tel:g("ptl")||null,contact_adresse:g("pad")||null,centre_lat:la&&!isNaN(la)?+la:null,centre_lng:lo&&!isNaN(lo)?+lo:null,zoom:n("pz")||11}));if(!S.err)S.err="Paramètres enregistrés."}
+else if(a=="saveind"){const la=g("pla").replace(",","."),lo=g("plo").replace(",",".");await run(sb.from("indicateurs").upsert({commune_id:c,population:n("pp"),croissance:+g("pg")||0,villages:n("pv"),menages:n("pm"),agents:n("pa"),budget_annuel:n("pb"),slogan:g("psl")||null,devise:g("pdv")||null,contact_tel:g("ptl")||null,contact_adresse:g("pad")||null,centre_lat:la&&!isNaN(la)?+la:null,centre_lng:lo&&!isNaN(lo)?+lo:null,zoom:n("pz")||11,departement:g("pdp")||null,region:g("prg")||null,pays:g("ppy")||null}));if(!S.err)S.err="Paramètres enregistrés."}
 else if(a=="upimg"){const k=t.dataset.k,f=($("#"+t.dataset.f)||{}).files&&$("#"+t.dataset.f).files[0];if(f){const bl=await comp(f,k=="blason"?600:1600,k=="blason"?150000:400000),pa=c+"/"+k+"-"+crypto.randomUUID()+"."+(bl.type=="image/webp"?"webp":"jpg"),up=await sb.storage.from("medias").upload(pa,bl,{contentType:bl.type});if(up.error)S.err="Envoi impossible : "+up.error.message;else{if(S.ind[k])await sb.storage.from("medias").remove([S.ind[k]]);const o={commune_id:c};o[k]=pa;await run(sb.from("indicateurs").upsert(o));if(!S.err)S.err="Image enregistrée ("+kb(bl.size)+")."}}else S.err="Choisissez d’abord une image."}
 await load(TBA[a])}
 }catch(x){S.err=x&&x.message&&!/fetch|network|Failed/i.test(x.message)?x.message:"Erreur réseau. Réessayez."}
