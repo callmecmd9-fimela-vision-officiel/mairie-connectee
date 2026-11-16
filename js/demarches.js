@@ -11,3 +11,23 @@ try{if(m=="dmsave"){const ed=S.ed&&S.ed.e=="dmr",o={type:g("dm_ty"),titre:g("dm_
 else if(m=="dmact"){const x=D().dmr.find(y=>y.id==t.dataset.id),r=await sb.from("demarches").update({actif:!x.actif}).eq("id",x.id);if(r.error)throw new Error(r.error.message)}
 else if(confirm("Supprimer cette démarche ?")){const r=await sb.from("demarches").delete().eq("id",t.dataset.id);if(r.error)throw new Error(r.error.message)}
 await load(["demarches"])}catch(x){S.err=x.message||"Erreur réseau."}render();window.scrollTo(0,0)});
+
+/* Lien citoyen + QR code + identité publique (espace mairie > Administration > Lien citoyen) */
+const LC={};
+const lcUrl=()=>location.origin+"/?c="+encodeURIComponent(slug());
+const lcQr=u=>{try{const q=qrcode(0,"M");q.addData(u);q.make();return q.createSvgTag({cellSize:6,margin:4,scalable:true,alt:"QR code du lien citoyen"})}catch(e){return""}};
+const lienc=()=>{const I=S.ind||{},u=lcUrl(),col=/^#[0-9a-fA-F]{6}$/.test(I.couleur||"")?I.couleur:"#0B5A2E";
+if(!window.qrcode&&!LC.t){LC.t=1;const s=document.createElement("script");s.src="/js/qr.js";s.onload=()=>render();s.onerror=()=>{LC.e=1;render()};document.head.appendChild(s)}
+const q=window.qrcode?lcQr(u):"";
+return pn("Lien et QR code pour les citoyens","mega",`<p>Le citoyen ne saisit rien : il ouvre ce lien ou scanne le QR code et arrive directement sur la mairie de ${esc(S.co)}. L’adresse est mémorisée sur son téléphone.</p><label for="lc_u">Lien citoyen</label><input id="lc_u" readonly value="${esc(u)}"><p style="margin-top:10px"><button class="bt" data-m="lnkcopy">Copier le lien</button> <button class="bo" data-m="lnkprint">Imprimer l’affiche (QR)</button></p><div style="width:240px;max-width:100%;margin:12px 0">${q||emp(LC.e?"QR code indisponible : utilisez le lien.":"Génération du QR code…")}</div>`)+
+pn("Identité affichée aux citoyens","gear",`<p>Couleur principale de l’application citoyenne (choisissez une couleur assez foncée pour que le texte blanc reste lisible).</p><p><input id="lc_co" type="color" value="${esc(col)}" aria-label="Couleur principale" style="max-width:90px"> <button class="bo" data-m="lnkcolor">Enregistrer la couleur</button></p><p style="margin-top:14px">Blason : après l’avoir envoyé dans Paramètres &gt; Images, publiez-le pour l’afficher sur l’application citoyenne et l’icône de la PWA. À refaire si vous changez de blason.</p><p><button class="bo" data-m="lnkblason">Publier le blason</button></p>`)};
+SP.administration.subs.push(["lienc","Lien citoyen"]);RP.lienc=["maire","cabinet","secretariat"];SPL.lienc="Lien citoyen et QR code";SUB.lienc=lienc;
+document.addEventListener("click",async e=>{const t=e.target.closest("[data-m^=lnk]");if(!t||S.sa)return;const m=t.dataset.m,g=id=>(($("#"+id)||{}).value||"").trim();S.err="";
+try{
+if(m=="lnkcopy"){try{await navigator.clipboard.writeText(lcUrl());t.textContent="Copié"}catch(x){const i=$("#lc_u");if(i)i.select()}return}
+if(m=="lnkprint"){const u=lcUrl(),q=window.qrcode?lcQr(u):"",p=$("#prt");
+if(p&&q){p.innerHTML=`<div style="font:16px/1.5 'Nunito Sans',sans-serif;padding:40px;text-align:center"><h1 style="font-size:34px;margin:0">MAIRIE DE ${esc(S.co.toUpperCase())}</h1><p style="font-size:20px">${esc(S.ind.slogan||"")}</p><h2 style="font-size:28px;margin:28px 0 8px">Vos démarches en ligne, sans vous déplacer</h2><p style="font-size:20px">Scannez ce QR code avec votre téléphone</p><div style="width:420px;max-width:100%;margin:20px auto">${q}</div><p style="font-size:18px">ou ouvrez : <b>${esc(u)}</b></p><p style="font-size:16px">Service gratuit · Suivi de votre demande en ligne</p></div>`;setTimeout(()=>window.print(),400);return}
+throw new Error("Affiche indisponible : le QR code n’est pas chargé. Réessayez dans un instant.")}
+else if(m=="lnkcolor"){const c=g("lc_co");if(!/^#[0-9a-fA-F]{6}$/.test(c))throw new Error("Couleur invalide.");const r=await sb.from("indicateurs").upsert({commune_id:S.cid,couleur:c});if(r.error)throw new Error(r.error.message);S.ind.couleur=c;S.err="Couleur enregistrée."}
+else if(m=="lnkblason"){if(!S.ind.blason)throw new Error("Envoyez d’abord le blason dans Paramètres > Images.");const d=await sb.storage.from("medias").download(S.ind.blason);if(d.error)throw new Error(d.error.message);const up=await sb.storage.from("identite").upload(S.cid+"/blason.webp",d.data,{upsert:true,contentType:d.data.type||"image/webp"});if(up.error)throw new Error(up.error.message);S.err="Blason publié : il s’affiche maintenant sur l’application citoyenne."}
+}catch(x){S.err=x.message||"Erreur réseau."}render();window.scrollTo(0,0)});
