@@ -15,7 +15,7 @@ const PST=["programme","en_cours","en_attente","en_retard","termine","suspendu"]
 const CAT=["\u00c9ducation","Sant\u00e9","Infrastructures","Autres"],CCOL={"\u00c9ducation":"#2563EB","Sant\u00e9":"#16A34A","Infrastructures":"#F59E0B","Autres":"#8B5CF6"};
 const MOIS=["Jan","F\u00e9v","Mar","Avr","Mai","Juin","Juil","Ao\u00fbt","Sep","Oct","Nov","D\u00e9c"];
 const P=["Au rythme des pirogues, {c} s\u2019\u00e9veille\u2026","{c}, terre de sel et de lumi\u00e8re, o\u00f9 chaque mar\u00e9e raconte nos racines.","Entre mangrove et horizon, {c} tisse son avenir avec patience et fiert\u00e9.","Le soleil se couche sur {c} ; demain, nous b\u00e2tirons encore.","Chaque main tendue \u00e0 {c} est une promesse tenue."];
-const E0={rem:[],pai:[],pli:[],per:[],cg:[],mar:[],pat:[],com:[],dec:[],rdv:[],mail:[],req:[],posts:[],med:[],proj:[],fin:[],del:[],adj:[],dl:[],ru:[],rpa:[],ins:[],rap:[],ms:[],nt:[],an:[],act:[],dos:[],sv:[],cn:[],se:[],pr:[],dc:[],op:[],cr:[]};
+const E0={rem:[],pai:[],pli:[],per:[],cg:[],mar:[],pat:[],cd:[],com:[],dec:[],rdv:[],mail:[],req:[],posts:[],med:[],proj:[],fin:[],del:[],adj:[],dl:[],ru:[],rpa:[],ins:[],rap:[],ms:[],nt:[],an:[],act:[],dos:[],sv:[],cn:[],se:[],pr:[],dc:[],op:[],cr:[]};
 let S={cs:[],sa:false,co:"",role:null,pr:"",view:"dash",f:"in",tab:{cab:"agenda",com:"pub"},dd:null,dh:[],dp:[],sel:{},fl:{},dch:null,adjv:null,ed:{},hi:[],hk:null,rd:null,ri:null,rr:null,mo:null,au:{},mine:null,pre:null,menu:false,err:"",tok:"",cid:null,uid:null,email:"",db:E0,ind:{},urls:{},ia:[],map:null};
 const D=()=>{for(const k in E0)if(!S.db[k])S.db[k]=[];return S.db},slug=()=>(S.cs.find(c=>c.nom==S.co)||{slug:S.co.toLowerCase()}).slug;
 const run=async p=>{const r=await p;if(r.error)S.err=r.error.message;return r};
@@ -87,6 +87,7 @@ paies:[()=>LQ("paies").order("mois",DE),r=>{S.db.pai=r||[]}],
 paie_lignes:[()=>LQ("paie_lignes").limit(500),r=>{S.db.pli=r||[]}],
 personnel:[()=>LQ("personnel").order("nom"),r=>{S.db.per=r||[]}],
 conges:[AS_("conges","date_debut"),r=>{S.db.cg=r||[]}],
+conges_droits:[()=>LQ("conges_droits").eq("annee",Y),r=>{S.db.cd=r||[]}],
 marches:[AS_("marches","created_at"),r=>{S.db.mar=r||[]}],
 patrimoine:[AS_("patrimoine","created_at"),r=>{S.db.pat=r||[]}],
 commissions:[()=>LQ("commissions").order("nom"),r=>{S.db.com=r||[]}],
@@ -95,10 +96,13 @@ ops_historique:[()=>sb.from("ops_historique").select("*").order("created_at",DE)
 /* load() = tout recharger ; load(["projets"]) = seulement ces tables (+ notifications et historique) */
 async function load(only){
 if(S.role!="cab"||!S.cid)return;
-const ks=only?[...new Set(only.concat(["notifications","ops_historique"]))].filter(k=>LG[k]):Object.keys(LG).filter(k=>!["personnel","conges","remunerations","paie_lignes"].includes(k)||["maire","rh"].includes(S.pr)).filter(k=>k!="paies"||["maire","rh","finances"].includes(S.pr));
+const ks=only?[...new Set(only.concat(["notifications","ops_historique"]))].filter(k=>LG[k]):Object.keys(LG).filter(k=>!["personnel","conges","conges_droits","remunerations","paie_lignes"].includes(k)||["maire","rh"].includes(S.pr)).filter(k=>k!="paies"||["maire","rh","finances"].includes(S.pr));
 if(!only&&S.sa)await saLoad();
 const R=await Promise.all(ks.map(k=>LG[k][0]()));
 const er=R.find(x=>x.error);if(er){S.err="Chargement impossible : "+er.error.message+". Reconnectez-vous si le probl\u00e8me persiste.";return}
+/* PostgREST plafonne à 1000 lignes : page suivante tant que la page est pleine (10 000 max) */
+for(let i=0;i<ks.length;i++){const k=ks[i];let d=R[i].data;if(!Array.isArray(d)||d.length<1000||k=="annuaire")continue;
+for(let p=1;p<10;p++){const r=await LG[k][0]().order("id").range(p*1000,p*1000+999);if(r.error){S.err="Chargement partiel de "+k+" : "+r.error.message;break}d=d.concat(r.data||[]);if((r.data||[]).length<1000)break;if(p==9)S.err="Liste "+k+" tronquée à 10 000 lignes."}R[i].data=d}
 if(S.db===E0)S.db=Object.assign({},E0);
 ks.forEach((k,i)=>LG[k][1](R[i].data));
 const d=D(),I=S.ind;

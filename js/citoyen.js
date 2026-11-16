@@ -10,13 +10,13 @@ const SV={secretariat:"Secrétariat",etat_civil:"Service de l’état civil",tec
 const IC={doc:'<path d="M6 2h8l5 5v15H6z"/><path d="M9 13h7M9 17h7"/>',cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',heart:'<path d="M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.5A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11z"/>',tools:'<path d="M14 3l7 7-3 3-7-7zM3 21l8-8"/>',pin:'<path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2.5"/>',leaf:'<path d="M5 19c0-9 5-14 15-14 0 10-5 15-14 15zM5 19l8-8"/>',cap:'<path d="M2 9l10-5 10 5-10 5zM6 11v5c3 2 9 2 12 0v-5"/>',trophy:'<path d="M7 4h10v5a5 5 0 0 1-10 0zM7 6H3v2a4 4 0 0 0 4 4M17 6h4v2a4 4 0 0 1-4 4M12 14v4M8 21h8"/>',shop:'<path d="M3 9l2-5h14l2 5M4 9v11h16V9M9 20v-6h6v6"/>',sprout:'<path d="M12 21v-9M12 12c0-4-3-6-7-6 0 4 3 6 7 6zM12 14c0-3 2-5 6-5 0 3-2 5-6 5z"/>',alert:'<circle cx="12" cy="12" r="10"/><path d="M12 7v6M12 16v1"/>',users:'<circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20c0-4 3-6 7-6s7 2 7 6M17 14c3 0 5 1.5 5 5"/>',search:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/>',help:'<circle cx="12" cy="12" r="10"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7M12 17v1"/>'};
 const ic=(n,s=30)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
 const CATS=[["État civil","doc","Actes de naissance, mariage, décès, certificats"],["Audience","cal","Rencontrer le Maire ou un responsable"],["Aide sociale","heart","Soutien aux personnes en difficulté"],["Travaux publics","tools","Routes, éclairage, assainissement"],["Urbanisme","pin","Parcelles, permis, autorisations"],["Environnement","leaf","Déchets, hygiène, espaces verts"],["Éducation","cap","Écoles, inscriptions, bourses"],["Sport et culture","trophy","Équipements et événements"],["Commerce","shop","Marchés, autorisations d’activité"],["Agriculture et pêche","sprout","Appui aux producteurs et pêcheurs"],["Réclamations","alert","Signaler un dysfonctionnement"],["Associations","users","Partenariat, salle, soutien"]];
-let S={cs:[],co:"",slug:"",info:{},cat:null,q:"",mine:[],err:"",ok:"",tr:"",res:null,pub:[],tok:"",d:{}};
+let S={cid:null,co:"",slug:"",info:{},cat:null,q:"",mine:[],err:"",ok:"",tr:"",res:null,pub:[],tok:"",d:{}};
 const KM=()=>"mc_d_"+S.slug,getM=()=>{try{return JSON.parse(localStorage.getItem(KM())||"[]")}catch(e){return[]}},addM=n=>{try{const l=getM().filter(x=>x!=n);l.unshift(n);localStorage.setItem(KM(),JSON.stringify(l.slice(0,30)))}catch(e){}};
 async function loadMine(){const l=getM();S.mine=l.length?((await sb.rpc("suivre_demandes",{p_commune:S.slug,p_numeros:l})).data||[]):[]}
-async function choose(c){S.co=c.nom;S.slug=c.slug;S.err="";S.ok="";S.res=null;S.cat=null;try{history.replaceState(null,"","?c="+c.slug);localStorage.setItem("mc_co",c.slug)}catch(e){}
+async function choose(c){S.co=c.nom;S.slug=c.slug;S.cid=c.id;S.err="";S.ok="";S.res=null;S.cat=null;try{history.replaceState(null,"","?c="+c.slug);localStorage.setItem("mc_co",c.slug)}catch(e){}
 const[i,p]=await Promise.all([sb.rpc("infos_commune",{p_commune:c.slug}),sb.rpc("actualites",{p_commune:c.slug}),loadMine()]);S.info=(i.data||[])[0]||{};S.pub=p.data||[]}
 const comp=async f=>{const im=await createImageBitmap(f);let k=Math.min(1,1800/Math.max(im.width,im.height)),q=.82,b;for(let n=0;n<6;n++){const c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);b=await new Promise(r=>c.toBlob(r,"image/webp",q));if(b.type!="image/webp")b=await new Promise(r=>c.toBlob(r,"image/jpeg",q));if(b.size<=500000)break;if(q>.7)q-=.04;else k*=.88}return b};
-const pick=()=>`<div class="hd"><div class="in"><span class="pill">Espace citoyen</span><h1>Mairie connectée</h1><p class="sl">Choisissez votre commune</p></div></div><main class="mn"><div class="cd">${S.cs.map((c,i)=>`<button class="bo" style="width:100%;margin:5px 0" data-a="pick" data-i="${i}">${esc(c.nom)}</button>`).join("")||"<p>Chargement…</p>"}</div></main>`;
+const pick=()=>`<div class="hd"><div class="in"><span class="pill">Espace citoyen</span><h1>Mairie connectée</h1><p class="sl">Accédez à votre mairie</p></div></div><main class="mn">${msgs()}<div class="cd"><p>Utilisez le lien fourni par votre mairie, ou saisissez le code de votre commune.</p><label for="cc">Code de la commune</label><input id="cc" autocapitalize="none" autocomplete="off" placeholder="Ex. fimela"><p style="margin-top:12px"><button class="bt" data-a="goc">Ouvrir</button></p></div></main>`;
 const head=()=>`<div class="hd"><div class="in"><div class="top"><b style="letter-spacing:.06em">MAIRIE DE ${esc(S.co.toUpperCase())}</b><span class="pill">Espace citoyen</span></div><h1>Que souhaitez-vous faire ?</h1><p class="sl">${esc(S.info.slogan||"Bienvenue dans votre espace de services municipaux.")}</p><button class="lk" data-a="chg">Changer de commune</button></div></div>`;
 const tiles=()=>CATS.filter(c=>!S.q||NZ(c[0]+" "+c[2]).includes(NZ(S.q))).map(c=>`<button class="tt" data-a="cat" data-c="${esc(c[0])}">${ic(c[1])}<b>${esc(c[0])}</b><span>${esc(c[2])}</span></button>`).join("")||'<p class="mu">Aucun service ne correspond. Essayez un autre mot.</p>';
 const bd=s=>`<span class="bd ${s=="traitee"||s=="redirigee"?"ok":s=="en_cours"||s=="orientee"?"bl":""}">${SL[s]||s}</span>`;
@@ -38,17 +38,19 @@ if($("#ts")&&window.turnstile)try{turnstile.render("#ts",{sitekey:TS_KEY,languag
 async function send(){const g=id=>(($("#"+id)||{}).value||"").trim();S.d={fn:g("fn"),ft:g("ft"),fo:g("fo"),fm:g("fm")};
 if(!S.d.fn||!S.d.fm){S.err="Indiquez votre nom et votre message.";return}
 if(!S.tok){S.err="Veuillez valider la vérification anti-spam, puis réessayer.";return}
-const files=[...($("#ff").files||[])].slice(0,3),sg=await sb.auth.signInAnonymously({options:{captchaToken:S.tok}});
+const files=[...($("#ff").files||[])].slice(0,3),blobs=[];
+try{for(const f of files){if(f.type!="application/pdf"&&!/^image\//.test(f.type))throw new Error("Format non accepté : photo ou PDF uniquement.");const bl=f.type=="application/pdf"?f:await comp(f);if(bl.size>3145728)throw new Error("Une pièce dépasse 3 Mo.");blobs.push(bl)}}catch(e){S.err=e.message&&!/bitmap|decode|source/i.test(e.message)?e.message:"Pièce illisible. Utilisez une photo JPEG/PNG ou un PDF.";return}
+const sg=await sb.auth.signInAnonymously({options:{captchaToken:S.tok}});
 if(sg.error){S.err="Vérification refusée. Réessayez.";return}
-try{const cid=(S.cs.find(c=>c.slug==S.slug)||{}).id,paths=[];
-for(const f of files){const bl=f.type=="application/pdf"?f:await comp(f);if(bl.size>3145728)throw new Error("Une pièce dépasse 3 Mo.");const p=cid+"/"+crypto.randomUUID()+"."+(bl.type=="application/pdf"?"pdf":bl.type=="image/webp"?"webp":"jpg"),u=await sb.storage.from("pieces").upload(p,bl,{contentType:bl.type});if(u.error)throw new Error("Envoi d’une pièce impossible. Utilisez une photo ou un PDF.");paths.push(p)}
+try{const cid=S.cid,paths=[];
+for(const bl of blobs){const p=cid+"/"+crypto.randomUUID()+"."+(bl.type=="application/pdf"?"pdf":bl.type=="image/png"?"png":bl.type=="image/webp"?"webp":"jpg"),u=await sb.storage.from("pieces").upload(p,bl,{contentType:bl.type});if(u.error)throw new Error("Envoi d’une pièce impossible. Utilisez une photo ou un PDF.");paths.push(p)}
 const r=await sb.rpc("creer_demande",{p_commune:S.slug,p_type:S.cat,p_nom:S.d.fn,p_message:S.d.fm,p_objet:S.d.fo||null,p_contact:S.d.ft||null,p_pieces:paths});
 if(r.error)throw new Error("Envoi impossible. Vérifiez les champs et réessayez.");
 addM(r.data);S.ok=r.data;S.cat=null;S.d={};await loadMine()}
 catch(e){S.err=e.message||"Erreur réseau. Réessayez."}finally{try{await sb.auth.signOut()}catch(e){}}}
 document.addEventListener("click",async e=>{const t=e.target.closest("[data-a]");if(!t)return;const a=t.dataset.a;S.err="";
 try{
-if(a=="pick")await choose(S.cs[+t.dataset.i]);
+if(a=="goc"){const c=await findC((($("#cc")||{}).value||"").trim());if(c)await choose(c);else S.err="Commune introuvable. Vérifiez le code ou le lien."}
 else if(a=="chg"){S.co="";S.slug="";S.cat=null;S.res=null;S.ok="";try{history.replaceState(null,"",location.pathname);localStorage.removeItem("mc_co")}catch(x){}}
 else if(a=="cat"){S.cat=t.dataset.c;S.ok="";S.d={}}
 else if(a=="back"){S.cat=null;S.res=null}
@@ -58,4 +60,5 @@ else if(a=="open"||a=="track"){const n=a=="open"?t.dataset.n:(($("#tk")||{}).val
 }catch(x){S.err="Erreur réseau. Réessayez."}
 render();window.scrollTo(0,0)});
 document.addEventListener("input",e=>{if(e.target.id=="q"){S.q=e.target.value;const tl=$("#tl");if(tl)tl.innerHTML=tiles()}});
-(async()=>{try{S.cs=(await sb.from("communes").select("id,slug,nom").order("nom")).data||[];let sl=new URLSearchParams(location.search).get("c");try{sl=sl||localStorage.getItem("mc_co")}catch(e){}const c=S.cs.find(x=>x.slug==sl);if(c)await choose(c)}catch(e){}render()})();
+async function findC(s){s=String(s||"").toLowerCase().trim();if(!/^[a-z0-9-]{1,40}$/.test(s))return null;const r=await sb.rpc("commune_par_slug",{p_slug:s});return(r.data||[])[0]||null}
+(async()=>{try{let sl=new URLSearchParams(location.search).get("c");try{sl=sl||localStorage.getItem("mc_co")}catch(e){}const c=sl&&await findC(sl);if(c)await choose(c)}catch(e){}render()})();
