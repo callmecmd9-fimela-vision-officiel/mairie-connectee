@@ -8,3 +8,6 @@
 - **Droits anon retirés** sur 12 tables internes : défense en profondeur ; seules les RPC publiques restent exécutables par anon.
 - **Non fait volontairement** : chargement de `core.js load()` en deux temps (risque de régression sur les vues qui lisent adjoints/projets) ; fusion des policies permissives ; suppression de l'index doublon et de `bright-worker` (accord requis).
 - **Non audités** (absents des docs du Project) : `index.html`, `mairie.html`, `_headers`, CSS citoyen, `supabase.js` côté fichiers HTML.
+- **Raccourcis en mots simples = demandes libres préremplies** (pas de démarche inventée) ; les vraies démarches viennent de la table `demarches` de la mairie.
+- **Rubrique sans démarche ni raccourci : formulaire direct** (pas d'écran intermédiaire inutile).
+- **Langues** : `TX.fr` est la référence ; wolof et sereer ajoutés seulement avec des textes validés par un locuteur.

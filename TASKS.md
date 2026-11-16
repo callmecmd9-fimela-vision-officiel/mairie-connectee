@@ -20,3 +20,9 @@
 ## Fait (audits précédents)
 - Audit 3 : numéro de suivi non devinable, commune fermée refusée, droits retirés, enhance.js, citoyen_id FK ON DELETE SET NULL.
 - Audit 2 : fuite `communes`, pièces, SW hors-ligne, CSP, .assetsignore. Correctif actualisation KO (SW mc-v9).
+
+## Lot 3 fait (navigation et catégories)
+- À copier : `citoyen.js`, `tests/citoyen-nav.test.js`.
+- Reste lot 5 : formulaires d'état civil (n° d'acte + année + nom, ou téléversement), statuts « acceptée » et « prêt à retirer » (migration SQL + libellés + notifications).
+- Reste lot 6 : table `rdv_demandes` validée par le personnel ; page Suivi avec explication simple de chaque statut.
+- Reste : la mairie doit saisir ses vraies démarches (Citoyens > Démarches) ; wolof/sereer : textes à fournir et valider.
