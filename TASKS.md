@@ -1,28 +1,22 @@
-## Fait (correctif actualisation KO)
-- CSP connect-src 'self', SW mc-v7 avec auto-test, tests/sw-csp.test.js.
-## À vérifier chez l'utilisateur
-- Après déploiement : ouvrir /, /mairie, /saas, actualiser 3 fois ; PWA : ouvrir, fermer, rouvrir. Si une PWA reste blanche : la désinstaller/réinstaller une fois.
-
-## Fait (audit 3)
-- Numéro de suivi non devinable, commune fermée refusée, droits inutiles retirés, enhance.js (double-envoi, focus, hors-ligne), tests/enhance.test.js.
-- Correction : `demandes.citoyen_id` a bien une FK vers auth.users, en ON DELETE SET NULL (la purge des anonymes ne supprime aucune demande).
+## Fait (2026-11-16 — porte d'entrée citoyenne)
+- Lien/QR par commune, mémorisation, manifest par commune, blason/couleur/slogan, hors-ligne, panneau « Lien citoyen » (Administration). Voir CHANGELOG.md.
+- Sécurité base : droits anon retirés sur 12 tables, policy citoyens_own optimisée. Advisors sécurité : seuls restent les avertissements voulus (RPC publiques, connexions anonymes) + mots de passe compromis (plan Pro).
+## À faire — action utilisateur
+- Copier dans le dépôt : `citoyen.js`, `demarches.js`, `manifest-citoyen.webmanifest`, **`qr.js` dans /js/** ; lancer `node patch-core.js js/core.js` ; déployer ; vider le cache/réinstaller la PWA une fois.
+- `_headers` (non fourni) : vérifier `manifest-src 'self' blob:` et `img-src` incluant `https://aiqegpijisspankpkwfj.supabase.co`.
+- Espace mairie > Administration > Lien citoyen : choisir la couleur, publier le blason, imprimer l'affiche QR (par commune).
+- Turnstile : ajouter mairie-connectee.callmecmd9-916.workers.dev aux domaines autorisés.
+- saas-admin : secrets ALLOWED_ORIGIN et SITE_URL = https://mairie-connectee.callmecmd9-916.workers.dev.
+- Sous-domaine par commune : DNS wildcard + route Cloudflare (la base résout déjà `sous_domaine`/`domaine_perso`).
+- Auth : mots de passe compromis (plan Pro) ; inscriptions e-mail publiques désactivées ; limite de connexions anonymes basse.
 ## À décider (accord requis, non appliqué)
 - Index doublon `communes_slug_key` / `communes_slug_uq` : supprimer l'un des deux.
 - Fonction « bright-worker » (doublon de saas-admin) : supprimer.
-- Périmé : supabase/20261114_super_admin.sql à remplacer par un export de la base ou à retirer du dépôt.
-- 33 avertissements « multiple permissive policies » (performance, négligeable à ce volume) : fusionner si une commune grossit.
-## À faire (action utilisateur)
-- Turnstile : ajouter mairie-connectee.callmecmd9-916.workers.dev aux domaines autorisés.
-- saas-admin : secrets ALLOWED_ORIGIN et SITE_URL = https://mairie-connectee.callmecmd9-916.workers.dev (tant qu'ils manquent, la création de mairie répond « Origine refusée »).
-- Auth : mots de passe compromis (plan Pro) ; vérifier que les inscriptions publiques par e-mail sont désactivées (comptes créés par l'administration) et que la limite de connexions anonymes est basse.
+- supabase/20261114_super_admin.sql périmé : remplacer par un export ou retirer.
+- 33 « multiple permissive policies » : fusionner si une commune grossit.
 ## Plus tard
-- Compteurs serveur si une commune dépasse 10 000 lignes/table (chargement paginé actuel : 10 000 max).
-- Login plus rapide : charger d'abord les tables de l'accueil, le reste en arrière-plan (core.js `load`).
-- Notifications push (VAPID + edge function) : non faites.
-- Pagination core.js : page 0 sans tri par id (ex-aequo possibles au-delà de 1000 lignes, tables sans tri uniquement).
-
-## Fait (audit 2)
-- Fuite `communes` corrigée, dépôt de pièces re-testé, SW hors-ligne, CSP, .assetsignore, tests/smoke.js.
-## Fait
-- Retrait liste communes (citoyen.js) ; soldes de congés ; guard.js CSP ; CSS mobile.
-- Edge saas-admin déployée (v1, identique au fichier fourni).
+- Icônes PNG 192/512 générées par commune (le blason publié est en webp, non « maskable »).
+- Chargement `load()` en deux temps ; compteurs serveur > 10 000 lignes/table ; notifications push ; pagination page 0 sans tri par id.
+## Fait (audits précédents)
+- Audit 3 : numéro de suivi non devinable, commune fermée refusée, droits retirés, enhance.js, citoyen_id FK ON DELETE SET NULL.
+- Audit 2 : fuite `communes`, pièces, SW hors-ligne, CSP, .assetsignore. Correctif actualisation KO (SW mc-v9).
