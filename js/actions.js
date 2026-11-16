@@ -29,7 +29,7 @@ else if(a=="filt")S.f=t.dataset.f;
 else if(a=="opend"){S.dd=d.req[i].id;await openD()}
 else if(a=="cld"){S.dd=null}
 else if(a=="dact"){const r=d.req.find(x=>x.id==S.dd);if(r){const u={};if(t.dataset.s)u.statut=t.dataset.s;if(t.dataset.o)u.service=g("dsv");if(t.dataset.r)u.reponse=g("drp")||null;
-if((u.statut=="traitee"||u.statut=="redirigee")&&!u.reponse)S.err="Rédigez d’abord la réponse destinée au citoyen.";else{await run(sb.from("demandes").update(u).eq("id",r.id));await load(["demandes"]);await openD()}}}
+if(["traitee","redirigee","rejetee","en_attente_pieces"].includes(u.statut)&&!u.reponse)S.err="Rédigez d’abord le message au citoyen (réponse, motif du rejet ou pièces demandées).";else{await run(sb.from("demandes").update(u).eq("id",r.id));await load(["demandes"]);await openD()}}}
 else if(UIB.includes(a)){
 if(a=="sopen"){S.sel[t.dataset.k]=t.dataset.id||null;S.hk=null}
 else if(a=="gos"){const v=t.dataset.v;if(t.dataset.r){printTab(REP[t.dataset.r]());return}if(isS())S.view=v;else{S.view="s_sec";S.tab.secretariat=SMAP[v]||"sdash"}S.menu=false}
