@@ -15,10 +15,10 @@ const vm=require('vm'),fs=require('fs'),path=require('path');let f=0;const ok=(n
  console.log('DEBUG accueil:',H().length,(H().match(/data-a="cat"/g)||[]).length,SS().co,SS().err);
  ok('accueil : 10 services affichés',(H().match(/class="tt" data-a="cat"/g)||[]).length===10);
  await click({a:'cat',c:'État civil et documents'});
- ok('service avec démarche configurée : liste (pas le formulaire)',/Que voulez-vous faire/.test(H())&&/Acte de naissance \(copie littérale\)/.test(H())&&!/id="fn"/.test(H()));
- ok('liste : raccourcis en mots simples + Autre demande',/Demander un extrait de naissance/.test(H())&&/Demander un extrait de décès/.test(H())&&/Autre demande/.test(H()));
- ok('liste : délai indicatif affiché',/Délai indicatif : 3 jours/.test(H()));
- await click({a:'dm',d:'d1'});
+ ok('État civil : 4 grandes cartes + Autres documents (pas le formulaire)',/Que voulez-vous faire/.test(H())&&(H().match(/data-a="rc"/g)||[]).length===4&&/certificat de résidence/.test(H())&&/data-a="dlgo"/.test(H())&&!/id="fn"/.test(H()));
+ ok('cartes : extraits naissance/décès + Autres documents',/Demander un extrait de naissance/.test(H())&&/Demander un extrait de décès/.test(H())&&/Autres documents/.test(H()));
+ 
+ await click({a:'dm',d:'d1'});/*dm sans liste*/
  ok('choix démarche état civil (naissance) : formulaire extrait guidé + infos de la démarche',/id="ecn"/.test(H())&&/Extrait d’acte de naissance/.test(H())&&/Délai indicatif :<\/b> 3 jours/.test(H()));
  await click({a:'back'});ok('retour du formulaire : retour à la liste',/Que voulez-vous faire/.test(H()));
  await click({a:'rc',r:'Demander un extrait de mariage'});
