@@ -2,7 +2,7 @@
 (function(){
 var app=document.getElementById("app");if(!app)return;
 /* actions de navigation/lecture : jamais verrouillées ni bloquées hors-ligne */
-var FREE=(" idea copy useia geo print csv menu go tab filt flr sopen gos flt rpgen coprint dochist ofile adjv edit ecl ruopen inopen rpopen hist rppdf pjrapport opend cld ia dir pg links cres cea eab epay eof spno chg cat back ").split(" ");
+var FREE=(" idea copy useia geo print csv menu go tab filt flr sopen gos flt rpgen coprint dochist ofile adjv edit ecl ruopen inopen rpopen hist rppdf pjrapport opend cld ia dir pg links cres cea eab epay eof spno chg cat back dlgo dlgx dlgc dlgp rc dm hit ").split(" ");
 var free={};FREE.forEach(function(k){if(k)free[k]=1});
 var busy=false,tmr=0,last=null,bar=null;
 function unlock(){busy=false;clearTimeout(tmr)}
