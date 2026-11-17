@@ -13,7 +13,7 @@ let fail=0;const ok=(n,f)=>{try{const r=f();if(r&&r.then)return r.then(()=>conso
 // citoyen
 let c=ctx();run(c,['citoyen']);
 ok('citoyen: accueil sans commune',()=>vm.runInContext('render();$("#app").innerHTML.length>=0',c));
-ok('citoyen: accueil/form/detail',()=>vm.runInContext(`S.co="Fimela";S.slug="fimela";S.cid="1";S.info={};S.pub=[{texte:"x"}];render();home().length>50&&(S.cat="Audience",form().length>50)&&(S.cat=null,S.res={type:"t",numero:"n",cree:"2026-01-01",statut:"nouvelle",historique:[{date:"2026-01-01",statut:"nouvelle"}]},detail().length>50)`,c));
+ok('citoyen: accueil/form/detail',()=>vm.runInContext(`S.co="Fimela";S.slug="fimela";S.cid="1";S.info={};S.pub=[{texte:"x"}];render();home().length>50&&(S.cat="Audiences et rendez-vous",form().length>50)&&(S.cat=null,S.res={type:"t",numero:"n",cree:"2026-01-01",statut:"nouvelle",historique:[{date:"2026-01-01",statut:"nouvelle"}]},detail().length>50)`,c));
 // mairie
 for(const [role,sa] of [['maire',0],['adjoint',0],['secretariat',0],['cabinet',0],['finances',0],['rh',0],['etat_civil',0],['technique',0],['agent',0],['super_admin',1]]){
  c=ctx();run(c,['core','adjoints','secretariat','superadmin','maire','actions']);

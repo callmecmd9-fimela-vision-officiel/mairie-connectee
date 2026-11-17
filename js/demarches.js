@@ -37,3 +37,35 @@ const sm=await mk(720),big=await mk(1280);
 for(const [n,b] of [["bandeau-m.webp",sm],["bandeau.webp",big]]){const up=await sb.storage.from("identite").upload(S.cid+"/"+n,b,{upsert:true,contentType:"image/webp"});if(up.error)throw new Error(up.error.message)}
 S.err="Photo de bannière publiée ("+kb(big.size)+" ordinateur, "+kb(sm.size)+" téléphone) : elle s’affiche maintenant sur l’application citoyenne."}
 }catch(x){S.err=x.message||"Erreur réseau."}render();window.scrollTo(0,0)});
+
+/* Lot 6 : rendez-vous demandés par les citoyens (espace mairie > Citoyens > Rendez-vous) */
+E0.rdq=[];E0.rdp=[];
+LG.rdv_demandes=[()=>LQ("rdv_demandes").order("created_at",DE),r=>{S.db.rdq=r||[]}];
+LG.rdv_planning=[()=>sb.from("rdv_planning").select("*").eq("commune_id",S.cid).maybeSingle(),r=>{S.db.rdp=r?[r]:[]}];
+const RQS={demandee:"En attente",confirmee:"Confirmé",refusee:"Refusé",annulee:"Annulé"};
+const RJ=[[1,"Lundi"],[2,"Mardi"],[3,"Mercredi"],[4,"Jeudi"],[5,"Vendredi"],[6,"Samedi"],[7,"Dimanche"]],hm5=v=>String(v||"").slice(0,5);
+const rqplan=()=>{const R=D().rdp,P=R[0]||{},j=P.jours||[1,2,3,4,5],pd=P.pause_debut===undefined?"12:30":P.pause_debut,pf=P.pause_fin===undefined?"14:00":P.pause_fin;
+return pn("Jours et heures de rendez-vous","cal",`<p>${P.actif?"<b>Actif</b> : le citoyen choisit un jour ouvrable puis une heure libre.":"<b>Non activé</b> : le citoyen propose seulement une date, vous fixez l’heure."}</p><div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px">${RJ.map(x=>`<span style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="rp_j${x[0]}" aria-label="${x[1]}" style="width:auto;min-height:0"${j.includes(x[0])?" checked":""}> ${x[1]}</span>`).join("")}</div>`+
+frm(inp("rp_d","Ouverture","time",hm5(P.heure_debut||"08:00"))+inp("rp_f","Fermeture","time",hm5(P.heure_fin||"17:00"))+inp("rp_pd","Début de la pause","time",hm5(pd))+inp("rp_pf","Fin de la pause","time",hm5(pf))+sel("rp_du","Durée d’un créneau",[[15,"15 minutes"],[20,"20 minutes"],[30,"30 minutes"],[45,"45 minutes"],[60,"1 heure"]],P.duree_min||30))+
+`<label style="display:flex;gap:8px;align-items:center;margin:0 0 10px"><input type="checkbox" id="rp_ac" style="width:auto;min-height:0"${P.actif||!R.length?" checked":""}> Proposer ces créneaux aux citoyens</label><p><button class="bt" data-m="rqplan">Enregistrer</button></p>`+emp("Les citoyens ne voient que les heures libres : un créneau déjà confirmé pour le même service disparaît. Laissez la pause vide si elle n’existe pas. Les rendez-vous restent confirmés par vous, jamais automatiquement."))};
+const rdvq=()=>{const d=D(),L=d.rdq,o=S.sel.rq&&L.find(x=>x.id==S.sel.rq);
+return rqplan()+(o?pn("Rendez-vous "+esc(o.numero),"cal",`<p><b>${esc(o.nom)}</b>${o.contact?" · "+esc(o.contact):""}<br>${esc(svn(o.service))} · date souhaitée ${fdd(o.date_souhaitee)}${o.heure_souhaitee?" à "+hm5(o.heure_souhaitee):""}</p><p>${esc(o.motif)}</p>`+(["demandee","confirmee"].includes(o.statut)?`<div class="fr">${inp("rq_d","Date confirmée","date",o.date_confirmee||o.date_souhaitee)}${inp("rq_h","Heure","time",String(o.heure_confirmee||o.heure_souhaitee||"09:00").slice(0,5))}</div><label for="rq_r">Message au citoyen (obligatoire pour un refus)</label><textarea id="rq_r" rows="2" maxlength="500">${esc(o.reponse||"")}</textarea><p style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="bt" data-m="rqok">Confirmer</button><button class="bo" data-m="rqno">Refuser</button> ${closeb("rq")}</p>`:`<p>${closeb("rq")}</p>`)):"")+
+pn("Rendez-vous demandés par les citoyens","cal",L.map(x=>rowv("rq",x.id,`<b>${esc(x.nom)}</b> · ${esc(svn(x.service))}<div class="mut" style="font-size:13px">${esc(x.numero)} · souhaité le ${fdd(x.date_souhaitee)}${x.heure_souhaitee?" à "+hm5(x.heure_souhaitee):""}${x.contact?" · "+esc(x.contact):""}</div>`,st2(RQS[x.statut]||x.statut,x.statut=="confirmee"?"ok":x.statut=="demandee"?"or":"rd"))).join("")||emp("Aucune demande de rendez-vous."))+emp("Aucun rendez-vous n’est confirmé automatiquement : vous choisissez la date et l’heure.")};
+SP.citoyens.subs.push(["rdvq","Rendez-vous"]);RP.rdvq=["maire","cabinet","secretariat"];SPL.rdvq="Rendez-vous demandés";SUB.rdvq=rdvq;
+document.addEventListener("click",async e=>{const t=e.target.closest("[data-m^=rq]");if(!t||S.sa)return;const m=t.dataset.m;if(!["rqok","rqno"].includes(m))return;const g=id=>(($("#"+id)||{}).value||"").trim();S.err="";
+try{const x=D().rdq.find(y=>y.id==S.sel.rq);if(!x)return;let u;
+if(m=="rqok"){const dj=g("rq_d"),h=g("rq_h");if(!dj||!h)throw new Error("Indiquez la date et l’heure.");if(dj<T)throw new Error("La date ne peut pas être passée.");u={statut:"confirmee",date_confirmee:dj,heure_confirmee:h,reponse:g("rq_r")||null}}
+else{if(g("rq_r").length<5)throw new Error("Écrivez le motif du refus au citoyen.");u={statut:"refusee",reponse:g("rq_r"),date_confirmee:null,heure_confirmee:null}}
+const r=await sb.from("rdv_demandes").update(u).eq("id",x.id);if(r.error)throw new Error(r.error.code=="23505"?"Ce créneau est déjà confirmé pour ce service. Choisissez une autre heure.":r.error.message);
+if(m=="rqok"&&x.service=="maire"&&x.statut!="confirmee"){await sb.from("rdv").insert({commune_id:S.cid,jour:u.date_confirmee,heure:u.heure_confirmee,titre:"Audience : "+x.nom})}
+await load(["rdv_demandes","rdv"]);S.err=m=="rqok"?"Rendez-vous confirmé : le citoyen est notifié s’il a un compte.":"Refus enregistré."}catch(x){S.err=x.message||"Erreur réseau."}render();window.scrollTo(0,0)});
+
+/* Lot 6 bis : enregistrement du planning (jours ouvrables, heures, pause, durée) */
+document.addEventListener("click",async e=>{const t=e.target.closest("[data-m=rqplan]");if(!t||S.sa)return;const g=id=>(($("#"+id)||{}).value||"").trim();S.err="";
+try{const J=RJ.map(x=>x[0]).filter(n=>($("#rp_j"+n)||{}).checked),d=g("rp_d"),f=g("rp_f"),pd=g("rp_pd"),pf=g("rp_pf"),du=+g("rp_du"),mn=h=>+h.slice(0,2)*60+ +h.slice(3,5);
+if(!J.length)throw new Error("Cochez au moins un jour.");
+if(!d||!f||f<=d)throw new Error("L’heure de fermeture doit être après l’ouverture.");
+if(!!pd!==!!pf||(pd&&(pf<=pd||pd<d||pf>f)))throw new Error("Pause : indiquez un début et une fin dans les heures d’ouverture, ou laissez les deux vides.");
+if(!(du>=10&&du<=120)||mn(f)-mn(d)<du)throw new Error("La durée d’un créneau doit tenir dans les heures d’ouverture.");
+const r=await sb.from("rdv_planning").upsert({commune_id:S.cid,actif:!!($("#rp_ac")||{}).checked,jours:J,heure_debut:d,heure_fin:f,pause_debut:pd||null,pause_fin:pf||null,duree_min:du,updated_at:new Date().toISOString()},{onConflict:"commune_id"});
+if(r.error)throw new Error(r.error.message);await load(["rdv_planning"]);S.err="Jours et heures enregistrés."}catch(x){S.err=x.message||"Erreur réseau."}render();window.scrollTo(0,0)});

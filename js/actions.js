@@ -1,6 +1,6 @@
 /* actions */
 const TBA=(()=>{const o={},s=(t,l)=>l.split(" ").forEach(k=>o[k]=t);
-s(["adjoints"],"adjsave adjphoto adjlink adjoff");s(["delegations"],"delsave delacte delval delend deldl");s(["projets"],"pjassign pjsuivi addproj cycp delproj");
+s(["adjoints"],"adjsave adjphoto adjlink adjoff");s(["delegations"],"delsave delacte delval delend deldl");s(["projets"],"pjassign pjsuivi addproj cycp delproj pjpub");
 s(["reunions","reunion_participants"],"rusave rudel ruconv");s(["reunions"],"rucr");s(["instructions"],"insave inrep incl sinsave sinaff sinst sinobs sinrel");
 s(["rapports"],"rpsave rpobs rparch");s(["messages"],"mssend msopen");s(["notifications"],"ntall ntgo");
 s(["courrier"],"cinsave cinaff cinadj cintrm cinst cinobs cosave costatut coatt coenv codel addmail cycm");s(["actes"],"acsave acst acsign acpreuve actrans acdel");
@@ -29,7 +29,7 @@ else if(a=="filt")S.f=t.dataset.f;
 else if(a=="opend"){S.dd=d.req[i].id;await openD()}
 else if(a=="cld"){S.dd=null}
 else if(a=="dact"){const r=d.req.find(x=>x.id==S.dd);if(r){const u={};if(t.dataset.s)u.statut=t.dataset.s;if(t.dataset.o)u.service=g("dsv");if(t.dataset.r)u.reponse=g("drp")||null;
-if(["traitee","redirigee","rejetee","en_attente_pieces"].includes(u.statut)&&!u.reponse)S.err="Rédigez d’abord le message au citoyen (réponse, motif du rejet ou pièces demandées).";else{await run(sb.from("demandes").update(u).eq("id",r.id));await load(["demandes"]);await openD()}}}
+if(["traitee","redirigee","rejetee","en_attente_pieces","pret_a_retirer"].includes(u.statut)&&!u.reponse)S.err="Rédigez d’abord le message au citoyen (réponse, motif du rejet, pièces demandées ou lieu et modalités de retrait).";else{await run(sb.from("demandes").update(u).eq("id",r.id));await load(["demandes"]);await openD()}}}
 else if(UIB.includes(a)){
 if(a=="sopen"){S.sel[t.dataset.k]=t.dataset.id||null;S.hk=null}
 else if(a=="gos"){const v=t.dataset.v;if(t.dataset.r){printTab(REP[t.dataset.r]());return}if(isS())S.view=v;else{S.view="s_sec";S.tab.secretariat=SMAP[v]||"sdash"}S.menu=false}
@@ -128,7 +128,7 @@ else if(a=="delrdv")await run(sb.from("rdv").delete().eq("id",d.rdv[i].id));
 else if(a=="addmail"){if(g("mo"))await run(sb.from("courrier").insert({commune_id:c,sens:g("ms"),correspondant:g("mf")||"Non précisé",objet:g("mo")}));S.f=g("ms")||S.f}
 else if(a=="cycm"){const m=d.mail[i];if(MS.indexOf(m.st)<0){S.err="Ce courrier suit le circuit du Secrétariat municipal."}else await run(sb.from("courrier").update({statut:MC[(MS.indexOf(m.st)+1)%MS.length]}).eq("id",m.id))}
 else if(a=="cycr"){const m=d.req[i];await run(sb.from("demandes").update({statut:RC[(RS.indexOf(m.st)+1)%RS.length]}).eq("id",m.id))}
-else if(a=="addpost"){if(g("pt"))await run(sb.from("publications").insert({commune_id:c,reseau:g("pr"),jour:g("pd")||T,texte:g("pt"),media_id:g("pm")||null}))}
+else if(a=="addpost"){if(g("pt"))await run(sb.from("publications").insert({commune_id:c,reseau:g("pr"),jour:g("pd")||T,texte:g("pt"),categorie:g("pc")||"actualite",media_id:g("pm")||null}))}
 else if(a=="nextp"){const p=d.posts[i],k=PS.indexOf(p.st);if(k<3)await run(sb.from("publications").update({statut:PS[k+1]}).eq("id",p.id))}
 else if(a=="delp")await run(sb.from("publications").delete().eq("id",d.posts[i].id));
 else if(a=="addphoto"){const f=($("#pf")||{}).files&&$("#pf").files[0],ti=g("pt2");if(f&&ti){const bl=await comp(f),pa=c+"/"+crypto.randomUUID()+"."+(bl.type=="image/webp"?"webp":"jpg"),up=await sb.storage.from("medias").upload(pa,bl,{contentType:bl.type});if(up.error)S.err="Envoi impossible : "+up.error.message;else{const r=await run(sb.from("medias").insert({commune_id:c,type:"photo",titre:ti,chemin:pa}));if(!r.error)S.err="Photo enregistrée : "+kb(f.size)+" réduits à "+kb(bl.size)+"."}}else S.err="Choisissez une photo et un titre."}
@@ -141,6 +141,7 @@ else if(a=="addfin"){await run(sb.from("finances").upsert({commune_id:c,annee:Y,
 else if(a=="delfin")await run(sb.from("finances").delete().eq("id",d.fin[i].id));
 else if(a=="addproj"){if(g("jt")){const la=g("jy").replace(",","."),lo=g("jx").replace(",",".");await run(sb.from("projets").insert({commune_id:c,titre:g("jt"),localite:g("jl")||null,categorie:g("jc"),statut:g("js"),avancement:g("js")=="termine"?100:Math.min(100,n("ja")),budget:n("jb"),domaine:g("jdm")||null,adjoint_id:g("jaj")||null,date_debut:g("jd1")||null,date_fin:g("jd2")||null,financement:g("jfi")||null,responsable:g("jre")||null,description:g("jds")||null,lat:la&&!isNaN(la)?+la:null,lng:lo&&!isNaN(lo)?+lo:null}))}}
 else if(a=="cycp"){const p=d.proj[i],s2=PST[(PST.indexOf(p.statut)+1)%3];await run(sb.from("projets").update({statut:s2,avancement:s2=="termine"?100:(p.statut=="termine"?90:p.avancement)}).eq("id",p.id))}
+else if(a=="pjpub"){const p=d.proj[i];await run(sb.from("projets").update({public:!p.public}).eq("id",p.id))}
 else if(a=="delproj"){if(confirm("Retirer ce projet ?"))await run(sb.from("projets").delete().eq("id",d.proj[i].id))}
 else if(a=="saveind"){const la=g("pla").replace(",","."),lo=g("plo").replace(",",".");await run(sb.from("indicateurs").upsert({commune_id:c,population:n("pp"),croissance:+g("pg")||0,villages:n("pv"),menages:n("pm"),agents:n("pa"),budget_annuel:n("pb"),slogan:g("psl")||null,devise:g("pdv")||null,contact_tel:g("ptl")||null,contact_adresse:g("pad")||null,centre_lat:la&&!isNaN(la)?+la:null,centre_lng:lo&&!isNaN(lo)?+lo:null,zoom:n("pz")||11,departement:g("pdp")||null,region:g("prg")||null,pays:g("ppy")||null}));if(!S.err)S.err="Paramètres enregistrés."}
 else if(a=="upimg"){const k=t.dataset.k,f=($("#"+t.dataset.f)||{}).files&&$("#"+t.dataset.f).files[0];if(f){const bl=await comp(f,k=="blason"?600:1600,k=="blason"?150000:400000),pa=c+"/"+k+"-"+crypto.randomUUID()+"."+(bl.type=="image/webp"?"webp":"jpg"),up=await sb.storage.from("medias").upload(pa,bl,{contentType:bl.type});if(up.error)S.err="Envoi impossible : "+up.error.message;else{if(S.ind[k])await sb.storage.from("medias").remove([S.ind[k]]);const o={commune_id:c};o[k]=pa;await run(sb.from("indicateurs").upsert(o));if(!S.err)S.err="Image enregistrée ("+kb(bl.size)+")."}}else S.err="Choisissez d’abord une image."}
