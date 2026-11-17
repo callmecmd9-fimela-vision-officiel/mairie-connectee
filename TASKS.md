@@ -26,3 +26,18 @@
 - Reste lot 5 : formulaires d'état civil (n° d'acte + année + nom, ou téléversement), statuts « acceptée » et « prêt à retirer » (migration SQL + libellés + notifications).
 - Reste lot 6 : table `rdv_demandes` validée par le personnel ; page Suivi avec explication simple de chaque statut.
 - Reste : la mairie doit saisir ses vraies démarches (Citoyens > Démarches) ; wolof/sereer : textes à fournir et valider.
+
+## Lot 5 fait (extrait d'acte guidé, statuts retrait)
+- À copier : `citoyen.js`, `core.js`, `actions.js`, `20261120_lot5_statuts_retrait.sql` (déjà en base), `tests/*`. Vider le cache/PWA une fois.
+- Reste lot 6 : table `rdv_demandes` validée par le personnel + écran Rendez-vous citoyen (`creer_demande` refuse encore les types « Rendez-vous avec le Maire / Signalement / Autre demande » alors que la contrainte les autorise).
+- Reste : SMS (fournisseur non choisi : connexion par téléphone indisponible, le dépôt sans compte reste actif) ; la mairie doit saisir ses démarches (Citoyens > Démarches).
+
+## Lot 6 fait (rendez-vous)
+- À faire : appliquer `20261121_lot6_rdv.sql` (Supabase), copier `citoyen.js`, `demarches.js`, `index.html`, `tests/citoyen-rdv.test.js` ; déployer ; vider le cache/PWA.
+- À tester en vrai : isolation commune/commune et citoyen/citoyen sur `rdv_demandes`/`mes_rdvs` (non exécutable ici).
+- Reste lot 7 (actualités, infos pratiques, accessibilité), lot 8 (tests/sécurité/doc). SMS : fournisseur non choisi.
+
+## Lot 6 bis fait (créneaux + annulation)
+- À faire : appliquer `20261122_lot6bis_creneaux.sql` (Supabase, après le lot 6) ; copier `citoyen.js`, `demarches.js`, `index.html`, `mairie.html`, `tests/*` ; déployer ; vider le cache/PWA.
+- À vérifier en vrai : (1) colonnes de la table `notifications` (la notification d'annulation au personnel est protégée par un bloc d'exception : si le format diffère, l'annulation marche mais sans notification) ; (2) isolation commune/commune et citoyen/citoyen sur `creneaux_rdv`, `annuler_rdv`, `rdv_planning` ; (3) la migration échoue si des doublons « confirmé » existent déjà (index unique).
+- Reste lot 7 (actualités, infos pratiques, accessibilité), lot 8 (tests/sécurité/doc). SMS : fournisseur non choisi.

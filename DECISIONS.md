@@ -11,3 +11,11 @@
 - **Raccourcis en mots simples = demandes libres préremplies** (pas de démarche inventée) ; les vraies démarches viennent de la table `demarches` de la mairie.
 - **Rubrique sans démarche ni raccourci : formulaire direct** (pas d'écran intermédiaire inutile).
 - **Langues** : `TX.fr` est la référence ; wolof et sereer ajoutés seulement avec des textes validés par un locuteur.
+- **Extrait = demande guidée, pas de message libre** : le message est composé (n° acte, année, nom) et lisible par le personnel ; aucune colonne ajoutée.
+- **« Accepter » ouvert à tout le personnel** (le service valide) ; « prêt à retirer » imposé après acceptation côté serveur ; clôture finale toujours réservée maire/adjoint.
+- **orientee = « Transmise au service »**, a_valider = « En cours de vérification » (aligné sur les notifications existantes).
+- **Rendez-vous** : le citoyen propose une date, le service fixe date+heure (pas de table de disponibilités inventée). Services proposés : secrétariat, Maire, état civil, technique, finances.
+- La rubrique « Audiences et rendez-vous » ouvre l’écran rendez-vous ; les démarches « Audience » configurées restent trouvables via la recherche.
+- Pas d’annulation par le citoyen à ce stade (reporté).
+- **Créneaux (lot 6 bis)** : jamais inventés. Calculés côté serveur depuis un planning saisi par la mairie (`rdv_planning`) ; sans planning actif, le citoyen propose seulement une date (comportement du lot 6). Conflit = un seul rendez-vous *confirmé* par service/jour/heure ; plusieurs demandes en attente sur la même heure restent possibles, le personnel arbitre.
+- **Annulation par le citoyen** : par numéro non devinable (même modèle de confiance que le suivi) ; seulement « en attente » ou « confirmé » et à venir ; le créneau est libéré. Pause déjeuner Fimela retenue : 12h30-14h (à corriger dans l'espace mairie si différent).
