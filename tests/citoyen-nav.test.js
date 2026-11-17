@@ -19,10 +19,10 @@ const vm=require('vm'),fs=require('fs'),path=require('path');let f=0;const ok=(n
  ok('liste : raccourcis en mots simples + Autre demande',/Demander un extrait de naissance/.test(H())&&/Demander un extrait de décès/.test(H())&&/Autre demande/.test(H()));
  ok('liste : délai indicatif affiché',/Délai indicatif : 3 jours/.test(H()));
  await click({a:'dm',d:'d1'});
- ok('choix démarche : formulaire avec démarche présélectionnée',/id="fn"/.test(H())&&/<option value="d1" selected>/.test(H()));
+ ok('choix démarche état civil (naissance) : formulaire extrait guidé + infos de la démarche',/id="ecn"/.test(H())&&/Extrait d’acte de naissance/.test(H())&&/Délai indicatif :<\/b> 3 jours/.test(H()));
  await click({a:'back'});ok('retour du formulaire : retour à la liste',/Que voulez-vous faire/.test(H()));
  await click({a:'rc',r:'Demander un extrait de mariage'});
- ok('raccourci : objet prérempli',/id="fo"[^>]*value="Demander un extrait de mariage"/.test(H()));
+ ok('raccourci extrait de mariage : formulaire guidé avec conjoint',/id="ecc"/.test(H())&&/Extrait d’acte de mariage/.test(H())&&!/id="fm"/.test(H()));
  await click({a:'back'});await click({a:'back'});ok('retour de la liste : accueil',(H().match(/class="tt" data-a="cat"/g)||[]).length===10);
  await click({a:'cat',c:'Sport, culture et associations'});
  ok('service sans démarche ni raccourci : formulaire direct (1 clic)',/id="fn"/.test(H())&&!/Que voulez-vous faire/.test(H()));
