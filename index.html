@@ -93,8 +93,19 @@ label{display:block;font:700 13px 'Nunito Sans',system-ui,sans-serif;color:var(-
 @keyframes sp{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media print{.hd,.tp,.hero,.c3,.bt,.bo{display:none}}
-</style></head><body><div id="app"></div><div id="ld" role="status"><i aria-hidden="true"></i>Chargement…</div><noscript><p style="padding:24px">Ce portail nécessite JavaScript.</p></noscript>
+/* ---- Lots 1-2 : grandes cartes + boîte de dialogue ---- */
+.tt.big{min-height:104px}.tt.big .tx b{font-size:18px}
+#dlg{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center}#dlg[hidden]{display:none}
+.dlb{background:#fff;width:100%;max-width:640px;height:100%;display:flex;flex-direction:column;padding:16px;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+@media(min-width:700px){#dlg{align-items:center}.dlb{height:auto;max-height:85vh;border-radius:18px}}
+.dlh{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}.dlh h2{font:800 22px/1.2 'Nunito Sans',system-ui,sans-serif}
+.dlx{width:48px;height:48px;border:0;background:#EEF3EC;border-radius:50%;cursor:pointer;display:grid;place-items:center;color:var(--g);flex:none}
+.dsr{display:flex;align-items:center;gap:8px;border:2px solid var(--g);border-radius:99px;padding:2px 14px;color:var(--mut);margin-bottom:10px}.dsr input{border:0;min-height:44px;flex:1;min-width:0;background:transparent;padding:0}.dsr input:focus-visible{outline:0}.dsr:focus-within{outline:3px solid #2563EB}
+.dlc{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;flex:none}.chp{flex:none;min-height:44px;padding:0 16px;border-radius:99px;border:2px solid var(--g);background:#fff;color:var(--g);font-weight:700;cursor:pointer}.chp.on{background:var(--g);color:#fff}
+.dll{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}.dli{border-top:1px solid var(--ln);padding:12px 0}.dli p{margin:4px 0}
+@media print{#dlg{display:none}}
+</style></head><body><div id="app"></div><div id="dlg" role="dialog" aria-modal="true" aria-labelledby="dlt" hidden></div><div id="ld" role="status"><i aria-hidden="true"></i>Chargement…</div><noscript><p style="padding:24px">Ce portail nécessite JavaScript.</p></noscript>
 <script src="/js/guard.js?v=1794657023"></script>
 <script src="/js/supabase.js"></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=tsReady" async defer></script>
-<script src="/js/citoyen.js?v=20261123"></script></body></html>
+<script src="/js/citoyen.js?v=20261124"></script></body></html>

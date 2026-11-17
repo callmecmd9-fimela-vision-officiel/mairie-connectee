@@ -43,3 +43,19 @@
 - Citoyen (`citoyen.js`) : jour puis heures libres (radios, sans perdre la saisie ni l'anti-spam) ; jour fermé refusé avec message ; heure obligatoire ; bouton « Annuler ce rendez-vous » (en attente ou confirmé, à venir). Sans planning actif : écran « date seule » inchangé.
 - Mairie (`demarches.js`) : Citoyens > Rendez-vous > « Jours et heures de rendez-vous » ; heure souhaitée visible et préremplie ; créneau déjà confirmé = message clair.
 - Tests : `tests/citoyen-rdv-creneaux.test.js` (19 contrôles), `tests/mairie-rdv-planning.test.js` (14). Tous les tests existants + smoke OK.
+
+## Lot 7 — Informations et accessibilité (portail citoyen)
+- Base : `20261123_lot7_infos.sql` — `publications.categorie` (actualité/communiqué/avis/événement), `projets.public` (défaut false), RPC `projets_publics(slug)`, `actualites` renvoie la catégorie.
+- Citoyen : section « Travaux et projets », badge de catégorie, « Envoi en cours… », lien « Aller au contenu », `h1` par écran.
+- Mairie : type de publication ; bouton « Visible citoyens / Masqué » sur chaque projet.
+- Tests : `tests/citoyen-info.test.js` (5). Tous OK + smoke.
+
+## Lot 8 — Audit sécurité et tests
+- Audit statique des 6 migrations + `index.ts` : toutes les RPC publiques résolvent la commune par slug côté serveur ; RLS personnel filtrée par `profiles.commune_id` ; droits anon retirés sur les tables internes ; `creer_rdv` réservé aux connectés (anonyme + captcha).
+- `tests/isolation_test.sql` (à lancer dans Supabase) : accès croisés commune/commune.
+
+## Lots catalogue 1 à 6
+- Citoyen : État civil = 4 cartes (naissance, mariage, décès, résidence) + « Autres documents » ; boîte de dialogue (recherche, catégories, aucun-résultat) ; formulaires par modèle (identité, légalisation, foncier, social, libre) ; extraits guidés inchangés.
+- Mairie : Démarches = famille, service, modèle, frais, retrait ; Activer/Désactiver, Archiver.
+- Base : `20261124_catalogue.sql` (28 prestations, 4 actives).
+- Tests : `catalogue.test.js` (nouveau), `citoyen-nav.test.js` mis à jour ; `isolation_catalogue.sql`.

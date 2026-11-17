@@ -20,7 +20,7 @@ SaaS municipal multi-communes. Front statique (HTML/JS sans build) sur Cloudflar
 Lot 1-8 faits : accueil/identité, navigation, espace citoyen (SMS indisponible : dépôt sans compte actif), extrait guidé, rendez-vous (créneaux, annulation), infos (actualités par catégorie, projets publiés), accessibilité de base.
 
 ## Base (migrations dans l'ordre)
-20261116_audit3 → 20261117_demarches_statuts → 20261119_citoyen_prenom → 20261120_lot5_statuts_retrait → 20261121_lot6_rdv → 20261122_lot6bis_creneaux → 20261123_lot7_infos
+20261116_audit3 → 20261117_demarches_statuts → 20261119_citoyen_prenom → 20261120_lot5_statuts_retrait → 20261121_lot6_rdv → 20261122_lot6bis_creneaux → 20261123_lot7_infos → 20261124_catalogue
 
 ## Tests
 `node tests/<nom>.test.js` pour chaque fichier ; `node tests/smoke.js` ; `enhance.test.js` exige `npm i jsdom` ; `tests/isolation_test.sql` à lancer dans Supabase.

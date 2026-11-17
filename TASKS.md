@@ -41,3 +41,15 @@
 - À faire : appliquer `20261122_lot6bis_creneaux.sql` (Supabase, après le lot 6) ; copier `citoyen.js`, `demarches.js`, `index.html`, `mairie.html`, `tests/*` ; déployer ; vider le cache/PWA.
 - À vérifier en vrai : (1) colonnes de la table `notifications` (la notification d'annulation au personnel est protégée par un bloc d'exception : si le format diffère, l'annulation marche mais sans notification) ; (2) isolation commune/commune et citoyen/citoyen sur `creneaux_rdv`, `annuler_rdv`, `rdv_planning` ; (3) la migration échoue si des doublons « confirmé » existent déjà (index unique).
 - Reste lot 7 (actualités, infos pratiques, accessibilité), lot 8 (tests/sécurité/doc). SMS : fournisseur non choisi.
+
+## Lot 7 / 8 — à faire
+- Appliquer `20261123_lot7_infos.sql` ; copier citoyen.js, core.js, actions.js, index.html ; tests ; déployer ; vider cache/PWA.
+- Lancer `isolation_test.sql` dans Supabase : doit afficher « ISOLATION OK ».
+- Supprimer `core_patched.js` (obsolète). Vérifier le nom `.assetsignore` (sans espace ni underscore).
+- Publier les projets à afficher : espace mairie > Projets > « Visible citoyens ».
+- Reste : fournisseur SMS ; saisie des vraies démarches ; wolof/sereer (textes à valider) ; installer jsdom pour `enhance.test.js`.
+
+## Lots catalogue — à faire
+- Appliquer `20261124_catalogue.sql` puis `isolation_catalogue.sql` ; déployer citoyen.js, demarches.js, index.html, mairie.html ; vider cache/PWA.
+- Fimela : valider juridiquement puis activer les 24 prestations inactives ; saisir pièces, frais, délais, retrait.
+- Tester sur Android réel (dialogue, clavier, défilement).

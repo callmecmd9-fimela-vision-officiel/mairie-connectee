@@ -19,3 +19,8 @@
 - Pas d’annulation par le citoyen à ce stade (reporté).
 - **Créneaux (lot 6 bis)** : jamais inventés. Calculés côté serveur depuis un planning saisi par la mairie (`rdv_planning`) ; sans planning actif, le citoyen propose seulement une date (comportement du lot 6). Conflit = un seul rendez-vous *confirmé* par service/jour/heure ; plusieurs demandes en attente sur la même heure restent possibles, le personnel arbitre.
 - **Annulation par le citoyen** : par numéro non devinable (même modèle de confiance que le suivi) ; seulement « en attente » ou « confirmé » et à venir ; le créneau est libéré. Pause déjeuner Fimela retenue : 12h30-14h (à corriger dans l'espace mairie si différent).
+
+- **Projets visibles aux citoyens seulement si la mairie les publie** (`projets.public`, défaut false).
+- **Catégories d'info** = colonne `publications.categorie`, pas de nouvelles tables.
+- **Navigation** : 5 entrées de la spécification ; « Travaux et projets » est une section de l'accueil, pas un lien de menu.
+- **Catalogue** : prestations non confirmées insérées inactives, la mairie les active après vérification de sa compétence ; archivage au lieu de suppression ; frais, pièces et délais jamais préremplis.
