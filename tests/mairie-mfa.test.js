@@ -23,6 +23,18 @@ function setup({ role = "super_admin", aal = "aal1", factors = [{ id: "totp-1", 
           calls.push(["challenge", factorId]);
           return { data: { id: "challenge-1" }, error: null };
         },
+        enroll: async () => {
+          calls.push("enroll");
+          return { data: { id: "totp-new", totp: { qr_code: "data:image/svg+xml;base64,AA==", secret: "TESTSECRET" } }, error: null };
+        },
+        unenroll: async ({ factorId }) => {
+          calls.push(["unenroll", factorId]);
+          return { error: null };
+        },
+        challengeAndVerify: async ({ factorId, code }) => {
+          calls.push(["challengeAndVerify", factorId, code]);
+          return { data: { access_token: "aal2" }, error: null };
+        },
       },
     },
     from(table) {
@@ -88,12 +100,22 @@ function setup({ role = "super_admin", aal = "aal1", factors = [{ id: "totp-1", 
     assert.equal(x.calls.includes("challenge"), false);
   });
 
-  await test("super-admin sans facteur TOTP vérifié : accès refusé et configuration demandée", async () => {
+  await test("super-admin sans facteur TOTP : enrôlement préparé sans ouvrir la console", async () => {
     const x = setup({ factors: [] });
     const ok = await vm.runInContext("profil()", x.context);
     assert.equal(ok, false);
     assert.equal(vm.runInContext("S.mfa.setup", x.context), true);
+    assert.equal(vm.runInContext("S.mfa.factorId", x.context), "totp-new");
+    assert.equal(vm.runInContext("S.mfa.secret", x.context), "TESTSECRET");
+    assert.ok(x.calls.includes("enroll"));
     assert.equal(vm.runInContext("S.role", x.context), null);
+  });
+
+  await test("facteur TOTP non vérifié précédent : nettoyé avant le nouvel enrôlement", async () => {
+    const x = setup({ factors: [{ id: "pending-old", status: "unverified" }] });
+    await vm.runInContext("profil()", x.context);
+    assert.ok(x.calls.some(c => Array.isArray(c) && c[0] === "unenroll" && c[1] === "pending-old"));
+    assert.ok(x.calls.includes("enroll"));
   });
 
   await test("maire AAL1 : aucun défi MFA plateforme imposé", async () => {
