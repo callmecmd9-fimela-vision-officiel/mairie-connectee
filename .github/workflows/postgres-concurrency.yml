@@ -44,3 +44,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: PostgreSQL 17 — concurrency and reservation lifecycle
         run: bash tests/postgres/ia-usage-concurrency.sh
+      - name: PostgreSQL 17 — MFA, paie and adjoint authorization guards
+        run: bash tests/postgres/security-guards-integration.sh
