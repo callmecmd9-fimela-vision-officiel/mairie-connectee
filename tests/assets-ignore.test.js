@@ -9,4 +9,7 @@ for (const rule of [".github/", "supabase/", "*.mjs", "*.ts", "tests", ".assetsi
   assert.ok(rules.includes(rule), `règle d’exclusion manquante : ${rule}`);
 }
 
+assert.equal(fs.existsSync(path.join(__dirname, "..", " .assetsignore")), false,
+  "le fichier .assetsignore mal nommé avec un espace initial ne doit pas subsister");
+
 console.log("OK   sources Supabase, métadonnées CI et modules serveur exclus des assets Worker");
