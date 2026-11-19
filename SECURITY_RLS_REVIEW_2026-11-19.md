@@ -71,3 +71,9 @@ Aucune faille RLS démontrée par les groupes échantillonnés, mais plusieurs z
 - `supabase/config.toml` conserve les paramètres JWT observés : `verify_jwt=false` uniquement pour `purge-pieces` (secret Vault vérifié côté RPC), et `true` pour les cinq autres fonctions.
 - Le workflow CI vérifie désormais chaque `index.ts` avec `deno check`, et un test contrôle la présence des six sources et les six paramètres `verify_jwt`.
 - Les versions source sont synchronisées dans Git ; elles ne sont pas encore déployées. Les secrets restent exclusivement dans les secrets Supabase et ne sont pas copiés dans le dépôt.
+
+## Durcissement final de `ia-texte`
+- Le contrôle d'accès refuse désormais les communes dont le statut n'est ni `essai` ni `actif`, y compris pour un super-administrateur.
+- Les erreurs de lecture ou d'écriture de `ia_usage` entraînent maintenant un refus (HTTP 503) au lieu de laisser le contrôle de quota échouer silencieusement.
+- La limite reste non atomique en cas de requêtes concurrentes. Elle ne peut être rendue atomique proprement qu'avec une RPC/migration versionnée, à différer jusqu'à la réconciliation des 81 migrations.
+- Les tests couvrent désormais le statut de commune et vérifient la présence des protections CORS et quota fail-closed.
