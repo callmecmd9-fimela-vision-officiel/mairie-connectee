@@ -77,3 +77,11 @@ Base de départ : `main` — `a11b53565168cad3bc081b5838ea4638447d6a0e`
 - Le correctif `ia-texte` est versionné dans la PR #1, avec tests Node et contrôle Deno réussis. Il reste à déployer séparément après validation, car le code Supabase actuellement actif n'a pas été remplacé.
 - Les sources des cinq autres Edge Functions actives restent à intégrer au dépôt pour obtenir une traçabilité complète des versions déployées.
 
+
+## Authentification MFA — écart d'interface corrigé sur la branche de travail
+- La console `/saas` possédait déjà un parcours TOTP, mais la console super-administrateur intégrée à `/mairie` ne lançait pas de défi MFA après le mot de passe.
+- Les fonctions SQL et RLS imposaient déjà AAL2 aux opérations sensibles. L'écart observé était donc une incohérence du parcours d'authentification et un défaut d'accès à la console, pas une preuve de contournement des contrôles serveur.
+- Correctif préparé sur `chore/ci-regression-tests` : contrôle AAL2 avant ouverture de la console, défi TOTP pour un facteur vérifié, enrôlement TOTP intégré si aucun facteur vérifié n'existe, vérification du code, et refus des profils inactifs.
+- Les rôles municipaux standards conservent leur parcours habituel ; le contrôle MFA plateforme concerne le rôle `super_admin`.
+- Tests dédiés ajoutés. La correction n'est pas encore déployée sur Supabase ni fusionnée dans `main`.
+
