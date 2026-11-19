@@ -50,3 +50,13 @@ Base de départ : `main` — `a11b53565168cad3bc081b5838ea4638447d6a0e`
 - Réconciliation des migrations SQL présentes dans le dépôt avec les sources exactes et l'historique Supabase.
 - Vérification des Edge Functions, Storage policies, workflows et chemins de déploiement.
 - Correctifs ciblés, tests de non-régression, revue de PR et validation avant fusion.
+
+## Constat complémentaire — Edge Functions
+- Six Edge Functions sont déployées et actives dans Supabase.
+- Aucune source `supabase/functions/*` n'était versionnée dans `main` au moment de l'audit : l'état déployé n'était donc pas reproductible depuis le dépôt.
+- La fonction active `ia-texte` (version 9, `verify_jwt=true`) utilise la clé service-role et autorise le rôle `super_admin` sur la seule base de `profiles.role`. Elle ne vérifie pas le niveau AAL2.
+- Or, la fonction SQL actuelle `public.is_super_admin()` exige explicitement `auth.jwt()->>'aal' = 'aal2'`, et `private.is_platform_admin()` vérifie également AAL2. `ia-texte` contourne donc cette règle côté Edge Function pour les sessions super-admin AAL1.
+- Aucun appel à `ia-texte` n'a été trouvé dans les fichiers JavaScript actuellement versionnés. L'endpoint reste néanmoins actif ; il ne faut pas le considérer comme inoffensif sans vérifier les éventuels clients externes.
+- Correctif préparé sur `chore/ci-regression-tests` : contrôle du JWT avec le client appelant, refus des utilisateurs anonymes/inactifs, appel obligatoire à `public.is_super_admin()` pour le rôle `super_admin`, et vérification du périmètre communal pour les rôles municipaux.
+- Un test de non-régression couvre les cas AAL1/AAL2, utilisateur anonyme, profil inactif, rôle non autorisé et accès intercommunal. Le correctif n'a pas été déployé sur Supabase.
+
