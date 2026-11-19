@@ -263,3 +263,17 @@ La correction définitive devra être adaptée aux règles d'autorisation réell
 
 ### Mesures prises et dépendances
 Aucune fonction n'a été appelée en mode mutation ; aucun rôle, profil ou lien adjoint n'a été modifié. Aucun SQL, ACL ou déploiement n'a été exécuté. Les sources historiques des migrations restent non réconciliées : aucune migration corrective ne doit être créée/appliquée en production avant récupération et comparaison des sources canoniques.
+
+
+## État du correctif SQL ciblé — 19 novembre 2026, 06:52 UTC
+
+Les définitions actives des fonctions ont été relues directement dans le catalogue PostgreSQL (pg_get_functiondef) afin de préparer un correctif aligné sur le code déployé, sans reconstruire les migrations historiques.
+
+- Migration préparée dans la branche : `supabase/migrations/20261119070000_security_null_mfa_guards.sql`.
+- `private.paie_garde(text[])` rejette explicitement le rôle NULL, un tableau de rôles NULL/vide, une comparaison `ANY` indéterminée et un état de maintenance NULL/faux. La surcharge à deux arguments n'est pas modifiée. Le rôle autorisé par `paie_payer` reste limité à `maire` et `finances`.
+- `public.lier_adjoint(uuid,text)` conserve les trois voies d'autorisation prévues (administrateur plateforme, maire communal, super-administrateur AAL2) mais transforme les valeurs NULL en refus explicite. Le contrôle de portée intercommunale reste réservé à l'administrateur plateforme. Les vérifications d'e-mail, de commune, de rôle cible, l'upsert du profil et la liaison adjoint sont conservés.
+- Aucun `GRANT`/`REVOKE`, changement de table, donnée, rôle ou profil n'est inclus dans la migration.
+- Test statique ajouté : `tests/security-null-guards.test.js`. Il contrôle les gardes fail-closed, les voies d'autorisation conservées, la portée communale et l'absence de modification d'ACL.
+- Workflow GitHub #94 : **succès** sur le commit `72df073b2749952bbce6f94583984aa778f5678c` ; suite JavaScript complète et vérification Deno des six Edge Functions réussies.
+
+**Limite de validation :** le test SQL est statique ; aucun test transactionnel AAL1/AAL2 sur une base isolée n'a été possible sans branche Supabase payante. La migration est préparée sur la branche GitHub uniquement et **n'a pas été exécutée**. Elle ne doit pas être appliquée à la production avant une revue finale et une stratégie de recette compatible avec le plan gratuit.
