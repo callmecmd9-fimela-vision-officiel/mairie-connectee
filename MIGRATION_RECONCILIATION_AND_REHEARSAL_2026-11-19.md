@@ -115,3 +115,26 @@ Une recherche ciblée complémentaire a été menée avant toute tentative de re
 Fournir l'archive originale complète ou, de préférence, un dump SQL historique antérieur à `20261114184306` (schéma seul acceptable pour établir le socle, export de données de recette séparé et anonymisé). Il faudra vérifier sa date, sa provenance, son intégrité et la présence des définitions exactes de `public.profiles` et `public.indicateurs` avant de l'utiliser.
 
 Aucun schéma n'a été reconstruit par déduction, aucun dump actuel n'a été rétrodaté et aucun rejeu non probant n'a été lancé.
+
+## 9. Analyse de l'archive originale transmise — 19 novembre 2026
+
+Archive analysée : `Fimela_Vision_Mairie_Connectee_complet_2026-11-19.zip`.
+
+### Intégrité et inventaire
+- Archive ZIP lisible ; contrôle CRC de toutes les entrées réussi (aucun membre corrompu détecté).
+- 150 entrées, dont 140 fichiers.
+- Empreinte SHA-256 de l'archive reçue : `58ff814a11caa0a24511d2235e00406df28558b2ea401d37174c8f1ea5f79280`.
+- 28 fichiers SQL distincts après dédoublonnage du contenu dans les archives imbriquées.
+- Les ZIP imbriqués ont été ouverts et inspectés récursivement, notamment `mairie-organisation-lots-A-E.zip`, `Saas_identite_prive_corrige.zip` et `Saas_identite_prive_audit_corrige_2026-11-18.zip`.
+
+### Recherche du socle initial
+- Aucun fichier `schema.sql`, dump PostgreSQL, `pg_dump` ou sauvegarde de schéma pré-migrations n'a été trouvé dans l'arborescence.
+- Aucun des 28 contenus SQL distincts ne contient de création de `public.profiles` ou `public.indicateurs`.
+- Les créations de tables présentes portent sur des objets ajoutés ultérieurement (par exemple `demarches`, `rdv_demandes`, `rdv_planning`, tables RBAC et personnel) ; les autres scripts effectuent des altérations, politiques, fonctions ou tests d'isolation.
+- Les archives imbriquées répètent plusieurs lots SQL applicatifs ; elles ne fournissent pas le schéma initial antérieur à `20261114184306`.
+
+### Conclusion
+L'archive reçue est intègre et a été inspectée, mais **elle ne contient pas le socle pré-migrations nécessaire au rejeu intégral**. Elle ne permet donc pas de lever le bloqueur identifié. Aucun schéma n'a été inféré à partir de l'état courant de production.
+
+### Prochaine pièce probante attendue
+Un export SQL de schéma antérieur au 14 novembre 2026, ou une sauvegarde complète de la base antérieure à la migration `20261114184306`. Il faudra contrôler la date, la provenance et les définitions de `public.profiles` et `public.indicateurs` avant de l'utiliser.
