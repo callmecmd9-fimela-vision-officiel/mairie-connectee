@@ -4,7 +4,7 @@ function mk(ind,compFn,dlErr){const handlers=[],uploads=[];
  comp:compFn,kb:n=>Math.round(n/1e3)+' Ko',
  sb:{from:()=>({}),storage:{from:b=>({download:async p=>dlErr?{error:{message:'introuvable'}}:{data:{type:'image/jpeg',p}},upload:async(p,d,o)=>{uploads.push([b,p,o.upsert,o.contentType,d.size]);return{}}})}},
  document:{addEventListener:(n,fn)=>handlers.push(fn),createElement:()=>({}),head:{appendChild(){}}},window:{},location:{origin:'https://m.x'},navigator:{},setTimeout(){},scrollTo(){},confirm:()=>true,console};
- ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync(require('path').join(__dirname,'..','demarches.js'),'utf8'),ctx);
+ ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync(require('path').join(__dirname,'..','js','demarches.js'),'utf8'),ctx);
  const click=async()=>{const t={dataset:{m:'lnkbandeau'},textContent:''};for(const h of handlers)await h({target:{closest:s=>s.includes('lnk')?t:null}})};
  return{ctx,uploads,click}}
 (async()=>{

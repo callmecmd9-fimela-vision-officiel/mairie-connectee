@@ -7,7 +7,7 @@ function mk({rdp=[],rdq=[],updErr=null}={}){const handlers=[],ups=[],upd=[],els=
   D:()=>({dmr:[],rdq,rdp}),LQ:()=>({order(){return this}}),load:async()=>{},render:()=>{},svn:x=>x,fdd:x=>x,closeb:()=>'',rowv:(k,id,l,r)=>`<div>${l}${r}</div>`,st2:(l)=>l,
   sb:{from:t=>({upsert:async(o,op)=>{ups.push([t,o,op]);return{}},update:u=>({eq:async()=>{upd.push(u);return updErr?{error:updErr}:{}}}),insert:async()=>({})}),storage:{from:()=>({})}},
   document:{addEventListener:(n,fn)=>handlers.push(fn),createElement:()=>({}),head:{appendChild(){}}},window:null,location:{origin:'https://m.x'},navigator:{},setTimeout(){},scrollTo(){},confirm:()=>true,console};
- ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,'..','demarches.js'),'utf8'),ctx);
+ ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','demarches.js'),'utf8'),ctx);
  const click=async m=>{const t={dataset:{m},textContent:''};for(const h of handlers)await h({target:{closest:s=>(s.includes('[data-m^=rq]')&&m.startsWith('rq'))||(s=='[data-m=rqplan]'&&m=='rqplan')?t:null}})};
  const form=({j=[1,2,3,4,5],d='08:00',f2='17:00',pd='12:30',pf='14:00',du='30',ac=true})=>{els['#rp_d']={value:d};els['#rp_f']={value:f2};els['#rp_pd']={value:pd};els['#rp_pf']={value:pf};els['#rp_du']={value:du};els['#rp_ac']={checked:ac};for(let n=1;n<=7;n++)els['#rp_j'+n]={checked:j.includes(n)}};
  return{ctx,ups,upd,form,click,els}}

@@ -1,0 +1,2 @@
+-- Aligne les fichiers du dépôt sur la production : fonctions internes jamais exécutables par anon/authenticated (idempotent, déjà vrai en base).
+revoke all on function public.org_seed(uuid), public.org_log(uuid,text,text,jsonb), public.org_droit_propre(uuid,text,text), public.org_droit_user(uuid,text,text) from public, anon, authenticated;

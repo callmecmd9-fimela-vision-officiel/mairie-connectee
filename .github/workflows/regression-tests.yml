@@ -1,0 +1,76 @@
+name: Regression tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  node-tests:
+    name: JavaScript regression suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate read-only production schema export script
+        run: bash -n scripts/database/export-production-schema.sh
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install isolated test dependency
+        run: npm install --prefix "$RUNNER_TEMP/test-deps" --no-save --no-package-lock jsdom@26
+
+      - name: Run all test files and report every failure
+        env:
+          NODE_PATH: ${{ runner.temp }}/test-deps/node_modules
+        shell: bash
+        run: |
+          set -uo pipefail
+          failed=0
+          shopt -s nullglob
+          files=(tests/*.test.js)
+          for test_file in "${files[@]}"; do
+            echo "::group::${test_file}"
+            if node "${test_file}"; then
+              echo "PASS: ${test_file}"
+            else
+              echo "::error::FAIL: ${test_file}"
+              failed=1
+            fi
+            echo "::endgroup::"
+          done
+          for test_file in js/smoke.js js/bandeau.test.js; do
+            if [[ -f "${test_file}" ]]; then
+              echo "::group::${test_file}"
+              if node "${test_file}"; then
+                echo "PASS: ${test_file}"
+              else
+                echo "::error::FAIL: ${test_file}"
+                failed=1
+              fi
+              echo "::endgroup::"
+            fi
+          done
+          exit "$failed"
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type-check all Supabase Edge Functions
+        run: |
+          for function_file in supabase/functions/*/index.ts; do
+            echo "Type-check: $function_file"
+            deno check --no-lock "$function_file"
+          done

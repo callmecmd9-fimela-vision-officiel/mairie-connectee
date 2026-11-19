@@ -1,0 +1,3 @@
+create or replace function private.perm_valides() returns text[] language sql immutable set search_path to '' as $$
+select array['sdash','cin','cout','actes','sconseil','sinstr','serv','sreun','dossiers','archives','srap','snotif','adjdash','adjlist','deleg','projA','reun','instr','rapp','msg','docs','notif','cabinet','budget','civil','personnel','params','projets','territoire','conseil','citoyens','pub','med','rapports',
+ 'conges','mdash','agenda','aud','valid','decis','marches','rapb','patrimoine','commissions','recl','aides','audc','devdom','indic','svcsuivi','evalproj','paie','remun'] $$;

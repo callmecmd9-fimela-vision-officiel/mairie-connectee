@@ -1,0 +1,3 @@
+# Local production schema exports contain internal database definitions.
+*
+!.gitignore

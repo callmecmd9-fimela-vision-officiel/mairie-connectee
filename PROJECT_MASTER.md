@@ -1,5 +1,8 @@
 # PROJECT_MASTER — Mairie Connectée (Fimela Vision)
 
+> **Mise à jour 2026-11-19** : les scripts SQL numérotés de la racine (`20261114_…` à `20261127_…`), `patch-org.js`, `patch-orgd.js`, `js/patch-core.js`, `js/patch-lot4.js`, `js/lot4.block.js`, `js/core_patched.js` et `patched/` ont été retirés du dépôt (commits `57a9265`, `ccf33b3` ; ils restent consultables dans l'historique git). Les migrations de référence sont dans `supabase/migrations/` (voir `recovered-history-manifest.json`) ; toutes les consignes « copier / appliquer / déployer » ci-dessous sont **historiques** : le code est déployé et les migrations sont appliquées en base. Les fichiers `*.append.md` ont été consolidés dans `CHANGELOG.md`, `DECISIONS.md` et `TASKS.md`.
+
+
 SaaS municipal multi-communes. Front statique (HTML/JS sans build) sur Cloudflare Workers (assets) + Supabase (Postgres/RLS, Auth, Storage, Edge Functions).
 
 ## Applications

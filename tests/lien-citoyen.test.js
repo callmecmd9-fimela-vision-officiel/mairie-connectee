@@ -1,12 +1,12 @@
 const vm=require('vm'),fs=require('fs');
-const qrsrc=fs.readFileSync(require('path').join(__dirname,'..','qr.js'),'utf8');
+const qrsrc=fs.readFileSync(require('path').join(__dirname,'..','js','qr.js'),'utf8');
 const handlers=[];let rendered=0,upserts=[],uploads=[];
 const prt={innerHTML:''};
 const ctx={E0:{},LG:{},SP:{administration:{subs:[]},citoyens:{subs:[]}},RP:{},SPL:{},SUB:{},S:{co:'Fimela',cid:'cid1',ind:{slogan:'S',blason:'cid1/b.webp'},sa:false},
  $:s=>s=='#prt'?prt:s=='#lc_co'?{value:'#0B5A2E'}:null,esc:s=>String(s),slug:()=>'fimela',pn:(t,i,b)=>`<section>${t}${b}</section>`,emp:m=>`<p>${m}</p>`,frm:x=>x,rw:()=>'',sel:()=>'',inp:()=>'',ev:()=>'',D:()=>({dmr:[]}),LQ:()=>({order(){return this}}),load:async()=>{},
  render:()=>{rendered++},sb:{from:()=>({upsert:async o=>{upserts.push(o);return{}}}),storage:{from:b=>({download:async()=>({data:{type:'image/webp'}}),upload:async(p,d,o)=>{uploads.push([b,p,o.upsert]);return{}}})}},
  document:{addEventListener:(n,f)=>handlers.push(f),createElement:()=>({}),head:{appendChild(s){ vm.runInContext(qrsrc,ctx);s.onload()}}},window:null,location:{origin:'https://m.x'},navigator:{clipboard:{writeText:async()=>{}}},setTimeout:f=>{ctx.__printed=1},scrollTo(){},confirm:()=>true,console};
-ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync(require('path').join(__dirname,'..','demarches.js'),'utf8'),ctx);
+ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync(require('path').join(__dirname,'..','js','demarches.js'),'utf8'),ctx);
 (async()=>{
  console.log('sub added:',JSON.stringify(ctx.SP.administration.subs),ctx.RP.lienc.join());
  let h=ctx.SUB.lienc();console.log('1er rendu: QR?',/<svg/.test(h),'(attendu false, chargement lazy) ; render rappelé:',rendered);

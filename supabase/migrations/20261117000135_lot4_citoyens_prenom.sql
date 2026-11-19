@@ -1,0 +1,1 @@
+alter table public.citoyens add column if not exists prenom text check (length(prenom)<=120);
