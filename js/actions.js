@@ -21,7 +21,14 @@ S.ia=r.data.textes||[];out.innerHTML=S.ia.map((x,k)=>`<div class="pn" style="pad
 S.err="";
 try{
 if(a=="enter"){if(!S.tok)S.err="Veuillez valider la vérification anti-spam, puis réessayer.";else{const r=await sb.auth.signInWithPassword({email:g("em"),password:($("#pw")||{}).value||"",options:{captchaToken:S.tok}});if(r.error)S.err=r.error.message;else if(await profil())await load()}}
-else if(a=="mfa-verify"){
+else if(a=="mfa-enroll-verify"){
+ if(!S.mfa||!S.mfa.setup||!S.mfa.factorId)throw new Error("Aucune configuration TOTP en attente.");
+ const code=g("mfa_code");if(!/^\d{6}$/.test(code))throw new Error("Saisissez le code à 6 chiffres.");
+ const v=await sb.auth.mfa.challengeAndVerify({factorId:S.mfa.factorId,code});
+ if(v.error)throw new Error("Code TOTP invalide. Vérifiez l’heure de votre appareil et réessayez.");
+ S.mfa=null;if(await profil())await load();
+ }
+ else if(a=="mfa-verify"){
  if(!S.mfa||!S.mfa.factorId||!S.mfa.challengeId)throw new Error("Aucun défi MFA actif. Renvoyez un défi.");
  const code=g("mfa_code");if(!/^\d{6}$/.test(code))throw new Error("Saisissez le code à 6 chiffres.");
  const v=await sb.auth.mfa.verify({factorId:S.mfa.factorId,challengeId:S.mfa.challengeId,code});
@@ -33,7 +40,7 @@ else if(a=="mfa-verify"){
  const ch=await sb.auth.mfa.challenge({factorId:S.mfa.factorId});if(ch.error)throw ch.error;
  S.mfa.challengeId=ch.data.id;S.err="Un nouveau défi MFA est prêt.";
  }
- else if(a=="mfa-cancel"){S.mfa=null;S.role=null;S.cid=null;S.uid=null;S.sa=false;S.db=E0;S.ind={};await sb.auth.signOut();S.err="Connexion annulée."}
+ else if(a=="mfa-cancel"){if(S.mfa&&S.mfa.setup&&S.mfa.factorId)await sb.auth.mfa.unenroll({factorId:S.mfa.factorId});S.mfa=null;S.role=null;S.cid=null;S.uid=null;S.sa=false;S.db=E0;S.ind={};await sb.auth.signOut();S.err="Connexion annulée."}
  else if(a=="out"){S.role=null;S.cid=null;S.uid=null;S.sa=false;S.db=E0;S.ind={};await sb.auth.signOut()}
 else if(a=="menu")S.menu=!S.menu;
 else if(a=="go"){S.view=t.dataset.v;S.menu=false}
