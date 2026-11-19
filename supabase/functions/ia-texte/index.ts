@@ -57,8 +57,11 @@ Deno.serve(async (req: Request) => {
       : "Facebook";
 
     const jour = new Date().toISOString().slice(0, 10);
-    const { data: u } = await admin.from("ia_usage").select("n")
+    const { data: u, error: usageReadError } = await admin.from("ia_usage").select("n")
       .eq("user_id", user.id).eq("jour", jour).maybeSingle();
+    if (usageReadError) {
+      return j({ error: "Contrôle du quota indisponible. Réessayez plus tard." }, 503);
+    }
     if ((u?.n ?? 0) >= LIMITE_JOUR) {
       return j({ error: "Limite quotidienne atteinte (" + LIMITE_JOUR + " demandes). Réessayez demain." }, 429);
     }
@@ -115,7 +118,11 @@ Deno.serve(async (req: Request) => {
       .slice(0, 3);
     if (!textes.length) return j({ error: "Réponse IA vide, réessayez." }, 502);
 
-    await admin.from("ia_usage").upsert({ user_id: user.id, jour, n: (u?.n ?? 0) + 1 });
+    const { error: usageWriteError } = await admin.from("ia_usage")
+      .upsert({ user_id: user.id, jour, n: (u?.n ?? 0) + 1 });
+    if (usageWriteError) {
+      return j({ error: "Enregistrement du quota impossible. Réessayez plus tard." }, 503);
+    }
     return j({ textes });
   } catch (_e) {
     return j({ error: "Erreur serveur" }, 500);
