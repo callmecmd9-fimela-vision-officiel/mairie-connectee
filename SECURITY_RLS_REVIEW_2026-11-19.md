@@ -188,3 +188,17 @@ Le catalogue ne montre actuellement aucune ligne de droit organisationnel `paie`
 
 ### Migration et traçabilité
 Le catalogue Supabase expose 81 versions appliquées, dont notamment `20261115183608` (paie initiale), `20261117213250` (droits/postes paie), `20261117213634` (écritures droits/postes), `20261118083148` (audit des lignes paie) et `20261118083150` (séparation des tâches). Les sources SQL originales de ces versions n'ont pas encore été retrouvées et comparées octet par octet dans le dépôt. Le nom et la présence d'une version dans l'historique ne suffisent pas à reconstituer son contenu.
+
+
+## Revue complémentaire des fonctions SECURITY DEFINER — point de durcissement à vérifier
+
+Le triage du catalogue des fonctions SECURITY DEFINER exécutables par `authenticated` a identifié un helper qui mérite une vérification dédiée :
+
+- `private.nb_pieces(p_uid text)` est `SECURITY DEFINER`, utilise un `search_path` vide, et retourne le nombre d'objets du bucket Storage `pieces` appartenant à l'identifiant fourni.
+- Les rôles `authenticated` disposent actuellement de `USAGE` sur le schéma `private` et de `EXECUTE` sur cette fonction.
+- Aucun appelant SQL externe à cette fonction n'a été retrouvé.
+- L'état de configuration PostgREST (`pgrst.db_schemas`) n'est pas lisible via les paramètres SQL interrogés ; l'exposition effective du schéma `private` par l'API n'est donc pas établie.
+
+**Qualification :** exposition potentielle de métadonnée (un compte authentifié pourrait apprendre un nombre de fichiers pour un identifiant fourni) uniquement si le schéma est exposé à l'API. Pas de preuve d'accès aux fichiers, à leurs noms ou à leur contenu. Pas de preuve que la fonction est appelable via l'API publique actuelle.
+
+**Action recommandée après vérification de l'exposition API :** si `private` n'a pas besoin d'être exposé, le maintenir hors des schémas PostgREST exposés ; examiner ensuite si `EXECUTE` sur `private.nb_pieces(text)` doit être retiré à `authenticated`, après vérification des usages hors base (Edge Functions, scripts et clients). Aucun changement d'ACL ou de configuration n'a été appliqué.
