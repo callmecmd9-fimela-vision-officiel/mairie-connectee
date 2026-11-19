@@ -277,3 +277,34 @@ Les définitions actives des fonctions ont été relues directement dans le cata
 - Workflow GitHub #94 : **succès** sur le commit `72df073b2749952bbce6f94583984aa778f5678c` ; suite JavaScript complète et vérification Deno des six Edge Functions réussies.
 
 **Limite de validation :** le test SQL est statique ; aucun test transactionnel AAL1/AAL2 sur une base isolée n'a été possible sans branche Supabase payante. La migration est préparée sur la branche GitHub uniquement et **n'a pas été exécutée**. Elle ne doit pas être appliquée à la production avant une revue finale et une stratégie de recette compatible avec le plan gratuit.
+
+
+## Audit complémentaire des RPC exposées, RLS et purge Storage — 19 novembre 2026, 07:05 UTC
+
+### RPC SECURITY DEFINER accessibles sans session
+Le Security Advisor recense 12 fonctions `public` exécutables par `anon`. Revue du code déployé pour les 12 entrées : ce sont des points de consultation publique à périmètre limité (résolution de commune par slug/hôte, identité et coordonnées publiques, démarches actives, actualités publiées, horaires/planning, créneaux futurs, projets explicitement publics et suivi par numéro de dossier). Les définitions examinées utilisent toutes `SET search_path TO ''` et ne permettent pas d'écriture.
+
+Le suivi de dossier (`suivre_demande`, `suivre_demandes`) fonctionne comme un accès par secret porteur : le numéro est généré dans `creer_demande` avec `gen_random_uuid()` sans tirets (128 bits aléatoires), et le format est contrôlé par expression régulière. Les fonctions retournent un sous-ensemble de données de suivi, pas les pièces jointes ni les coordonnées du demandeur. La fonction batch borne l'entrée à 30 numéros. Aucun défaut exploitable confirmé dans ce contrôle statique ; conserver une surveillance des abus et des réponses contenant des données personnelles dans `reponse`.
+
+### RPC SECURITY DEFINER authentifiées
+Le conseiller recense 89 fonctions `SECURITY DEFINER` exécutables par `authenticated`. Ce nombre ne constitue pas 89 vulnérabilités : ces fonctions servent de couche métier/RPC et plusieurs appliquent des contrôles d'identité, de rôle, de commune et/ou AAL2. Exemples examinés :
+- `admin_attribuer` vérifie `private.is_platform_admin()` (qui exige AAL2 et une entrée plateforme active), limite la liste de rôles, bloque les comptes plateforme/super-admin et interdit un transfert communal implicite.
+- `admin_utilisateurs` limite la lecture des comptes à `private.is_platform_admin()`.
+- `is_super_admin` exige un profil super-admin actif avec JWT AAL2 ou un administrateur plateforme validé AAL2.
+- `_garde(p_commune)` exige `is_super_admin()` et vérifie le périmètre communal, sauf administrateur plateforme.
+- Les fonctions privées de contrôle utilisent `search_path` vide.
+
+Aucun `REVOKE EXECUTE` global n'a été appliqué : il casserait des appels métiers légitimes et les contrôles doivent être qualifiés fonction par fonction. Les ACL doivent rester minimales au niveau de chaque signature, et les fonctions internes ne doivent pas être rendues publiques par défaut.
+
+### Accès direct anonyme aux tables
+Inspection des privilèges effectifs sur toutes les tables `public` : le rôle SQL `anon` ne dispose que de `SELECT` sur `public.communes`; aucun droit direct `INSERT`, `UPDATE` ou `DELETE` n'a été trouvé pour `anon`. La table `communes` a RLS activé et ses politiques ciblent `authenticated`, sans politique `anon` : le privilège SQL seul ne donne donc pas accès aux lignes via le rôle `anon`.
+
+Le Security Advisor signale de nombreuses politiques `TO authenticated` comme potentiellement accessibles aux utilisateurs authentifiés anonymes. Sur les tables sensibles vérifiées (profils, personnel, rémunérations, paies, lignes de paie, paiements, rôles d'organisation), les politiques restrictives `bloque_anonymes_*` vérifient le claim JWT `is_anonymous=false`; les autres politiques exigent également un profil, une commune ou un rôle/droit métier. `org_roles` a aussi une barrière restrictive dédiée. Les avertissements restants doivent être examinés table par table avant toute modification : le rôle Postgres `authenticated` inclut techniquement les sessions anonymes Supabase.
+
+### Edge Function `purge-pieces`
+La fonction active est configurée `verify_jwt=false`, mais son code refuse toute requête autre que POST sans en-tête `x-purge-secret`, puis appelle `public.pieces_orphelines(p_secret)`. Cette RPC `SECURITY DEFINER` a un `search_path` vide et n'est exécutable que par `service_role`/`postgres`; elle compare le secret à Vault avant de retourner au plus 200 objets du bucket privé `pieces` âgés de plus de 24 h et non référencés par `demandes.pieces`. La suppression est effectuée ensuite avec la clé service-role. Aucun accès anonyme à la RPC ou au bucket n'a été trouvé dans les privilèges inspectés.
+
+**Point de vigilance opérationnel :** l'endpoint est volontairement sans JWT et dépend entièrement du secret Vault transmis par l'appelant planifié. Maintenir ce secret hors du dépôt, le faire tourner en cas de suspicion, et conserver la limite de méthode/secret. Ne pas changer `verify_jwt` sans adapter le mécanisme de planification.
+
+### Décision
+Aucun défaut supplémentaire exploitable n'a été confirmé dans ce lot. Aucun changement de permissions, RLS, fonction ou donnée de production n'a été effectué. Les alertes Advisor de fonctions SECURITY DEFINER et d'accès anonyme sont des indicateurs de surface d'attaque, pas des preuves individuelles de vulnérabilité. Le durcissement doit être ciblé et testé afin de ne pas interrompre le portail citoyen, les workflows métier ou les tâches planifiées.
