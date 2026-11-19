@@ -1,0 +1,576 @@
+{
+  "source": "Supabase supabase_migrations.schema_migrations statements[1]",
+  "project": "aiqegpijisspankpkwfj",
+  "captured_at": "2026-11-19",
+  "count": 81,
+  "hash_algorithm": "MD5 (integrity comparison; not a security signature)",
+  "migrations": [
+    {
+      "version": "20261114184306",
+      "name": "super_admin_socle",
+      "file": "20261114184306_super_admin_socle.sql",
+      "md5": "f38ab3b2033009a436c9315b6f528c0d",
+      "bytes": 20470
+    },
+    {
+      "version": "20261114184410",
+      "name": "super_admin_durcissement",
+      "file": "20261114184410_super_admin_durcissement.sql",
+      "md5": "ca55c07ee21388b36b68e6a8f0964122",
+      "bytes": 616
+    },
+    {
+      "version": "20261114195514",
+      "name": "20261114c_super_admin_corrections",
+      "file": "20261114195514_20261114c_super_admin_corrections.sql",
+      "md5": "85d832361bcb6af7f81134656826bf09",
+      "bytes": 8096
+    },
+    {
+      "version": "20261114195558",
+      "name": "20261114d_journal_consultation_search_path",
+      "file": "20261114195558_20261114d_journal_consultation_search_path.sql",
+      "md5": "130c09f1d8160336bdf0cc72e9f104ff",
+      "bytes": 70
+    },
+    {
+      "version": "20261114224024",
+      "name": "index_missing_fk",
+      "file": "20261114224024_index_missing_fk.sql",
+      "md5": "633c0991d588dc3d5caab93f05a08197",
+      "bytes": 285
+    },
+    {
+      "version": "20261114231423",
+      "name": "perf_bloque_anonymes_initplan",
+      "file": "20261114231423_perf_bloque_anonymes_initplan.sql",
+      "md5": "b5c1b99e72e07817afbd59a6f15c4d26",
+      "bytes": 380
+    },
+    {
+      "version": "20261114232604",
+      "name": "securite_maintenance_serveur_et_purge_anonymes",
+      "file": "20261114232604_securite_maintenance_serveur_et_purge_anonymes.sql",
+      "md5": "472b0fa32caff8a17ae2c770d1e54d8b",
+      "bytes": 2016
+    },
+    {
+      "version": "20261115002705",
+      "name": "fix_storage_policies_is_super_admin_qualifie",
+      "file": "20261115002705_fix_storage_policies_is_super_admin_qualifie.sql",
+      "md5": "6dd3e0d0eeee2030f980cf55c7c91c9c",
+      "bytes": 632
+    },
+    {
+      "version": "20261115064221",
+      "name": "fix_storage_pieces_depot_recursion",
+      "file": "20261115064221_fix_storage_pieces_depot_recursion.sql",
+      "md5": "a2e54356875b4c85f548ddc314a013af",
+      "bytes": 591
+    },
+    {
+      "version": "20261115072440",
+      "name": "maire_marches_patrimoine_commissions_decisions",
+      "file": "20261115072440_maire_marches_patrimoine_commissions_decisions.sql",
+      "md5": "ca2e1e0c7b70c2cd7f73ad702ca5a259",
+      "bytes": 5728
+    },
+    {
+      "version": "20261115115311",
+      "name": "personnel_et_conges",
+      "file": "20261115115311_personnel_et_conges.sql",
+      "md5": "970ba31c88bb8edf6eb66580d663beb0",
+      "bytes": 2997
+    },
+    {
+      "version": "20261115115721",
+      "name": "permissions_par_utilisateur",
+      "file": "20261115115721_permissions_par_utilisateur.sql",
+      "md5": "e028a5746b4479c22a8e03bacf1d7d89",
+      "bytes": 4338
+    },
+    {
+      "version": "20261115183608",
+      "name": "remunerations_et_paie_du_personnel",
+      "file": "20261115183608_remunerations_et_paie_du_personnel.sql",
+      "md5": "9fdddfcd801175d31d5c297c03ff696a",
+      "bytes": 9183
+    },
+    {
+      "version": "20261115184124",
+      "name": "soldes_de_conges",
+      "file": "20261115184124_soldes_de_conges.sql",
+      "md5": "07263a8f0f04132a1b576b31d5598df3",
+      "bytes": 1778
+    },
+    {
+      "version": "20261115194155",
+      "name": "perm_valides_paie_remun",
+      "file": "20261115194155_perm_valides_paie_remun.sql",
+      "md5": "3bc4f8368cb0793bbd4efabfc14342d1",
+      "bytes": 599
+    },
+    {
+      "version": "20261115194203",
+      "name": "perf_index_paie_lignes_fk",
+      "file": "20261115194203_perf_index_paie_lignes_fk.sql",
+      "md5": "265cdadfe7f49a7e06f8571569ebd284",
+      "bytes": 264
+    },
+    {
+      "version": "20261115211628",
+      "name": "saas_p1_plateforme",
+      "file": "20261115211628_saas_p1_plateforme.sql",
+      "md5": "8a2dd5b2feb21016d53f2b3935de6e7e",
+      "bytes": 14077
+    },
+    {
+      "version": "20261115211717",
+      "name": "saas_p1_isolation_tenants",
+      "file": "20261115211717_saas_p1_isolation_tenants.sql",
+      "md5": "516ead67f866362d083f62583d73d017",
+      "bytes": 2183
+    },
+    {
+      "version": "20261115212916",
+      "name": "saas_p3_abonnements_facturation",
+      "file": "20261115212916_saas_p3_abonnements_facturation.sql",
+      "md5": "cbff20dc7bd43b35c0eeecbb3f77006b",
+      "bytes": 11550
+    },
+    {
+      "version": "20261116004703",
+      "name": "fix_communes_lecture_anon",
+      "file": "20261116004703_fix_communes_lecture_anon.sql",
+      "md5": "c4c886aff3ceebe864da6b4d824d330b",
+      "bytes": 177
+    },
+    {
+      "version": "20261116005908",
+      "name": "retrait_liste_publique_communes",
+      "file": "20261116005908_retrait_liste_publique_communes.sql",
+      "md5": "91428b9ddb646016658a2cffbd2be41c",
+      "bytes": 867
+    },
+    {
+      "version": "20261116012604",
+      "name": "bloque_anonymes_communes",
+      "file": "20261116012604_bloque_anonymes_communes.sql",
+      "md5": "40c79e68a61c9615022cb37629349e95",
+      "bytes": 263
+    },
+    {
+      "version": "20261116012716",
+      "name": "pieces_depot_sans_lecture_communes",
+      "file": "20261116012716_pieces_depot_sans_lecture_communes.sql",
+      "md5": "9ba087aae9215f0f2cfaaf5a95e3054d",
+      "bytes": 665
+    },
+    {
+      "version": "20261116012730",
+      "name": "communes_lecture_isolee",
+      "file": "20261116012730_communes_lecture_isolee.sql",
+      "md5": "44e8f00ebbad9c612459125e01c9137d",
+      "bytes": 181
+    },
+    {
+      "version": "20261116090636",
+      "name": "purge_pieces_orphelines",
+      "file": "20261116090636_purge_pieces_orphelines.sql",
+      "md5": "f6ae9300ccd819fc7397554ef8eceb45",
+      "bytes": 1333
+    },
+    {
+      "version": "20261116093520",
+      "name": "audit3_demande_numero_statut_grants",
+      "file": "20261116093520_audit3_demande_numero_statut_grants.sql",
+      "md5": "d9aa52dcfcfa0905de93c77dff59f93d",
+      "bytes": 2885
+    },
+    {
+      "version": "20261116101057",
+      "name": "fix_saas_creer_commune_profil_existant",
+      "file": "20261116101057_fix_saas_creer_commune_profil_existant.sql",
+      "md5": "da46c781b23257746c05c0dc358c4537",
+      "bytes": 1983
+    },
+    {
+      "version": "20261116135125",
+      "name": "demarches_statuts_comptes_notifications",
+      "file": "20261116135125_demarches_statuts_comptes_notifications.sql",
+      "md5": "0708c2b7506aa261e03deb06c75e39bd",
+      "bytes": 8487
+    },
+    {
+      "version": "20261116144112",
+      "name": "securite_revoke_anon_tables_initplan",
+      "file": "20261116144112_securite_revoke_anon_tables_initplan.sql",
+      "md5": "27a50c01ae3997321910ff8da2413039",
+      "bytes": 1050
+    },
+    {
+      "version": "20261116144119",
+      "name": "porte_entree_citoyen_identite",
+      "file": "20261116144119_porte_entree_citoyen_identite.sql",
+      "md5": "fe2442e2df98e348c6799671af0d68b7",
+      "bytes": 3090
+    },
+    {
+      "version": "20261116230033",
+      "name": "lot2_portail_commune",
+      "file": "20261116230033_lot2_portail_commune.sql",
+      "md5": "26ee2aab268d08f55f431e8fecd16e09",
+      "bytes": 775
+    },
+    {
+      "version": "20261117000135",
+      "name": "lot4_citoyens_prenom",
+      "file": "20261117000135_lot4_citoyens_prenom.sql",
+      "md5": "52918aea3a087a05ea077bee4ed2cbb5",
+      "bytes": 93
+    },
+    {
+      "version": "20261117001027",
+      "name": "lot5_statuts_acceptee_pret_a_retirer",
+      "file": "20261117001027_lot5_statuts_acceptee_pret_a_retirer.sql",
+      "md5": "34e04b5b0bd82e71dcf556d8a27826f9",
+      "bytes": 3470
+    },
+    {
+      "version": "20261117011409",
+      "name": "lot6_rdv_demandes",
+      "file": "20261117011409_lot6_rdv_demandes.sql",
+      "md5": "4c6bdfbee942d9782b5f0ce548dfba8a",
+      "bytes": 5200
+    },
+    {
+      "version": "20261117114444",
+      "name": "lot_d_org_tracer_hardening",
+      "file": "20261117114444_lot_d_org_tracer_hardening.sql",
+      "md5": "091ca0d9a4b4393ba6a0cd9045746ae4",
+      "bytes": 587
+    },
+    {
+      "version": "20261117131621",
+      "name": "lot_c2_correctif_securite",
+      "file": "20261117131621_lot_c2_correctif_securite.sql",
+      "md5": "a365453a61987df195e5418ee3aca487",
+      "bytes": 6870
+    },
+    {
+      "version": "20261117213250",
+      "name": "lot_e_paie_droits_postes",
+      "file": "20261117213250_lot_e_paie_droits_postes.sql",
+      "md5": "d2eb2234788dcf7f851f211c0ea68f74",
+      "bytes": 4226
+    },
+    {
+      "version": "20261117213634",
+      "name": "lot_e2_ecritures_droits_postes",
+      "file": "20261117213634_lot_e2_ecritures_droits_postes.sql",
+      "md5": "c2a0d6a782097ebef84d86566b3fc4d9",
+      "bytes": 1666
+    },
+    {
+      "version": "20261117214129",
+      "name": "lot_c2b_revoke_fonctions_internes",
+      "file": "20261117214129_lot_c2b_revoke_fonctions_internes.sql",
+      "md5": "0fde8a80ab51252fe624e34664e7d1ee",
+      "bytes": 347
+    },
+    {
+      "version": "20261118071003",
+      "name": "20261128_org_personnel_schema",
+      "file": "20261118071003_20261128_org_personnel_schema.sql",
+      "md5": "13a8a619c33c08085ca91a3ffb0ce874",
+      "bytes": 4746
+    },
+    {
+      "version": "20261118071054",
+      "name": "20261128_org_personnel_rpc",
+      "file": "20261118071054_20261128_org_personnel_rpc.sql",
+      "md5": "389f46595ddea78d22768f05e3623b6c",
+      "bytes": 13983
+    },
+    {
+      "version": "20261118073957",
+      "name": "lot_f_services_kpi",
+      "file": "20261118073957_lot_f_services_kpi.sql",
+      "md5": "0c25d6e8cf074fd346f60c6b35623a8c",
+      "bytes": 4446
+    },
+    {
+      "version": "20261118083148",
+      "name": "lot_g1_audit_paie_lignes",
+      "file": "20261118083148_lot_g1_audit_paie_lignes.sql",
+      "md5": "2f6377fe929182cc64b7d5b322a10405",
+      "bytes": 626
+    },
+    {
+      "version": "20261118083150",
+      "name": "lot_g2_paie_separation_taches",
+      "file": "20261118083150_lot_g2_paie_separation_taches.sql",
+      "md5": "ea3f2022df1f150c1da83e8a4f595efd",
+      "bytes": 2461
+    },
+    {
+      "version": "20261118094619",
+      "name": "lot_f_services_durcissement",
+      "file": "20261118094619_lot_f_services_durcissement.sql",
+      "md5": "79fcc1fdaa951da78b714a2cad186ab5",
+      "bytes": 3051
+    },
+    {
+      "version": "20261118145351",
+      "name": "lot_pieces_rpc_security_hardening",
+      "file": "20261118145351_lot_pieces_rpc_security_hardening.sql",
+      "md5": "d792476d60a48e3548518b883853fbee",
+      "bytes": 8269
+    },
+    {
+      "version": "20261118150557",
+      "name": "p0_annuler_rdv_owner_guard",
+      "file": "20261118150557_p0_annuler_rdv_owner_guard.sql",
+      "md5": "1b28976d2d21309c0ea07c66b4bffed8",
+      "bytes": 1352
+    },
+    {
+      "version": "20261118150821",
+      "name": "p0_mes_rdvs_owner_guard",
+      "file": "20261118150821_p0_mes_rdvs_owner_guard.sql",
+      "md5": "547c6e808b5addbe4a469e67fd09711b",
+      "bytes": 940
+    },
+    {
+      "version": "20261118151118",
+      "name": "p1_rpc_commune_scope_guards",
+      "file": "20261118151118_p1_rpc_commune_scope_guards.sql",
+      "md5": "0666fc06c0578bdf2dc9ca6da159a6fa",
+      "bytes": 2293
+    },
+    {
+      "version": "20261118151155",
+      "name": "p1_sa_user_tenant_scope",
+      "file": "20261118151155_p1_sa_user_tenant_scope.sql",
+      "md5": "0746f9cbdfb03bfc968f050944ae81c1",
+      "bytes": 3116
+    },
+    {
+      "version": "20261118152128",
+      "name": "p1_citizen_tracking_bearer_guard",
+      "file": "20261118152128_p1_citizen_tracking_bearer_guard.sql",
+      "md5": "966d8bfab0db5f233deb568282f8230c",
+      "bytes": 3504
+    },
+    {
+      "version": "20261118152508",
+      "name": "p0_org_gest_fail_closed_affecter_scope",
+      "file": "20261118152508_p0_org_gest_fail_closed_affecter_scope.sql",
+      "md5": "2517401b3d04709461b6a24450adcb04",
+      "bytes": 2439
+    },
+    {
+      "version": "20261118153404",
+      "name": "p0_saas_commune_admin_identity_guard",
+      "file": "20261118153404_p0_saas_commune_admin_identity_guard.sql",
+      "md5": "5d93cfdcfe4fba5be6eae2ef25aaad58",
+      "bytes": 3214
+    },
+    {
+      "version": "20261118153641",
+      "name": "p0_admin_attribuer_platform_identity_guard",
+      "file": "20261118153641_p0_admin_attribuer_platform_identity_guard.sql",
+      "md5": "1b92d36e9b3b4955899329f438cca2bf",
+      "bytes": 1841
+    },
+    {
+      "version": "20261118153749",
+      "name": "p1_admin_attribuer_tenant_transfer_guard",
+      "file": "20261118153749_p1_admin_attribuer_tenant_transfer_guard.sql",
+      "md5": "a752a85bfd444cd55b944875fa56bdd9",
+      "bytes": 2118
+    },
+    {
+      "version": "20261118154106",
+      "name": "p1_rh_identity_link_and_merge_guards",
+      "file": "20261118154106_p1_rh_identity_link_and_merge_guards.sql",
+      "md5": "75f9d1beeb8f3fc5fcd166de7d9deda2",
+      "bytes": 5555
+    },
+    {
+      "version": "20261118154417",
+      "name": "p1_finance_invoice_payment_integrity",
+      "file": "20261118154417_p1_finance_invoice_payment_integrity.sql",
+      "md5": "a98536340a18af90887310511384117b",
+      "bytes": 4329
+    },
+    {
+      "version": "20261118154504",
+      "name": "p1_saas_pricing_payload_validation",
+      "file": "20261118154504_p1_saas_pricing_payload_validation.sql",
+      "md5": "d2d2c6f1db4fd8a8b23cacaadbc7b0be",
+      "bytes": 3506
+    },
+    {
+      "version": "20261118161607",
+      "name": "p0_preserve_anonymous_citizen_tracking",
+      "file": "20261118161607_p0_preserve_anonymous_citizen_tracking.sql",
+      "md5": "73767f4b13fd33794995d015d936fac1",
+      "bytes": 1472
+    },
+    {
+      "version": "20261118161657",
+      "name": "p1_backup_restore_and_session_scope_guards",
+      "file": "20261118161657_p1_backup_restore_and_session_scope_guards.sql",
+      "md5": "4b2d60fd063c4ecb1c7a42fa8625a0c1",
+      "bytes": 3813
+    },
+    {
+      "version": "20261118161931",
+      "name": "p0_org_security_definer_search_path_hardening",
+      "file": "20261118161931_p0_org_security_definer_search_path_hardening.sql",
+      "md5": "b9d0a07f6cf12bec05d56938d5e5af74",
+      "bytes": 14171
+    },
+    {
+      "version": "20261118162103",
+      "name": "p0_org_remaining_definer_path_hardening",
+      "file": "20261118162103_p0_org_remaining_definer_path_hardening.sql",
+      "md5": "98255041b279907630b9ebeec78e440c",
+      "bytes": 17295
+    },
+    {
+      "version": "20261118162204",
+      "name": "p1_public_rpc_and_notification_path_hardening",
+      "file": "20261118162204_p1_public_rpc_and_notification_path_hardening.sql",
+      "md5": "c05a452b5ff0e1dd82435bdda8134d0b",
+      "bytes": 4871
+    },
+    {
+      "version": "20261118162313",
+      "name": "p1_org_service_trigger_path_hardening",
+      "file": "20261118162313_p1_org_service_trigger_path_hardening.sql",
+      "md5": "54b092cd77c1fb37ffb12582ac0f569e",
+      "bytes": 574
+    },
+    {
+      "version": "20261118164927",
+      "name": "p1_finance_payment_reference_guard",
+      "file": "20261118164927_p1_finance_payment_reference_guard.sql",
+      "md5": "0763472d6d3f33414972c2c26d139411",
+      "bytes": 806
+    },
+    {
+      "version": "20261118165215",
+      "name": "p0_identite_bucket_private",
+      "file": "20261118165215_p0_identite_bucket_private.sql",
+      "md5": "c9822ec8da9a773e2ae2b2054d52d669",
+      "bytes": 272
+    },
+    {
+      "version": "20261118165305",
+      "name": "p1_explicit_anonymous_finance_and_org_guards",
+      "file": "20261118165305_p1_explicit_anonymous_finance_and_org_guards.sql",
+      "md5": "f296d17f830e8f30bc7824c0e301d6a5",
+      "bytes": 641
+    },
+    {
+      "version": "20261118170403",
+      "name": "p1_identite_published_assets_read",
+      "file": "20261118170403_p1_identite_published_assets_read.sql",
+      "md5": "327d58e4837d98b1392fdaa7bb2d7ef0",
+      "bytes": 339
+    },
+    {
+      "version": "20261118210521",
+      "name": "20261118_security_identity_mfa_scope",
+      "file": "20261118210521_20261118_security_identity_mfa_scope.sql",
+      "md5": "7c911ae4505bea25ade7dad1022a0983",
+      "bytes": 3310
+    },
+    {
+      "version": "20261118210656",
+      "name": "20261118_org_roles_agents_and_account_links",
+      "file": "20261118210656_20261118_org_roles_agents_and_account_links.sql",
+      "md5": "d83ad0e8f4452c068abc565cc74f3dd4",
+      "bytes": 14139
+    },
+    {
+      "version": "20261118210737",
+      "name": "20261118_org_assignment_permission_sync",
+      "file": "20261118210737_20261118_org_assignment_permission_sync.sql",
+      "md5": "d8dba23801673c5e8b4b62dee0ba1ad2",
+      "bytes": 6397
+    },
+    {
+      "version": "20261118210757",
+      "name": "20261118_secure_municipal_admin_invitation",
+      "file": "20261118210757_20261118_secure_municipal_admin_invitation.sql",
+      "md5": "cf11c1ebfc79e60d71b5c532a5ea0c4d",
+      "bytes": 2802
+    },
+    {
+      "version": "20261118211311",
+      "name": "20261118_diofior_organigramme_reconciliation",
+      "file": "20261118211311_20261118_diofior_organigramme_reconciliation.sql",
+      "md5": "6ea5d406f62b2b092c6776e38d920eff",
+      "bytes": 7047
+    },
+    {
+      "version": "20261118211804",
+      "name": "20261118_org_invitation_link_and_assignment_integrity",
+      "file": "20261118211804_20261118_org_invitation_link_and_assignment_integrity.sql",
+      "md5": "03f5d204c25e13ca12c65fda372c8b57",
+      "bytes": 9860
+    },
+    {
+      "version": "20261118212239",
+      "name": "20261118_superadmin_mfa_org_droits",
+      "file": "20261118212239_20261118_superadmin_mfa_org_droits.sql",
+      "md5": "87845b3167adafa0e41cb9638b420c09",
+      "bytes": 1186
+    },
+    {
+      "version": "20261118212309",
+      "name": "20261118_superadmin_mfa_server_role_gates",
+      "file": "20261118212309_20261118_superadmin_mfa_server_role_gates.sql",
+      "md5": "c174a08a18b7ed9d3f85915036f3d628",
+      "bytes": 1609
+    },
+    {
+      "version": "20261118212626",
+      "name": "20261118_platform_admin_superadmin_continuity",
+      "file": "20261118212626_20261118_platform_admin_superadmin_continuity.sql",
+      "md5": "17f154101b0740acde0b55dc8c2a3690",
+      "bytes": 1608
+    },
+    {
+      "version": "20261118213958",
+      "name": "20261118_platform_admin_tenant_scope_for_sa",
+      "file": "20261118213958_20261118_platform_admin_tenant_scope_for_sa.sql",
+      "md5": "299326d1b3af8b25f49cb98f144ce583",
+      "bytes": 740
+    },
+    {
+      "version": "20261118214709",
+      "name": "20261118_diofior_cadre_vie_assignment_correction",
+      "file": "20261118214709_20261118_diofior_cadre_vie_assignment_correction.sql",
+      "md5": "b978b8d4d9c3945d14962dd81853c5fb",
+      "bytes": 2732
+    },
+    {
+      "version": "20261118215220",
+      "name": "20261118_org_affectation_end_date_guard",
+      "file": "20261118215220_20261118_org_affectation_end_date_guard.sql",
+      "md5": "dd097477af0143a9bed51fcd7209f153",
+      "bytes": 1198
+    },
+    {
+      "version": "20261118230324",
+      "name": "20261118_org_sa_roles",
+      "file": "20261118230324_20261118_org_sa_roles.sql",
+      "md5": "a1812d3c6c69722691f3d568e59d5f7a",
+      "bytes": 843
+    }
+  ]
+}
