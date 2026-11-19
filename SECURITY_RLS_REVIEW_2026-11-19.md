@@ -415,3 +415,31 @@ Le verrou et l'UPDATE conditionnel empêchent deux requêtes simultanées de con
 Le test statique `tests/ia-texte-quota.test.js` vérifie la cohérence migration/consommateur, les privilèges, le verrou, le plafond et l'ordre réservation-appel-finalisation. Il ne remplace pas un test PostgreSQL concurrent réel ; celui-ci reste requis avant toute migration de production.
 
 **État opérationnel :** migration et code uniquement sur la branche `chore/ci-regression-tests`. Aucune migration appliquée, aucun déploiement Edge Function, aucune modification de secret ou de donnée de production.
+
+
+## Validation PostgreSQL réelle — concurrence, paie, MFA et liaison adjoints — 19 novembre 2026
+
+Les validations ont été exécutées dans GitHub Actions sur une instance PostgreSQL éphémère **PostgreSQL 17.12**. Cette base est indépendante du projet Supabase de production et est détruite à la fin du job.
+
+### Quota IA atomique — résultat réussi
+- 32 sessions PostgreSQL concurrentes ont tenté de réserver une unité pour le même utilisateur et le même jour, avec une limite de 7.
+- Résultat observé : **7 réservations accordées, 25 refusées** ; le plafond n'a pas été dépassé.
+- La libération après échec du fournisseur a décrémenté le compteur et a été idempotente (deuxième finalisation refusée).
+- Une finalisation réussie a conservé l'unité consommée ; une deuxième finalisation a été refusée.
+- Test : `tests/postgres/ia-usage-concurrency.sh`.
+
+### Gardes paie et autorisations adjoints — résultat réussi
+- `private.paie_garde` : refus vérifié pour commune NULL, rôle NULL, tableau de rôles NULL/vide, rôle non autorisé et mode maintenance ; accès valide pour le rôle autorisé et une commune définie.
+- `public.lier_adjoint` : refus d'un appelant non autorisé ; liaison maire limitée à sa commune ; refus du ciblage intercommunal par un maire ; super-admin AAL1 refusé ; super-admin AAL2 autorisé dans le périmètre communal fourni ; administrateur plateforme AAL1 refusé et exception intercommunale conservée pour plateforme AAL2 ; refus d'un compte cible ayant le rôle maire.
+- Test : `tests/postgres/security-guards-integration.sh`.
+
+### Contrôle de portée et limites
+- Les migrations candidates sont exécutées sur une base PostgreSQL isolée, avec des tables et fonctions auxiliaires de test qui simulent les claims Auth et les helpers Supabase. Les fonctions métier corrigées sont celles de la migration candidate.
+- Le test SQL vérifie les décisions des gardes et leur comportement transactionnel, mais ne remplace pas un test HTTP avec de vrais JWT Supabase, facteurs TOTP et comptes de recette. Le parcours MFA de l'interface reste couvert par `tests/mairie-mfa.test.js`.
+- La définition de production de `private.my_role()`, `private.my_commune()`, `private.is_platform_admin()`, `public.is_super_admin()` et `public.lier_adjoint` a été relue en lecture seule pour confirmer les règles AAL2 et le périmètre communal. Aucun SQL de mutation n'a été exécuté sur la production.
+- La migration quota et la migration paie/adjoints restent non appliquées en production ; aucune Edge Function n'a été déployée.
+
+### CI
+- Workflow PostgreSQL concurrency integration **#18** : succès.
+- Workflow Regression tests **#114** : succès — suite JavaScript complète et vérification Deno des six Edge Functions.
+- Commit de branche validé : `f626a3376934bf60e6e87d5cd4b7a85b4abdd34d`.
