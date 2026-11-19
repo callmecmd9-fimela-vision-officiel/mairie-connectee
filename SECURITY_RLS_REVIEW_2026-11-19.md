@@ -32,3 +32,12 @@ Les dix premières fonctions retournent des informations de portail public et li
 
 ## Conclusion de cette passe
 Aucune faille RLS démontrée par les groupes échantillonnés, mais plusieurs zones nécessitent une validation métier plus profonde : délégations paie, fonctions de suivi citoyen, RPC d'administration, et cohérence des 81 migrations. Aucun correctif de politique n'est appliqué sans preuve d'un contournement reproductible et test de non-régression.
+
+## Authentification MFA — constat et correction sur la branche
+- La console SaaS `/saas` imposait déjà TOTP et AAL2, mais la console super-administrateur intégrée à `/mairie` ne réalisait pas le défi MFA après le mot de passe.
+- Les contrôles SQL/RLS imposaient bien AAL2 aux opérations sensibles : le constat est donc un défaut de parcours et de cohérence entre l'interface et l'autorisation serveur, pas un contournement RLS démontré.
+- Correction préparée dans cette branche : contrôle AAL2 après authentification, défi TOTP pour un facteur déjà vérifié, enrôlement TOTP intégré si aucun facteur vérifié n'existe, vérification du code avant d'ouvrir la console, et refus des profils inactifs.
+- Les rôles municipaux ordinaires ne sont pas soumis au MFA plateforme ; le contrôle s'applique au rôle `super_admin`.
+- Tests de non-régression dédiés : AAL1, AAL2, absence de facteur, facteur non vérifié antérieur, maire AAL1, profil inactif et syntaxe des modules d'authentification.
+- Cette correction reste une modification de code source sur branche/PR. Elle n'a pas été déployée en production.
+
