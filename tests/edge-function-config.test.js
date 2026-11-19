@@ -23,7 +23,10 @@ for (const [slug, verifyJwt] of Object.entries(expected)) {
 
 const iaSource = fs.readFileSync(path.join(root, "supabase", "functions", "ia-texte", "index.ts"), "utf8");
 assert.match(iaSource, /Access-Control-Allow-Methods/);
-assert.match(iaSource, /usageReadError/);
-assert.match(iaSource, /usageWriteError/);
+assert.match(iaSource, /reserveError/);
+assert.match(iaSource, /ia_usage_reserver/);
+assert.match(iaSource, /ia_usage_finaliser/);
+assert.match(iaSource, /finalizeQuota\(false\)/);
+assert.match(iaSource, /finalizeQuota\(true\)/);
 
 console.log("OK   six Edge Functions versionnées, JWT configuré et quota IA fail-closed");
