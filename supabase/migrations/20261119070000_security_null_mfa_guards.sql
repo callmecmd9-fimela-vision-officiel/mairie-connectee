@@ -52,7 +52,7 @@ begin
 
   select * into a from public.adjoints where id = p_adjoint;
   if a.id is null or (
-    not private.is_platform_admin()
+    not coalesce(private.is_platform_admin(), false)
     and a.commune_id is distinct from private.my_commune()
   ) then
     raise exception 'Adjoint introuvable';
