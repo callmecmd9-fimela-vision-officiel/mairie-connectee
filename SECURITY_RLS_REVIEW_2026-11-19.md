@@ -41,3 +41,14 @@ Aucune faille RLS démontrée par les groupes échantillonnés, mais plusieurs z
 - Tests de non-régression dédiés : AAL1, AAL2, absence de facteur, facteur non vérifié antérieur, maire AAL1, profil inactif et syntaxe des modules d'authentification.
 - Cette correction reste une modification de code source sur branche/PR. Elle n'a pas été déployée en production.
 
+
+## Edge Function `ia-texte` — contrôles complémentaires
+- La table `ia_usage` a une clé primaire unique `(user_id, jour)` et une politique RLS qui refuse toutes les opérations directes à `anon` et `authenticated`. La Edge Function utilise la clé service-role.
+- La limite quotidienne est actuellement lue puis écrite par un `upsert` non atomique. Deux requêtes simultanées du même compte peuvent lire le même compteur et dépasser temporairement le plafond de 30. C'est un défaut de robustesse de quota, pas un accès aux données d'un autre utilisateur. Une future migration devra ajouter une opération atomique (verrou/UPSERT conditionnel) après réconciliation des sources historiques.
+- Le prévol CORS de la fonction a été complété dans la branche avec `Access-Control-Allow-Methods: POST, OPTIONS` et `Access-Control-Max-Age`. Cette modification n'est pas encore déployée.
+- Les sources Supabase ne seront déployées qu'après validation complète de la PR et plan de déploiement distinct.
+
+## Portée des alertes RLS
+- L'énumération PostgreSQL a recensé 12 groupes table/opération comportant plusieurs politiques permissives. Les 12 groupes ont été examinés ; les conditions combinent des rôles séparés, des droits `org_droit`, l'appartenance à la commune, la confidentialité ou le rattachement à l'utilisateur.
+- Aucun contournement intercommunal ou accès paie non autorisé n'a été démontré dans ces 12 groupes lors de cette passe. Les règles métier de délégation paie et les 56 alertes advisor doivent rester suivies, mais il ne faut pas supprimer des politiques simplement pour faire disparaître les avertissements.
+
