@@ -89,3 +89,10 @@ Toute application en production, tout déploiement Edge Function et toute modifi
 - Aucun déploiement Supabase ou Cloudflare.
 - Aucune donnée, aucun secret et aucune configuration de production modifiés.
 - Aucun compute ou branche Supabase payant créé.
+
+
+## 7. CI de la réconciliation
+
+- Workflow Regression tests **#164 : succès** sur le commit `2b7c83060c762ffdd1318d157d7413bbd908068b` ; le test d'intégrité des 81 sources est vert, ainsi que la suite JavaScript et le contrôle Deno des six Edge Functions.
+- Workflow PostgreSQL concurrency integration **#68 : succès** sur le même commit ; tests de quota atomique, gardes paie et liaison des adjoints verts sur PostgreSQL éphémère.
+- Un défaut de regex dans la première version du test d'intégrité a été corrigé avant ce résultat final ; le workflow de validation final est entièrement vert.
