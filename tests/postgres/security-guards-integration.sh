@@ -49,7 +49,10 @@ as $$ select coalesce(nullif(current_setting('test.hors_maintenance', true), '')
 
 create function private.is_platform_admin() returns boolean
 language sql stable set search_path = ''
-as $$ select coalesce(nullif(current_setting('test.platform_admin', true), '')::boolean, false) $$;
+as $
+  select coalesce(nullif(current_setting('test.platform_admin', true), '')::boolean, false)
+     and current_setting('request.jwt.claims', true)::jsonb ->> 'aal' = 'aal2'
+$;
 
 create function public.is_super_admin() returns boolean
 language sql stable set search_path = ''
@@ -128,8 +131,10 @@ begin
 
   -- Administrateur plateforme : exception de périmètre conservée.
   perform set_config('test.platform_admin', 'true', false);
-  perform set_config('test.commune', '11111111-1111-4111-8111-111111111111', false);
+  perform set_config('test.commune', '22222222-2222-4222-8222-222222222222', false);
   perform set_config('request.jwt.claims', '{"app_role":"platform_admin","aal":"aal1"}', false);
+  begin perform public.lier_adjoint('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','adjoint@example.test'); raise exception 'platform AAL1 unexpectedly allowed'; exception when others then if sqlerrm = 'platform AAL1 unexpectedly allowed' then raise; end if; end;
+  perform set_config('request.jwt.claims', '{"app_role":"platform_admin","aal":"aal2"}', false);
   perform public.lier_adjoint('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','adjoint@example.test');
 
   -- Compte cible avec rôle maire/super_admin ou autre commune : refus.
