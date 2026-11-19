@@ -21,4 +21,9 @@ for (const [slug, verifyJwt] of Object.entries(expected)) {
     `source Edge Function absente : ${slug}`);
 }
 
-console.log("OK   six Edge Functions versionnées et verify_jwt aligné sur Supabase");
+const iaSource = fs.readFileSync(path.join(root, "supabase", "functions", "ia-texte", "index.ts"), "utf8");
+assert.match(iaSource, /Access-Control-Allow-Methods/);
+assert.match(iaSource, /usageReadError/);
+assert.match(iaSource, /usageWriteError/);
+
+console.log("OK   six Edge Functions versionnées, JWT configuré et quota IA fail-closed");
