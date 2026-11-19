@@ -69,3 +69,11 @@ Base de départ : `main` — `a11b53565168cad3bc081b5838ea4638447d6a0e`
 - Les alertes de performance sont : 7 clés étrangères sans index, 20 index signalés inutilisés et 1 index dupliqué. Aucune suppression/création d'index n'a été exécutée ; l'impact doit être évalué avec les requêtes et volumes réels.
 - La protection Supabase contre les mots de passe compromis est désactivée. Son activation est à planifier séparément, après évaluation de l'impact utilisateur et de la configuration Auth.
 
+
+## Edge Functions — autres contrôles
+- `saas-admin` et `sa-admin` exigent un JWT valide et passent par les RPC de contrôle plateforme/MFA avant les opérations privilégiées.
+- `purge-pieces` est configurée avec `verify_jwt=false`, mais exige un secret partagé dans l'en-tête ; sa RPC `pieces_orphelines` vérifie ce secret via Vault et n'est pas exécutable par `anon` ou `authenticated`. Ce modèle reste sensible à la protection/rotation du secret.
+- `bright-worker` et `admin-comptes` sont encore déployées actives, mais répondent HTTP 410 avec une indication de migration vers les fonctions actuelles ; leur retrait contrôlé pourra être étudié après vérification des appels externes.
+- Le correctif `ia-texte` est versionné dans la PR #1, avec tests Node et contrôle Deno réussis. Il reste à déployer séparément après validation, car le code Supabase actuellement actif n'a pas été remplacé.
+- Les sources des cinq autres Edge Functions actives restent à intégrer au dépôt pour obtenir une traçabilité complète des versions déployées.
+
