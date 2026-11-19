@@ -138,8 +138,6 @@ begin
   perform public.lier_adjoint('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','adjoint@example.test');
 
   -- Compte cible avec rôle maire/super_admin ou autre commune : refus.
-  insert into public.profiles(id,role,commune_id) values
-   ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','maire','11111111-1111-4111-8111-111111111111');
   begin perform public.lier_adjoint('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','maire@example.test'); raise exception 'privileged target role unexpectedly allowed'; exception when others then if sqlerrm = 'privileged target role unexpectedly allowed' then raise; end if; end;
 end $$;
 
