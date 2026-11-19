@@ -121,3 +121,38 @@ Pour `paies`, `paie_lignes` et `remunerations`, les politiques restrictives impo
 - Les contrôles CI valident les tests JavaScript et le `deno check` des six Edge Functions ; ils ne constituent pas une recette RLS réelle.
 - Aucun SQL DDL/DML, changement d'ACL, changement de politique, déploiement Supabase/Cloudflare ou fusion dans `main`.
 - Les 81 migrations Supabase restent non réconciliées avec leurs sources historiques ; aucune migration ne doit être rejouée à ce stade.
+
+
+## Constat bloquant — contrôle paie AAL1 (19 novembre 2026, 05:15 UTC)
+
+**Sévérité : élevée — vulnérabilité potentielle confirmée par analyse statique du chemin d'exécution, non exploitée pendant l'audit.**
+
+La surcharge `private.paie_garde(p_roles text[])` contient ce contrôle :
+`if c is null or (select private.my_role()) <> all (p_roles) or not private.hors_maintenance() then raise ...`
+
+Or `private.my_role()` renvoie volontairement `NULL` pour un profil `super_admin` lorsque le JWT est au niveau AAL1. En PL/pgSQL, une condition `IF` évaluée à `NULL` n'entre pas dans la branche `THEN`. Si le profil a une commune active et que la commune n'est pas en maintenance, `private.hors_maintenance()` vaut vrai : la condition complète peut donc rester `NULL` et la garde renvoie la commune au lieu de refuser.
+
+Le chemin sensible est concret :
+- `public.paie_payer(p_paie,p_date,p_ref)` est `SECURITY DEFINER` et exécutable par `authenticated`.
+- Cette RPC appelle précisément la surcharge vulnérable avec `private.paie_garde(array['maire','finances'])`.
+- Elle met ensuite à jour une paie ordonnancée en `paye`, sans contrôle de rôle supplémentaire.
+- La base comporte actuellement un profil `super_admin` actif rattaché à une commune active, sans maintenance active ; une paie ordonnancée existe dans cette commune.
+
+**Conclusion :** un jeton `super_admin` AAL1 pourrait appeler directement `paie_payer` et franchir le contrôle de rôle, sous les conditions ci-dessus. Aucun appel de ce type n'a été exécuté ni observé ; aucune paie n'a été modifiée pendant l'audit.
+
+### Correction proposée — ne pas exécuter directement
+La garde doit récupérer le rôle une seule fois et refuser explicitement `NULL` :
+`declare c uuid := private.my_commune(); r text := private.my_role();`
+puis :
+`if c is null or r is null or not (r = any (p_roles)) or not private.hors_maintenance() then raise exception 'Accès refusé' using errcode='42501'; end if;`
+
+Le refus explicite de `r is null` supprime l'ambiguïté SQL trois-valued logic. Il faut conserver les rôles autorisés `maire` et `finances` sans ouvrir le droit au rôle `super_admin`.
+
+### Vérifications obligatoires avant déploiement
+1. Retrouver la source SQL historique exacte de `private.paie_garde(text[])` et la migration qui l'a créée/modifiée ; elles ne sont pas actuellement réconciliées dans le dépôt.
+2. Préparer une migration corrective versionnée uniquement après réconciliation des 81 migrations.
+3. Tester avec des JWT réels : `super_admin` AAL1 refusé (42501), `super_admin` AAL2 refusé par cette garde de paiement, rôle `adjoint` refusé, `maire` et `finances` autorisés selon les règles métier et l'état de la paie.
+4. Tester qu'une paie d'une autre commune reste inaccessible et que les statuts autres que `ordonnance` ne sont pas modifiés.
+5. Vérifier les logs et l'audit métier après déploiement contrôlé.
+
+**Mesure prise :** aucune modification SQL, aucun changement d'ACL, aucun déploiement et aucune donnée modifiée. Ce constat devient un bloqueur explicite avant fusion de la PR et avant toute validation de sécurité paie.
