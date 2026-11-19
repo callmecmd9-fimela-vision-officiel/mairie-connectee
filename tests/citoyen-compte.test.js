@@ -1,6 +1,6 @@
 // Lot 4 : espace citoyen (compte, profil, historique, notifications, isolation sur appareil). node tests/citoyen-compte.test.js
 const vm=require('vm'),fs=require('fs'),path=require('path');let f=0;const ok=(n,c)=>{console.log(c?'OK  ':'FAIL',n);if(!c)f++};
-async function boot({user=true,prof={prenom:'Awa',nom:'Diop',village:'Mbodiène'},store={mc_co:'fimela'},otpErr=null}={}){
+async function boot({user=true,prof={prenom:'Awa',nom:'Diop',village:'Mbodiène'},store={mc_co:'fimela'},otpErr=null,smsEnabled=false}={}){
  const app={innerHTML:''},handlers={click:[],input:[]},els={},log=[],rpcs=[];
  const tables={citoyens:prof?[prof]:[],citoyen_notifications:[{id:'n1',titre:'Demande FIM-0001-AAAA1111',corps:'Votre demande est en cours de traitement.',lu:false,created_at:'2026-11-17T10:00:00Z'},{id:'n2',titre:'Annonce',corps:'x',lu:true,created_at:'2026-11-16T10:00:00Z'}]};
  const dem={'FIM-0001-AAAA1111':{numero:'FIM-0001-AAAA1111',type:'État civil',statut:'en_cours'},'FIM-0002-LOCAL000':{numero:'FIM-0002-LOCAL000',type:'Réclamations',statut:'nouvelle'}};
@@ -17,7 +17,7 @@ async function boot({user=true,prof={prenom:'Awa',nom:'Diop',village:'Mbodiène'
    return{data:[]}}};
  const ctx={supabase:{createClient:()=>sb},document:{querySelector:s=>s=='#app'?app:els[s]||null,getElementById:()=>null,addEventListener:(n,fn)=>(handlers[n]=handlers[n]||[]).push(fn),createElement:()=>({}),head:{appendChild(){}},documentElement:{style:{setProperty(){},removeProperty(){}}},hidden:false},
   localStorage:{getItem:k=>store[k]??null,setItem:(k,v)=>store[k]=String(v),removeItem:k=>delete store[k]},location:{search:'',pathname:'/',origin:'https://m.x',hostname:'x.workers.dev'},history:{replaceState(){}},navigator:{onLine:true},URL,Blob,URLSearchParams,setInterval(){},setTimeout(){},addEventListener(){},scrollTo(){},console,Promise,JSON,Math,Date,crypto:{},matchMedia:()=>({matches:true})};
- ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','citoyen.js'),'utf8'),ctx);
+ ctx.window=ctx;vm.createContext(ctx);let source=fs.readFileSync(path.join(__dirname,'..','js','citoyen.js'),'utf8');if(smsEnabled)source=source.replace('const SMS_ON=false;','const SMS_ON=true;');vm.runInContext(source,ctx);
  await new Promise(r=>setTimeout(r,60));
  const click=async d=>{const t={dataset:d,textContent:''};for(const h of handlers.click)await h({target:{closest:s=>s=='[data-a]'?t:null}})};
  return{app,els,log,rpcs,store,click,H:()=>app.innerHTML,S:()=>vm.runInContext('S',ctx),ctx}}
@@ -68,15 +68,15 @@ async function boot({user=true,prof={prenom:'Awa',nom:'Diop',village:'Mbodiène'
  ok('sans compte : dossiers de l\'appareil visibles, aucun appel au compte',t.S().mine.length===1&&!t.rpcs.some(x=>x[0]=='mes_demandes_compte'));
  await t.click({a:'cat',c:'Sport, culture et associations'});
  ok('sans compte : dépôt libre conservé (nom + téléphone + anti-spam)',/id="fn"/.test(t.H())&&/id="ft"/.test(t.H())&&/id="ts"/.test(t.H()));
- await t.click({a:'back'});await t.click({a:'esp'});
+ await t.click({a:'back'});t=await boot({user:false,smsEnabled:true});await t.click({a:'esp'});
  ok('espace déconnecté : « Se connecter ou créer un compte », accès sans compte rappelé',/Se connecter ou créer un compte/.test(t.H())&&/sans compte/.test(t.H())&&!/Mes demandes/.test(t.H().split('Se connecter ou créer un compte')[1]||'')&&!/Notifications/.test(t.H()));
  // 7. SMS indisponible : message honnête
- t=await boot({user:false,otpErr:{code:'phone_provider_disabled',message:'Unsupported phone provider'}});
+ t=await boot({user:false,otpErr:{code:'phone_provider_disabled',message:'Unsupported phone provider'},smsEnabled:true});
  await t.click({a:'esp'});t.els['#ph']={value:'77 123 45 67'};t.S().tok='ok';
  await t.click({a:'otp'});
  ok('SMS indisponible : message clair, pas de faux succès',/pas encore disponible/.test(t.H())&&!/Code reçu par SMS/.test(t.H()));
  // 8. première connexion : création de la fiche
- t=await boot({user:false,prof:null,otpErr:null});
+ t=await boot({user:false,prof:null,otpErr:null,smsEnabled:true});
  await t.click({a:'esp'});t.els['#ph']={value:'77 123 45 67'};t.S().tok='ok';
  await t.click({a:'otp'});ok('SMS envoyé : saisie du code',/Code reçu par SMS/.test(t.H()));
  t.els['#cd']={value:'123456'};await t.click({a:'vfy'});
