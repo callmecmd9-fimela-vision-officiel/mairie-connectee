@@ -65,7 +65,7 @@ jobs:
         with:
           deno-version: v2.x
 
-      - name: Type-check IA Edge Function
+      - name: Type-check all Supabase Edge Functions
         run: |
           for function_file in supabase/functions/*/index.ts; do
             echo "Type-check: $function_file"
