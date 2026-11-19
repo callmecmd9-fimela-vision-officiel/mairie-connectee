@@ -58,3 +58,9 @@ Aucune faille RLS démontrée par les groupes échantillonnés, mais plusieurs z
 - Le dépôt contenait un fichier mal nommé avec un espace initial (` .assetsignore`) ; Wrangler ne le traite pas comme le fichier d'exclusion attendu. Le vrai `.assetsignore` de `main` ne contenait que les exclusions minimales.
 - Correction dans cette PR : le fichier reconnu `.assetsignore` contient désormais les exclusions des tests, sources SQL/TypeScript, archives, répertoires `.github/` et `supabase/`, fichiers `*.mjs` et fichiers de verrouillage. Le fichier mal nommé est supprimé.
 - Un test vérifie les règles critiques et l'absence du fichier mal nommé. Aucun déploiement Workers n'a été effectué ; l'exclusion sera appliquée au prochain déploiement autorisé.
+
+## Vérification de correspondance des sources SQL
+- Sur la branche PR, 16 fichiers `.sql` sont présents à la racine.
+- La comparaison stricte des noms de fichiers avec les 81 noms de migrations enregistrés ne donne qu'une correspondance exacte (`20261118_org_sa_roles.sql` ↔ `20261118_org_sa_roles`).
+- Une différence de nom ne prouve pas qu'une migration n'a jamais été appliquée : certaines sources peuvent être des fragments, des lots ou des scripts d'isolation. Elle prouve en revanche que le dépôt ne fournit pas une correspondance canonique exploitable entre fichiers et historique Supabase.
+- Les fichiers datés après le 19 novembre 2026 sont des sources futures/proposées au regard de la date de cet audit ; ils ne doivent pas être exécutés sans plan de migration explicite.
