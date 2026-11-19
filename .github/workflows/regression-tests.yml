@@ -66,4 +66,8 @@ jobs:
           deno-version: v2.x
 
       - name: Type-check IA Edge Function
-        run: deno check --no-lock supabase/functions/ia-texte/index.ts
+        run: |
+          for function_file in supabase/functions/*/index.ts; do
+            echo "Type-check: $function_file"
+            deno check --no-lock "$function_file"
+          done
