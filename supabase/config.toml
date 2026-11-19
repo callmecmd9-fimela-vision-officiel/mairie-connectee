@@ -1,0 +1,19 @@
+project_id = "aiqegpijisspankpkwfj"
+
+[functions.ia-texte]
+verify_jwt = true
+
+[functions.saas-admin]
+verify_jwt = true
+
+[functions.sa-admin]
+verify_jwt = true
+
+[functions.purge-pieces]
+verify_jwt = false
+
+[functions.bright-worker]
+verify_jwt = true
+
+[functions.admin-comptes]
+verify_jwt = true
