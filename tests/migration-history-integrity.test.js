@@ -17,7 +17,7 @@ const versions = new Set();
 const historicalFiles = new Set();
 
 for (const item of manifest.migrations) {
-  assert.match(item.version, /^\\d{14}$/, `invalid migration version: ${item.version}`);
+  assert.ok(item.version.length === 14 && [...item.version].every(c => c >= '0' && c <= '9'), `invalid migration version: ${item.version}`);
   assert.equal(item.file, `${item.version}_${item.name}.sql`);
   assert.ok(!versions.has(item.version), `duplicate migration version: ${item.version}`);
   versions.add(item.version);
