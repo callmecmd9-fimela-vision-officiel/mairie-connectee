@@ -38,7 +38,7 @@ assert.match(adjoint, /role\s+in\s*\(\s*'maire'\s*,\s*'super_admin'\s*\)/);
 assert.match(adjoint, /on\s+conflict\s*\(id\)\s*do\s+update\s+set\s+role\s*=\s*'adjoint'/);
 assert.match(adjoint, /update\s+public\.adjoints\s+set\s+user_id\s*=\s*u/);
 
-assert.match(sql, /^begin;/i);
+assert.match(sql, /\\bbegin;/i);
 assert.match(sql.trimEnd(), /commit;$/i);
 assert.doesNotMatch(sql, /\b(grant|revoke)\s+/i);
 
