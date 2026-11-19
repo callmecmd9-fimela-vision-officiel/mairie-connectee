@@ -85,3 +85,8 @@ Base de départ : `main` — `a11b53565168cad3bc081b5838ea4638447d6a0e`
 - Les rôles municipaux standards conservent leur parcours habituel ; le contrôle MFA plateforme concerne le rôle `super_admin`.
 - Tests dédiés ajoutés. La correction n'est pas encore déployée sur Supabase ni fusionnée dans `main`.
 
+
+## Cloudflare Workers Assets — point de publication
+- Le Worker sert les assets depuis la racine du dépôt (`wrangler.jsonc`, `assets.directory = "./"`).
+- La branche principale contenait un `.assetsignore` minimal et un doublon mal nommé avec un espace initial. La branche de correction remplace le fichier reconnu par une liste d'exclusions complète, ajoute `supabase/`, `.github/`, `*.mjs` et `*.lock`, puis supprime le fichier mal nommé.
+- Cette mesure évite de publier les sources Edge Functions, les métadonnées CI et les artefacts de test comme fichiers statiques au prochain déploiement. Elle n'a pas encore été déployée.
