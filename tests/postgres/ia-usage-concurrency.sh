@@ -40,7 +40,11 @@ denied="$(grep -hc '^DENIED$' "$tmp"/* | awk '{s+=$1} END {print s+0}')"
 [[ "$denied" -eq 25 ]] || { echo "FAIL: denied=$denied expected=25"; exit 1; }
 
 # Échec fournisseur : libération idempotente et possibilité de réutiliser une unité.
-reservation="$(grep -hv '^DENIED$' "$tmp"/* | head -n 1)"
+reservation=""
+for result_file in "$tmp"/*; do
+  candidate="$(cat "$result_file")"
+  if [[ "$candidate" != "DENIED" && -n "$candidate" ]]; then reservation="$candidate"; break; fi
+done
 [[ -n "$reservation" && "$reservation" != "DENIED" ]]
 "${psql[@]}" -c "select public.ia_usage_finaliser('$reservation', false)" >/dev/null
 "${psql[@]}" -c "select public.ia_usage_finaliser('$reservation', false)" | grep -qx 'f'
