@@ -93,3 +93,6 @@ Base de départ : `main` — `a11b53565168cad3bc081b5838ea4638447d6a0e`
 
 ## Mise à jour de traçabilité Edge Functions
 La branche de correction `chore/ci-regression-tests` contient désormais les six sources Edge Functions et leur configuration `verify_jwt` observée. Les cinq sources non modifiées ont été récupérées depuis les versions Supabase actives ; `ia-texte` a été durcie sur la branche. Le workflow vérifie chaque fonction avec Deno. Aucun déploiement Supabase n'a été effectué.
+
+## Dernier durcissement IA dans la PR
+La fonction `ia-texte` refuse maintenant les communes suspendues/inactives et échoue de façon fermée si le contrôle de quota ne peut être lu ou écrit. La limite quotidienne reste exposée à une course concurrente ; sa correction atomique exige une migration à différer jusqu'à la réconciliation des sources. Les tests couvrent ces garde-fous.
