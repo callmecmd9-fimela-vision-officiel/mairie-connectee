@@ -5,7 +5,31 @@ const ORGM=[["cabinet","Cabinet du maire"],["instr","Instructions"],["rapports",
 const ORGA=[["consulter","Consulter"],["creer","Créer"],["modifier","Modifier"],["supprimer","Supprimer"],["valider","Valider"],["rejeter","Rejeter"],["signer","Signer"],["exporter","Exporter"],["imprimer","Imprimer"],["partager","Partager"],["administrer","Administrer"]];
 /* droits de consultation du poste de l'utilisateur connecté : alimente can() (affichage des écrans) */
 const orgCan=k=>{const o=S.orgMy;if(!o||S.sa||S.pr=="maire"||(S.mod||{})[k]===false)return false;if(S.pu&&k in S.pu)return false;return o.has("consulter|"+k)};
-async function orgMine(){S.orgMy=null;if(!S.uid||S.sa||S.pr=="maire")return;try{const t=new Date().toISOString().slice(0,10),a=((await sb.from("org_affectations").select("poste_code,debut,fin").eq("user_id",S.uid).eq("actif",true)).data||[]).filter(x=>x.debut<=t&&(!x.fin||x.fin>=t)).map(x=>x.poste_code);if(!a.length)return;const p=(await sb.from("org_postes").select("role_code").in("code",a).eq("actif",true)).data||[],rc=[...new Set(p.map(x=>x.role_code))];if(!rc.length)return;const d=(await sb.from("org_role_droits").select("module,action").in("role_code",rc).limit(2000)).data||[];S.orgMy=new Set(d.map(x=>x.action+"|"+x.module))}catch(e){}}
+async function orgMine(){
+ S.orgMy=null;
+ if(!S.uid||S.sa||S.pr=="maire")return;
+ try{
+  const today=new Date().toISOString().slice(0,10);
+  const ar=await sb.from("org_affectations").select("poste_code,debut,fin").eq("user_id",S.uid).eq("actif",true);
+  if(ar.error)throw ar.error;
+  const assignments=(ar.data||[]).filter(x=>x.debut<=today&&(!x.fin||x.fin>=today)).map(x=>x.poste_code);
+  if(!assignments.length)return;
+  const pr=await sb.from("org_postes").select("role_code").in("code",assignments).eq("actif",true);
+  if(pr.error)throw pr.error;
+  const roles=[...new Set((pr.data||[]).map(x=>x.role_code).filter(Boolean))];
+  if(!roles.length)return;
+  let rights=[],offset=0;
+  for(;;){
+   const page=await sb.from("org_role_droits").select("module,action").in("role_code",roles).range(offset,offset+999);
+   if(page.error)throw page.error;
+   rights=rights.concat(page.data||[]);
+   if(!page.data||page.data.length<1000)break;
+   offset+=1000;
+   if(offset>20000)throw new Error("Trop de droits à charger : arrêt de sécurité.");
+  }
+  S.orgMy=new Set(rights.map(x=>x.action+"|"+x.module));
+ }catch(e){S.orgMy=null}
+}
 const _orgLoad0=load;load=async function(o){await _orgLoad0(o);if(!o)await orgMine()};
 async function orgLoad(){ORG.ld=1;try{const q=t=>sb.from(t).select("*"),[r,p,a,g,u]=await Promise.all([q("org_roles").order("nom"),q("org_postes").order("nom"),q("org_affectations").order("created_at",{ascending:false}).limit(500),q("org_delegations_droits").order("created_at",{ascending:false}).limit(200),sb.from("profiles").select("id,nom,role,service,actif").eq("commune_id",S.cid)]);
 if(r.error||p.error)throw 0;let dr=[],off=0;for(;;){const x=await sb.from("org_role_droits").select("role_code,module,action").order("role_code").order("module").order("action").range(off,off+999);if(x.error||!x.data)throw 0;dr=dr.concat(x.data);if(x.data.length<1000||off>20000)break;off+=1000}
