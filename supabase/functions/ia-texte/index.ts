@@ -57,21 +57,34 @@ Deno.serve(async (req: Request) => {
       : "Facebook";
 
     const jour = new Date().toISOString().slice(0, 10);
-    const { data: u, error: usageReadError } = await admin.from("ia_usage").select("n")
-      .eq("user_id", user.id).eq("jour", jour).maybeSingle();
-    if (usageReadError) {
-      return j({ error: "Contrôle du quota indisponible. Réessayez plus tard." }, 503);
-    }
-    if ((u?.n ?? 0) >= LIMITE_JOUR) {
-      return j({ error: "Limite quotidienne atteinte (" + LIMITE_JOUR + " demandes). Réessayez demain." }, 429);
-    }
-
     const cle = Deno.env.get("ANTHROPIC_API_KEY");
     const cfId = Deno.env.get("CF_ACCOUNT_ID");
     const cfTok = Deno.env.get("CF_API_TOKEN");
     if (!cle && !(cfId && cfTok)) {
       return j({ error: "IA non configurée : ajoutez les clés dans les secrets de la fonction." }, 501);
     }
+
+    // Réservation transactionnelle avant l'appel externe : le plafond est strict
+    // même lorsque plusieurs générations du même compte arrivent simultanément.
+    const { data: reservationId, error: reserveError } = await admin.rpc("ia_usage_reserver", {
+      p_user_id: user.id,
+      p_jour: jour,
+      p_limite: LIMITE_JOUR,
+    });
+    if (reserveError) {
+      return j({ error: "Contrôle du quota indisponible. Réessayez plus tard." }, 503);
+    }
+    if (!reservationId) {
+      return j({ error: "Limite quotidienne atteinte (" + LIMITE_JOUR + " demandes). Réessayez demain." }, 429);
+    }
+
+    const finalizeQuota = async (success: boolean) => {
+      const { data, error } = await admin.rpc("ia_usage_finaliser", {
+        p_reservation_id: reservationId,
+        p_succes: success,
+      });
+      return !error && data === true;
+    };
 
     const longueur: Record<string, string> = {
       Facebook: "350 caractères maximum",
@@ -82,48 +95,64 @@ Deno.serve(async (req: Request) => {
     const system = `Tu es la plume poétique du Maire de la commune de ${commune.nom} (Sénégal). Tu écris en français soutenu, chaleureux, imagé et élégant des textes pour les réseaux sociaux. Règles : texte original, sensible et digne ; aucune promesse politique chiffrée ni fait inventé ; aucun propos partisan ; respect de toutes les communautés ; évoque la terre, la mer, la lumière, les gens et le travail seulement si cela sert le sujet.`;
     const prompt = `Écris 3 propositions différentes pour ${reseau} (${longueur[reseau]}). Sujet : ${sujet || "un message d'attachement et d'espoir pour la commune"}. Sépare les 3 propositions par une ligne contenant uniquement ---. N'ajoute aucun commentaire.`;
 
-    let texte = "";
-    if (cle) {
-      const r = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "x-api-key": cle, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-        body: JSON.stringify({
-          model: Deno.env.get("ANTHROPIC_MODEL") ?? "claude-sonnet-5-5",
-          max_tokens: 900,
-          system,
-          messages: [{ role: "user", content: prompt }],
-        }),
-      });
-      if (!r.ok) return j({ error: "Service IA indisponible" }, 502);
-      const d = await r.json();
-      texte = (d.content ?? []).map((x: { text?: string }) => x.text ?? "").join("");
-    } else {
-      const modele = Deno.env.get("CF_MODEL") ?? "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
-      const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${cfId}/ai/run/${modele}`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${cfTok}`, "content-type": "application/json" },
-        body: JSON.stringify({
-          messages: [{ role: "system", content: system }, { role: "user", content: prompt }],
-          max_tokens: 900,
-        }),
-      });
-      if (!r.ok) return j({ error: "Service IA indisponible" }, 502);
-      const d = await r.json();
-      texte = d?.result?.response ?? "";
-    }
+    try {
+      let texte = "";
+      if (cle) {
+        const r = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: { "x-api-key": cle, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+          body: JSON.stringify({
+            model: Deno.env.get("ANTHROPIC_MODEL") ?? "claude-sonnet-5-5",
+            max_tokens: 900,
+            system,
+            messages: [{ role: "user", content: prompt }],
+          }),
+          signal: AbortSignal.timeout(120_000),
+        });
+        if (!r.ok) {
+          if (!await finalizeQuota(false)) return j({ error: "Libération du quota impossible. Contactez l'administrateur." }, 503);
+          return j({ error: "Service IA indisponible" }, 502);
+        }
+        const d = await r.json();
+        texte = (d.content ?? []).map((x: { text?: string }) => x.text ?? "").join("");
+      } else {
+        const modele = Deno.env.get("CF_MODEL") ?? "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+        const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${cfId}/ai/run/${modele}`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${cfTok}`, "content-type": "application/json" },
+          body: JSON.stringify({
+            messages: [{ role: "system", content: system }, { role: "user", content: prompt }],
+            max_tokens: 900,
+          }),
+          signal: AbortSignal.timeout(120_000),
+        });
+        if (!r.ok) {
+          if (!await finalizeQuota(false)) return j({ error: "Libération du quota impossible. Contactez l'administrateur." }, 503);
+          return j({ error: "Service IA indisponible" }, 502);
+        }
+        const d = await r.json();
+        texte = d?.result?.response ?? "";
+      }
 
-    const textes = texte.split(/\n\s*-{3,}\s*\n/)
-      .map((x: string) => x.replace(/^\s*\d+[.)]\s*/, "").trim())
-      .filter((x: string) => x.length > 10)
-      .slice(0, 3);
-    if (!textes.length) return j({ error: "Réponse IA vide, réessayez." }, 502);
+      const textes = texte.split(/\\n\\s*-{3,}\\s*\\n/)
+        .map((x: string) => x.replace(/^\\s*\\d+[.)]\\s*/, "").trim())
+        .filter((x: string) => x.length > 10)
+        .slice(0, 3);
+      if (!textes.length) {
+        if (!await finalizeQuota(false)) return j({ error: "Libération du quota impossible. Contactez l'administrateur." }, 503);
+        return j({ error: "Réponse IA vide, réessayez." }, 502);
+      }
 
-    const { error: usageWriteError } = await admin.from("ia_usage")
-      .upsert({ user_id: user.id, jour, n: (u?.n ?? 0) + 1 });
-    if (usageWriteError) {
-      return j({ error: "Enregistrement du quota impossible. Réessayez plus tard." }, 503);
+      if (!await finalizeQuota(true)) {
+        return j({ error: "Validation du quota impossible. Réessayez plus tard." }, 503);
+      }
+      return j({ textes });
+    } catch (_providerError) {
+      if (!await finalizeQuota(false)) {
+        return j({ error: "Libération du quota impossible. Contactez l'administrateur." }, 503);
+      }
+      return j({ error: "Service IA indisponible" }, 502);
     }
-    return j({ textes });
   } catch (_e) {
     return j({ error: "Erreur serveur" }, 500);
   }
