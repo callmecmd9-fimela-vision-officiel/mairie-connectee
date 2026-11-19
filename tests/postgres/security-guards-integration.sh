@@ -121,10 +121,14 @@ begin
   perform set_config('request.jwt.claims', '{"app_role":"super_admin","aal":"aal1"}', false);
   begin perform public.lier_adjoint('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','other@example.test'); raise exception 'AAL1 super-admin unexpectedly allowed'; exception when others then if sqlerrm = 'AAL1 super-admin unexpectedly allowed' then raise; end if; end;
   perform set_config('request.jwt.claims', '{"app_role":"super_admin","aal":"aal2"}', false);
+  -- Un super-admin AAL2 franchit le garde d'identité, mais reste dans le périmètre
+  -- de sa commune si private.my_commune() en fournit une.
+  perform set_config('test.commune', '22222222-2222-4222-8222-222222222222', false);
   perform public.lier_adjoint('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','other@example.test');
 
   -- Administrateur plateforme : exception de périmètre conservée.
   perform set_config('test.platform_admin', 'true', false);
+  perform set_config('test.commune', '11111111-1111-4111-8111-111111111111', false);
   perform set_config('request.jwt.claims', '{"app_role":"platform_admin","aal":"aal1"}', false);
   perform public.lier_adjoint('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','adjoint@example.test');
 
