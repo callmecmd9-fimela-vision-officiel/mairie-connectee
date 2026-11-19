@@ -6,11 +6,6 @@ node_modules
 tests
 *.sql
 *.ts
-patch-*.js
-patched/
-js/patch-*.js
-js/lot4.block.js
-js/core_patched.js
 js/smoke.js
 *.test.js
 mairie-organisation-lots-A-E.zip
