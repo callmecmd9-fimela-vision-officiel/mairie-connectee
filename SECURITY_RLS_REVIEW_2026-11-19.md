@@ -202,3 +202,64 @@ Le triage du catalogue des fonctions SECURITY DEFINER exécutables par `authenti
 **Qualification :** exposition potentielle de métadonnée (un compte authentifié pourrait apprendre un nombre de fichiers pour un identifiant fourni) uniquement si le schéma est exposé à l'API. Pas de preuve d'accès aux fichiers, à leurs noms ou à leur contenu. Pas de preuve que la fonction est appelable via l'API publique actuelle.
 
 **Action recommandée après vérification de l'exposition API :** si `private` n'a pas besoin d'être exposé, le maintenir hors des schémas PostgREST exposés ; examiner ensuite si `EXECUTE` sur `private.nb_pieces(text)` doit être retiré à `authenticated`, après vérification des usages hors base (Edge Functions, scripts et clients). Aucun changement d'ACL ou de configuration n'a été appliqué.
+
+
+## Nouveau constat — garde MFA AAL1 dans `public.lier_adjoint` (19 novembre 2026, 05:34 UTC)
+
+**Sévérité : élevée — chemin d'escalade de rôle plausible et configuration prérequise présente ; aucun appel de mutation exécuté.**
+
+La fonction `public.lier_adjoint(p_adjoint uuid,p_email text)` est `SECURITY DEFINER`, exécutable par `authenticated` et non exécutable par `anon`. Son contrôle initial est :
+
+```sql
+IF NOT (
+  private.is_platform_admin()
+  OR private.my_role() IN ('maire','super_admin')
+) THEN RAISE EXCEPTION 'Accès refusé'; END IF;
+```
+
+`private.my_role()` renvoie `NULL` pour un profil `super_admin` en AAL1. Si `private.is_platform_admin()` est faux, l'expression devient `NOT (FALSE OR NULL)`, donc `NULL`. Un `IF NULL` PL/pgSQL n'exécute pas la branche de refus.
+
+Le contrôle suivant vérifie que l'adjoint demandé appartient à la commune de l'appelant, sauf administrateur plateforme. Il ne rétablit pas le contrôle AAL2 : pour un profil super-admin actif rattaché à cette même commune, `private.my_commune()` retourne cette commune et le contrôle passe.
+
+### Présence du prérequis en production
+Lecture agrégée du catalogue et des profils :
+- 1 profil `super_admin` actif ;
+- 1 profil `super_admin` actif rattaché à une commune ;
+- ce profil n'a pas d'entrée active correspondante dans `platform_admins`.
+
+Aucun identifiant de compte, adresse e-mail ou identifiant de commune n'est reproduit.
+
+### Impact potentiel
+Après franchissement de la garde, la fonction recherche un compte par e-mail, refuse seulement les profils déjà rattachés à une autre commune et les rôles `maire`/`super_admin`, puis crée ou remplace le profil cible par le rôle `adjoint` et lie l'enregistrement adjoint. Un jeton AAL1 du profil super-admin communal identifié pourrait donc potentiellement attribuer le rôle adjoint à un compte de sa commune, sans satisfaire AAL2. Cela constitue un risque d'escalade de privilèges et de modification non autorisée des affectations RH/organisationnelles.
+
+### Correctif ciblé à préparer — ne pas exécuter en production
+Remplacer le contrôle par une condition fail-closed, en capturant les valeurs une fois :
+```sql
+DECLARE
+  v_platform_admin boolean := coalesce(private.is_platform_admin(), false);
+  v_role text := private.my_role();
+BEGIN
+  IF NOT v_platform_admin
+     AND v_role IS DISTINCT FROM 'maire'
+     AND v_role IS DISTINCT FROM 'super_admin' THEN
+    RAISE EXCEPTION 'Accès refusé' USING ERRCODE='42501';
+  END IF;
+  -- Pour super_admin, imposer en plus explicitement AAL2.
+  IF v_role = 'super_admin'
+     AND coalesce((SELECT auth.jwt()->>'aal'),'') <> 'aal2'
+     AND NOT v_platform_admin THEN
+    RAISE EXCEPTION 'MFA AAL2 requise' USING ERRCODE='42501';
+  END IF;
+```
+La correction définitive devra être adaptée aux règles d'autorisation réelles (en particulier le traitement des administrateurs plateforme) et à la sémantique voulue de `is_super_admin()`. Ne pas copier ce fragment sans revue SQL complète.
+
+### Tests requis avant toute livraison
+1. Super-admin communal AAL1 : refus 42501, sans changement de profil ni de lien adjoint.
+2. Super-admin AAL2 : autorisation uniquement dans le périmètre prévu.
+3. Maire AAL1 : comportement métier conservé dans sa commune.
+4. Agent/citoyen AAL1, utilisateur sans profil et profil inactif : refus.
+5. Cible d'une autre commune, cible maire/super_admin et identifiant adjoint inexistant : refus sans mutation.
+6. Vérifier l'audit et les contraintes d'unicité/liaison après chaque scénario dans une branche Supabase de recette.
+
+### Mesures prises et dépendances
+Aucune fonction n'a été appelée en mode mutation ; aucun rôle, profil ou lien adjoint n'a été modifié. Aucun SQL, ACL ou déploiement n'a été exécuté. Les sources historiques des migrations restent non réconciliées : aucune migration corrective ne doit être créée/appliquée en production avant récupération et comparaison des sources canoniques.
