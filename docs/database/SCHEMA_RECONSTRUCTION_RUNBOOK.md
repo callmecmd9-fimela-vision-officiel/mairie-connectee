@@ -6,6 +6,8 @@ Le catalogue PostgreSQL enregistré dans [PRODUCTION_SCHEMA_CATALOG_2026-11-19.j
 
 La voie de référence est un export natif `pg_dump` en mode schéma uniquement, via Supabase CLI. Il préserve les définitions SQL réelles et l'ordre de dépendances, au lieu de reconstruire les objets à partir d'hypothèses.
 
+**Prérequis important :** la commande Supabase CLI lance `pg_dump` dans un conteneur. Il faut donc un poste disposant de Docker Engine fonctionnel. Un terminal Android/Termux sans daemon Docker ne peut pas exécuter ce script ; ne contourne pas ce contrôle en remplaçant la commande par un dump manuel incomplet.
+
 ## Projet source vérifié
 
 - Projet : `fimela-vision-officiel`

@@ -13,6 +13,8 @@ fail() { printf 'ERREUR: %s\n' "$*" >&2; exit 1; }
 
 command -v supabase >/dev/null 2>&1 || fail "Supabase CLI absent. Installe et authentifie Supabase CLI v3."
 command -v bash >/dev/null 2>&1 || fail "Bash est requis."
+command -v docker >/dev/null 2>&1 || fail "Docker CLI absent. supabase db dump utilise un conteneur pg_dump."
+docker info >/dev/null 2>&1 || fail "Docker Engine indisponible. Lance Docker sur un poste compatible avant l'export."
 
 version="$(supabase --version 2>/dev/null | head -n 1 || true)"
 [[ "$version" =~ ^[[:space:]]*3\.[0-9]+\.[0-9]+ ]] || fail "Supabase CLI v3 requis (version détectée: ${version:-inconnue}). Ne pas exécuter avec CLI v2 sans adapter et vérifier les options."
