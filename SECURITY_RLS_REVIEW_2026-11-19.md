@@ -365,9 +365,9 @@ Le premier point est une faiblesse d'autorisation confirmée : un profil désact
 ### État du correctif dans le dépôt
 La branche `chore/ci-regression-tests` contient déjà le correctif source :
 - `supabase/functions/ia-texte/authz.mjs` refuse les sessions absentes ou anonymes ;
-- exige un profil présent avec `actif === true) ;
+- exige un profil présent avec `actif === true` ;
 - limite les rôles communaux à maire/cabinet/secrétariat ;
-- impose `caller.rpc("is_super_admin") === true) pour `super_admin` (échec fermé si erreur) ;
+- impose `caller.rpc("is_super_admin") === true` pour `super_admin` (échec fermé si erreur) ;
 - vérifie l'état de la commune (essai/actif) et le rattachement communal ;
 - l'index traite les erreurs de lecture et d'écriture du quota en 503.
 
@@ -383,3 +383,16 @@ Le contrôle actuel reste un schéma lecture-puis-upsert non atomique : deux req
 - Priorité élevée : planifier le déploiement contrôlé du code déjà corrigé de `ia-texte` ; ne pas modifier les secrets ni les autres fonctions.
 - Avant déploiement : vérifier les secrets `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, la disponibilité de `is_super_admin()` pour le rôle appelant, le chemin `authz.mjs` inclus dans l'artefact, puis exécuter les tests de non-régression.
 - Ne pas déployer par ce lot : aucune validation fonctionnelle en production ni procédure de rollback n'a été exécutée.
+
+
+### Vérification complémentaire du compteur IA en production — 19 novembre 2026
+
+Lecture du schéma PostgreSQL de production (sans mutation) :
+- `public.ia_usage` possède les colonnes `user_id uuid NOT NULL`, `jour date NOT NULL`, `n integer NOT NULL DEFAULT 0`.
+- La clé primaire est exactement `(user_id, jour)`.
+- RLS est activé et la politique observée pour `anon` et `authenticated` refuse toutes les opérations (`USING false`, `WITH CHECK false`).
+- Les privilèges directs de table observés sont limités à `postgres` et `service_role` ; aucun droit direct n'est accordé à `anon` ou `authenticated`.
+
+Conséquence de conception : une RPC de consommation atomique doit rester réservée à `service_role` et conserver l'isolation actuelle. Un simple incrément atomique exécuté après l'appel au fournisseur empêcherait la perte de mises à jour, mais ne limiterait pas le nombre d'appels IA lancés simultanément. Pour préserver la règle métier « seules les générations réussies sont comptabilisées » tout en bloquant les dépassements sous concurrence, le mécanisme robuste doit réserver atomiquement une unité avant l'appel externe, puis libérer cette réservation de façon idempotente en cas d'échec. Cette conception nécessite un identifiant de réservation unique et des tests de concurrence/échec ; elle ne doit pas être remplacée par un incrément naïf qui facturerait les échecs.
+
+La migration de durcissement des gardes paie/adjoint présente sur la branche n'apparaît pas dans l'historique de production consulté : la dernière version enregistrée est `20261118230324`. La migration reste donc non appliquée. Aucun schéma, ACL, compteur, donnée, secret ou fonction de production n'a été modifié lors de cette vérification.
