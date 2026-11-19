@@ -15,11 +15,15 @@ La voie de référence est un export natif `pg_dump` en mode schéma uniquement,
 
 ## Export protégé depuis le dépôt
 
-Depuis la racine du dépôt, avec Supabase CLI v3 installé et authentifié :
+Depuis la racine du dépôt, avec Supabase CLI v3 installé et authentifié, lie d'abord le checkout au projet attendu (opération de configuration locale uniquement) :
 
 ```bash
+supabase login
+supabase link --project-ref=aiqegpijisspankpkwfj
 bash scripts/database/export-production-schema.sh
 ```
+
+Lors de `supabase link`, le mot de passe de base peut être laissé vide si la CLI le permet. Le script vérifie ensuite que `.temp/project-ref` correspond exactement au projet de production avant tout export.
 
 Le script :
 1. vérifie la version majeure de la CLI et le `project_id` local ;
