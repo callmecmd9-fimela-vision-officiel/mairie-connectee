@@ -28,12 +28,16 @@ export async function authorizeIaUser({ caller, admin, communeSlug }) {
 
   const { data: commune, error: communeError } = await admin
     .from("communes")
-    .select("id,nom")
+    .select("id,nom,statut")
     .eq("slug", communeSlug)
     .maybeSingle();
 
   if (communeError || !commune) {
     return { ok: false, status: 400, message: "Commune inconnue" };
+  }
+
+  if (!["essai", "actif"].includes(commune.statut)) {
+    return { ok: false, status: 403, message: "Commune suspendue ou inactive" };
   }
 
   if (profile.role !== "super_admin" && profile.commune_id !== commune.id) {
