@@ -49,10 +49,10 @@ as $$ select coalesce(nullif(current_setting('test.hors_maintenance', true), '')
 
 create function private.is_platform_admin() returns boolean
 language sql stable set search_path = ''
-as $
+as $body$
   select coalesce(nullif(current_setting('test.platform_admin', true), '')::boolean, false)
      and current_setting('request.jwt.claims', true)::jsonb ->> 'aal' = 'aal2'
-$;
+$body$;
 
 create function public.is_super_admin() returns boolean
 language sql stable set search_path = ''
