@@ -62,3 +62,27 @@ Les suites exécutées sont unitaires, simulées ou statiques. Elles ne constitu
 **Non réalisé :** remplacement en masse de fichiers, exécution SQL, changement de données ou secrets Supabase, déploiement Cloudflare/Supabase, fusion dans `main`.
 
 La PR #1 reste en brouillon sur `chore/ci-regression-tests`.
+
+
+## 7. Contrats interface / Edge Functions — correctifs du 19 novembre
+La revue des fichiers divergents a mis en évidence des incompatibilités réelles entre les commandes émises par les interfaces et les actions effectivement acceptées par les Edge Functions versionnées.
+
+### Administration SaaS — création d'une mairie
+- L'interface demandait et générait un mot de passe temporaire, puis envoyait un champ `password`.
+- `saas-admin` ignore ce champ et utilise `inviteUserByEmail`, puis crée le profil inactif.
+- L'interface annonçait donc un mot de passe qui n'était ni créé ni transmis.
+- Correction : suppression du faux champ mot de passe ; libellé et confirmation alignés sur l'invitation e-mail et le compte inactif.
+- Cache de `saas.js` versionné ; test `tests/saas-invitation.test.js`.
+
+### Administration mairie — comptes utilisateurs
+- L'interface envoyait `action: "creer"` avec un mot de passe ; `sa-admin` accepte `action: "inviter"` et crée un compte inactif via invitation.
+- L'interface envoyait un mot de passe en clair pour `reinit_mdp` ; la fonction exige `captchaToken` et déclenche un e-mail de réinitialisation.
+- L'interface proposait une suppression que le serveur refuse explicitement afin de préserver l'historique.
+- Corrections : invitation sans mot de passe, réinitialisation par e-mail avec Turnstile, retrait du bouton de suppression non supporté.
+- Cache de `superadmin.js` versionné ; test `tests/superadmin-edge-contract.test.js`.
+
+### Validation
+- Workflow GitHub #78 : succès sur le commit `1dda47b65bcd7aecd9ca5ff6cd6ce93126012311`.
+- Suite de tests JavaScript : succès.
+- Vérification Deno des six Edge Functions : succès.
+- Aucun changement de source Edge Function déployée, aucune migration et aucun déploiement.
