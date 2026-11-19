@@ -1,5 +1,8 @@
 # DECISIONS
 
+> **Mise à jour 2026-11-19** : les scripts SQL numérotés de la racine (`20261114_…` à `20261127_…`), `patch-org.js`, `patch-orgd.js`, `js/patch-core.js`, `js/patch-lot4.js`, `js/lot4.block.js`, `js/core_patched.js` et `patched/` ont été retirés du dépôt (commits `57a9265`, `ccf33b3` ; ils restent consultables dans l'historique git). Les migrations de référence sont dans `supabase/migrations/` (voir `recovered-history-manifest.json`) ; toutes les consignes « copier / appliquer / déployer » ci-dessous sont **historiques** : le code est déployé et les migrations sont appliquées en base. Les fichiers `*.append.md` ont été consolidés dans `CHANGELOG.md`, `DECISIONS.md` et `TASKS.md`.
+
+
 - **Pas de liste de communes côté citoyen** (fuite audit 2) : résolution par lien/QR, mémorisation, sous-domaine ; saisie de code masquée dans un `<details>`.
 - **Manifest dynamique côté client (blob)** plutôt qu'un Worker : aucun changement de déploiement. Si la CSP bloque `blob:` en `manifest-src`, repli automatique sur le manifest statique.
 - **Blason public** : bucket `identite` dédié (public, 300 Ko, images seulement) ; le bucket `medias` reste privé. Publication par bouton (copie), pas de duplication automatique.
@@ -24,3 +27,29 @@
 - **Catégories d'info** = colonne `publications.categorie`, pas de nouvelles tables.
 - **Navigation** : 5 entrées de la spécification ; « Travaux et projets » est une section de l'accueil, pas un lien de menu.
 - **Catalogue** : prestations non confirmées insérées inactives, la mairie les active après vérification de sa compétence ; archivage au lieu de suppression ; frais, pièces et délais jamais préremplis.
+
+
+---
+
+# Décisions consolidées des lots (ex-fichiers `*.append.md`)
+
+
+- **Projets visibles aux citoyens seulement si la mairie les publie** (`projets.public`, défaut false).
+- **Catégories d'info** = colonne `publications.categorie`, pas de nouvelles tables.
+- **Navigation** : 5 entrées de la spécification ; « Travaux et projets » est une section de l'accueil, pas un lien de menu.
+
+
+
+- Lot C : RLS `org_droit` toujours additive (nouvelle policy permissive en OR avec l'existant), jamais en remplacement — élimine le risque de régression sur les accès legacy par rôle.
+- Documents confidentiels : `org_droit('archives',...)` ne débloque que le non-confidentiel ; le confidentiel reste exclusivement maire/secrétariat via la policy historique, intacte.
+- Traçabilité sensible centralisée dans `acces_sensibles` plutôt qu'une table de log par module (évite la prolifération de tables).
+
+
+
+## Lot D
+- Traçabilité au niveau de l'écran (pas de la fiche) : aucune fiche individuelle n'est ouverte séparément aujourd'hui ; la colonne `cible` reste disponible.
+- « Mon poste » / « Mes délégations » placés dans Administration (schéma de menu existant, aucune nouvelle structure) ; invisibles au maire et sans poste/délégation.
+- Les menus suivent les délégations reçues ; le serveur revérifie à chaque requête (org_droit_user vérifie aussi que le délégant détient encore le droit).
+- Hors périmètre : tableaux de bord KPI propres à chaque poste (seul « Mon poste » : postes, écrans, délégations, demandes du service).
+
+

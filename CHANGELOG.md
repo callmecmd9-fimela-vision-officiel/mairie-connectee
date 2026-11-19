@@ -1,5 +1,8 @@
 # CHANGELOG
 
+> **Mise à jour 2026-11-19** : les scripts SQL numérotés de la racine (`20261114_…` à `20261127_…`), `patch-org.js`, `patch-orgd.js`, `js/patch-core.js`, `js/patch-lot4.js`, `js/lot4.block.js`, `js/core_patched.js` et `patched/` ont été retirés du dépôt (commits `57a9265`, `ccf33b3` ; ils restent consultables dans l'historique git). Les migrations de référence sont dans `supabase/migrations/` (voir `recovered-history-manifest.json`) ; toutes les consignes « copier / appliquer / déployer » ci-dessous sont **historiques** : le code est déployé et les migrations sont appliquées en base. Les fichiers `*.append.md` ont été consolidés dans `CHANGELOG.md`, `DECISIONS.md` et `TASKS.md`.
+
+
 ## 2026-11-16 — Porte d'entrée citoyenne + durcissement
 ### Base (migrations appliquées, idempotentes, aucune suppression)
 - `securite_revoke_anon_tables_initplan` : droits SQL retirés au rôle `anon` sur 12 tables internes (RLS déjà actif) ; `default privileges` anon retirés ; policy `citoyens_own` optimisée (`(select auth.jwt())`) ; index `communes_admin_principal_idx`.
@@ -59,3 +62,65 @@
 - Mairie : Démarches = famille, service, modèle, frais, retrait ; Activer/Désactiver, Archiver.
 - Base : `20261124_catalogue.sql` (28 prestations, 4 actives).
 - Tests : `catalogue.test.js` (nouveau), `citoyen-nav.test.js` mis à jour ; `isolation_catalogue.sql`.
+
+
+---
+
+# Historique consolidé des lots (ex-fichiers `*.append.md`)
+
+
+## CHANGELOG — Lots catalogue (1 à 6)
+- Citoyen : État civil = 4 cartes (naissance, mariage, décès, résidence) + « Autres documents » ; boîte de dialogue plein écran mobile (recherche sans accents, catégories, aucun-résultat, fermeture/réouverture) ; formulaires par modèle (identite, legalisation, foncier, social, libre) avec récapitulatif, frais, retrait, service ; extraits guidés inchangés.
+- Mairie : Démarches = famille, service, modèle, frais, retrait ; Activer/Désactiver, Archiver.
+- Base : `20261124_catalogue.sql` (famille, service, frais, retrait, modele, statut ; RPC par slug, actives seulement ; 28 prestations, 4 actives).
+- Tests : `catalogue.test.js` (nouveau), `citoyen-nav.test.js` mis à jour ; compte, état civil, rdv, créneaux, info OK ; `isolation_catalogue.sql`.
+
+## DECISIONS
+- Prestations non confirmées insérées inactives ; la mairie les active après vérification de sa compétence.
+- Pas de suppression de prestation : archivage. Frais/pièces/délais jamais préremplis.
+- Dialogue = div role=dialog hors rendu principal (saisie préservée).
+
+## TASKS
+- Appliquer `20261124_catalogue.sql` puis `isolation_catalogue.sql` ; déployer citoyen.js, demarches.js, index.html, mairie.html ; vider cache/PWA.
+- Fimela : valider juridiquement puis activer les 24 prestations inactives, saisir pièces/frais/délais/retrait.
+- Tester sur Android réel : dialogue, clavier, défilement.
+
+
+
+## CHANGELOG — Lot A : organigramme, rôles et droits (base)
+- Appliqué en production (additif, aucune table/RLS/fonction existante modifiée) : `org_roles`, `org_role_droits`, `org_postes`, `org_affectations`, `org_delegations_droits` (RLS : lecture limitée à sa commune, écriture uniquement via fonctions).
+- Fonctions : `org_commune`, `org_droit(module,action)`, `org_init`, `org_role_save`, `org_role_droit_set`, `org_poste_save`, `org_affecter`, `org_affectation_fin`, `org_deleguer`, `org_revoquer` ; internes non exposées : `org_droit_propre`, `org_droit_user`, `org_log`, `org_seed`.
+- Organigramme par défaut (24 postes + 1 agent par service spécialisé) semé pour les 2 communes existantes : 80 rôles, 80 postes, 1100 droits.
+- 11 actions : consulter, creer, modifier, supprimer, valider, rejeter, signer, exporter, imprimer, partager, administrer.
+- Tests exécutés en base (annulés après coup) : maire tous droits ; sans affectation = aucun droit ; droits du poste ; délégation > droits détenus refusée ; délégation valide puis révocation immédiate ; non-admin refusé ; délégation inter-communes refusée ; RLS : une seule commune visible. 8/8 OK.
+
+## DECISIONS
+- `commune_id` conservé (pas `municipality_id`) : évite de casser 16+ tables, RLS et RPC.
+- Postes = données configurables par commune ; `profiles.role` (11 valeurs) inchangé, donc aucune régression.
+- Droit effectif = maire/super_admin : tous ; sinon override legacy (consulter) > poste/rôle > délégation. Une délégation n'est valide que si le délégant détient encore le droit ; pas de sous-délégation ; 1 an maximum.
+- Pas d'action « payer » : séparation ordonnateur / comptable public ; le paiement reste une confirmation externe.
+- Rien n'utilise encore `org_droit` : le lot A n'altère aucun comportement existant.
+
+## TASKS
+- Lot B : écrans Administration > Organigramme / Rôles / Affectations / Délégations ; `can()` alimenté par `org_droit` ; tableaux de bord par poste.
+- Lot C : RLS des modules sensibles (paie, personnel, rémunérations, marchés, archives confidentielles) via `org_droit` ; traçabilité des consultations sensibles ; tests d'isolation.
+- Lot D : tests UI, matrice finale, documents.
+- Export du SQL du lot A en fichier `20261125_org_rbac.sql` pour le dépôt (appliqué en base, non encore versionné).
+
+
+
+## Lot C — RLS sensibles via org_droit, traçabilité
+- `20261126_lot_c_rls.sql` : policies additives (OR) sur personnel, congés, rémunérations, paies/paie_lignes, marchés, archives non confidentielles — aucune policy existante retirée.
+- Table `acces_sensibles` + fonction `org_tracer(module, cible)` : journal des consultations sensibles, lecture réservée maire/super_admin.
+- `isolation_lotc.sql` : croisement Diofior/Fimela sur personnel, rémunérations, paies, marchés, archives.
+### À appliquer
+- Exécuter `20261126_lot_c_rls.sql` dans Supabase, puis `isolation_lotc.sql` (remplacer les placeholders par des ids réels) : attendu 0 sur chaque ligne croisée, vrai sur le témoin positif.
+
+
+
+## Lot D — délégations dans les menus, traçabilité, Mon poste (2026-11-17)
+- `js/org-d.js` (nouveau, additif) : droits reçus par délégation visibles dans les menus ; chargement des tables sensibles pour un poste habilité (RLS inchangée) ; `org_tracer` à l'ouverture des écrans personnel, congés, paie, rémunérations, marchés (1 ligne / 15 min / utilisateur / écran) ; écrans « Mon poste », « Mes délégations » (non-maires), « Consultations sensibles » (maire).
+- `20261127_lot_d.sql` : `org_tracer` durcie (search_path, anon révoqué, longueurs bornées), index du journal. Appliquée en base.
+- `patch-orgd.js` : ajoute la balise org-d.js dans mairie.html (idempotent, .bak).
+
+

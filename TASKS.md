@@ -1,4 +1,7 @@
 ## Fait (2026-11-16 — porte d'entrée citoyenne)
+
+> **Mise à jour 2026-11-19** : les scripts SQL numérotés de la racine (`20261114_…` à `20261127_…`), `patch-org.js`, `patch-orgd.js`, `js/patch-core.js`, `js/patch-lot4.js`, `js/lot4.block.js`, `js/core_patched.js` et `patched/` ont été retirés du dépôt (commits `57a9265`, `ccf33b3` ; ils restent consultables dans l'historique git). Les migrations de référence sont dans `supabase/migrations/` (voir `recovered-history-manifest.json`) ; toutes les consignes « copier / appliquer / déployer » ci-dessous sont **historiques** : le code est déployé et les migrations sont appliquées en base. Les fichiers `*.append.md` ont été consolidés dans `CHANGELOG.md`, `DECISIONS.md` et `TASKS.md`.
+
 - Lien/QR par commune, mémorisation, manifest par commune, blason/couleur/slogan, hors-ligne, panneau « Lien citoyen » (Administration). Voir CHANGELOG.md.
 - Sécurité base : droits anon retirés sur 12 tables, policy citoyens_own optimisée. Advisors sécurité : seuls restent les avertissements voulus (RPC publiques, connexions anonymes) + mots de passe compromis (plan Pro).
 ## À faire — action utilisateur
@@ -53,3 +56,23 @@
 - Appliquer `20261124_catalogue.sql` puis `isolation_catalogue.sql` ; déployer citoyen.js, demarches.js, index.html, mairie.html ; vider cache/PWA.
 - Fimela : valider juridiquement puis activer les 24 prestations inactives ; saisir pièces, frais, délais, retrait.
 - Tester sur Android réel (dialogue, clavier, défilement).
+
+
+---
+
+# Tâches consolidées des lots (ex-fichiers `*.append.md`)
+
+
+## Lot C — à appliquer
+- Exécuter `20261126_lot_c_rls.sql` puis `isolation_lotc.sql` (Supabase, ids réels) : attendu 0 ligne cross-commune, témoin positif vrai.
+- Brancher `org_tracer()` dans les écrans personnel/rémunérations/paie à l'ouverture d'une fiche (lot D).
+- Reste lot D : tableaux de bord par poste, accès non-maire à l'écran Délégations.
+
+
+
+## Lot D — à déployer
+- Copier `js/org-d.js` et `tests/org-d.test.js` ; lancer `node patch-orgd.js .` (après patch-org.js) ; vider cache/PWA ; lancer `node tests/org-d.test.js` + `smoke.js`.
+- Versionner dans le dépôt : `20261125_org_rbac.sql` (lot A, encore à exporter), `20261127_lot_d.sql`.
+- Reste : KPI par poste ; tracer l'ouverture de pièces confidentielles des archives (documents_consultations existe déjà) ; test d'isolation Lot C avec données réelles dans Diofior.
+
+

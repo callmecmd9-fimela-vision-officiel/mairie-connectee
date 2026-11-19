@@ -1,5 +1,8 @@
 # Synchronisation consolidée — 19 novembre 2026
 
+> **Mise à jour 2026-11-19 (après nettoyage)** : les scripts `patch-*.js`, les variantes `patched/` et les copies racine périmées de `core.js`, `citoyen.js`, etc. ne sont plus conservés dans l'arbre de travail (commits `57a9265`, `ccf33b3`, retrouvables via git). Le fichier racine `20261118_org_sa_roles.sql` a été retiré : sa version de référence est `supabase/migrations/20261118230324_20261118_org_sa_roles.sql`. Les modules des lots E/F sont présents sur la branche `chore/ci-regression-tests` (PR #1), et `enhance.test.js` passe en CI avec jsdom. Le build Cloudflare est corrigé par l'ajout de `"previews": {}` à `wrangler.jsonc` (commit `5445064`).
+
+
 ## Périmètre vérifié
 L'archive `Fimela_Vision_Mairie_Connectee_complet_2026-11-19.zip` a été extraite et inventoriée : 150 entrées dans l'archive principale, 8 ZIP imbriqués et 28 fichiers SQL distincts après dédoublonnage.
 
