@@ -308,3 +308,44 @@ La fonction active est configurée `verify_jwt=false`, mais son code refuse tout
 
 ### Décision
 Aucun défaut supplémentaire exploitable n'a été confirmé dans ce lot. Aucun changement de permissions, RLS, fonction ou donnée de production n'a été effectué. Les alertes Advisor de fonctions SECURITY DEFINER et d'accès anonyme sont des indicateurs de surface d'attaque, pas des preuves individuelles de vulnérabilité. Le durcissement doit être ciblé et testé afin de ne pas interrompre le portail citoyen, les workflows métier ou les tâches planifiées.
+
+
+## Audit complémentaire RLS Storage et sessions anonymes — 19 novembre 2026, 07:20 UTC
+
+Cette passe est fondée sur une lecture des catalogues PostgreSQL (pg_policies, privilèges et définitions des helpers). Aucun objet Storage, fichier citoyen, profil ou contenu de demande n'a été téléchargé ; aucune politique ni donnée n'a été modifiée.
+
+### Buckets Storage
+Les cinq buckets observés (adjoints, archives, identite, medias, pieces) sont tous configurés **privés**. Les limites de taille et types MIME sont définis au niveau des buckets. Il n'existe donc pas d'accès public global par le seul paramètre public.
+
+Exception fonctionnelle délimitée : la politique identite_published_assets_read autorise anon et authenticated à lire uniquement, dans le bucket privé identite, les chemins correspondant exactement à un UUID de commune suivi de blason.webp, bandeau.webp ou bandeau-m.webp. Cette règle correspond aux éléments d'identité destinés au portail public ; elle n'autorise ni la lecture générale du bucket ni les autres fichiers d'identité.
+
+### Contrôles d'accès par bucket
+- adjoints : dépôt/lecture limités à l'adjoint actif dans sa commune et son dossier ; gestion maire bornée à sa commune. Les règles de suppression contrôlent aussi le propriétaire pour l'adjoint.
+- archives : accès par commune et rôles/droits ; le cabinet est exclu du sous-dossier confidentiel. Les politiques restrictives interdisent les mutations super-admin sur ce bucket.
+- identite : dépôt, lecture, modification et suppression réservés aux profils communaux maire/cabinet/secrétariat, avec commune issue du profil et chemin de stockage correspondant.
+- medias : écriture réservée aux rôles maire/cabinet/secrétariat ; lecture aux rôles municipaux prévus ; le premier segment du chemin doit correspondre à la commune active de la session.
+- pieces : dépôt limité au propriétaire auth.uid(), à une commune en essai/active, à un chemin UUID de commune + UUID de fichier, aux extensions PDF/JPG/PNG/WEBP et à moins de trois objets déjà détenus par l'utilisateur. La lecture est réservée aux rôles municipaux autorisés dans la commune du chemin.
+
+### Sessions anonymes et dépôt de pièces citoyennes
+La politique pieces_depot cible authenticated et ne bloque pas explicitement le claim is_anonymous. C'est une différence intentionnelle à vérifier avec le parcours citoyen : la RPC creer_demande exige une session Auth (auth.uid() non NULL), vérifie que chaque pièce appartient à l'utilisateur appelant, que le premier segment correspond à la commune sélectionnée, et refuse les pièces dupliquées ou les chemins hors format. Les tables de demandes, elles, ont une politique restrictive bloque_anonymes_demandes ; la création passe par la RPC contrôlée plutôt que par une insertion directe RLS.
+
+La fonction private.nb_pieces(text) compte les objets du bucket pieces pour le propriétaire donné ; elle est utilisée par la politique de dépôt pour appliquer la limite de trois fichiers. Le plafond est toutefois fondé sur un comptage avant insertion et n'est pas atomique : des dépôts concurrents par le même utilisateur pourraient théoriquement dépasser temporairement la limite. Cela relève d'un risque de quota/abus de stockage, pas d'une lecture de pièces par un tiers. Ne pas ajouter une barrière anti-anonyme avant d'avoir confirmé le parcours produit : cela pourrait casser la soumission citoyenne sans compte permanent.
+
+### Tables publiques sans barrière restrictive anti-anonyme explicite
+L'inventaire a isolé les tables dont les politiques authenticated ne contiennent pas de règle restrictive is_anonymous=false : abonnements, acces_sensibles, acces_techniques, citoyen_notifications, citoyens, compteurs, demarches, factures, ia_usage, org_affectations, org_agent_affectations, org_delegations_droits, org_postes, org_role_droits, plans, platform_admins, platform_audit, rdv_demandes, rdv_planning, reunion_participants et session_presences.
+
+Ce résultat est un inventaire de revue, **pas une liste de vulnérabilités**. Les prédicats observés reposent selon les tables sur l'identité exacte auth.uid(), l'existence d'un profil actif et d'un rôle métier, une commune issue du profil, un droit plateforme AAL2, un droit organisationnel, ou une politique restrictive de rattachement à une réunion/session. Exemples :
+- org_commune() renvoie NULL sans profil actif ; les politiques des tables d'organisation qui l'utilisent ne peuvent donc pas sélectionner une commune pour une session anonyme sans profil.
+- private.can(...) renvoie false si aucun profil correspondant à auth.uid() n'existe.
+- ia_usage possède une politique de refus total (false).
+- citoyens limite l'accès à la ligne du même user_id et son WITH CHECK bloque les écritures anonymes ; citoyen_notifications limite lecture et mise à jour au même user_id.
+- Les règles rendez-vous vérifient l'existence d'un profil dans la commune avec un rôle maire/cabinet/secrétariat.
+
+La revue doit encore confirmer les scénarios de cycle de vie d'un compte anonyme (création de demande, notification éventuelle, conversion en compte permanent) avec un JWT de recette. Aucun test de session réelle ni mutation n'a été effectué sur la production.
+
+### Qualification et suites
+- Aucun accès anonyme non autorisé aux objets privés n'a été démontré dans les politiques inspectées.
+- Les cinq buckets sont privés ; les trois fichiers d'identité publics sont précisément filtrés par nom de chemin.
+- Le dépôt citoyen anonyme est un chemin fonctionnel plausible et doit être conservé tant que le portail le requiert ; il faut plutôt ajouter une limitation atomique/rate-limit adaptée si les tests confirment un risque de dépassement.
+- Le comptage nb_pieces reste un helper dont l'exposition PostgREST effective n'a pas été établie. Ne pas révoquer ses ACL avant d'avoir confirmé le schéma API exposé et les dépendances.
+- Aucun changement RLS, Storage, ACL, bucket, fonction ou donnée de production n'a été appliqué.
