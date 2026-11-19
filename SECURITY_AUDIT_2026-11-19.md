@@ -90,3 +90,6 @@ Base de départ : `main` — `a11b53565168cad3bc081b5838ea4638447d6a0e`
 - Le Worker sert les assets depuis la racine du dépôt (`wrangler.jsonc`, `assets.directory = "./"`).
 - La branche principale contenait un `.assetsignore` minimal et un doublon mal nommé avec un espace initial. La branche de correction remplace le fichier reconnu par une liste d'exclusions complète, ajoute `supabase/`, `.github/`, `*.mjs` et `*.lock`, puis supprime le fichier mal nommé.
 - Cette mesure évite de publier les sources Edge Functions, les métadonnées CI et les artefacts de test comme fichiers statiques au prochain déploiement. Elle n'a pas encore été déployée.
+
+## Mise à jour de traçabilité Edge Functions
+La branche de correction `chore/ci-regression-tests` contient désormais les six sources Edge Functions et leur configuration `verify_jwt` observée. Les cinq sources non modifiées ont été récupérées depuis les versions Supabase actives ; `ia-texte` a été durcie sur la branche. Le workflow vérifie chaque fonction avec Deno. Aucun déploiement Supabase n'a été effectué.
