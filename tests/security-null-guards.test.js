@@ -12,13 +12,11 @@ const migrationPath = path.join(
 const sql = fs.readFileSync(migrationPath, "utf8");
 
 function functionBody(name) {
-  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = sql.match(new RegExp(
-    String.raw`create\\s+or\\s+replace\\s+function\\s+${escaped}\\b([\\s\\S]*?)\\$function\\$;?`,
-    "i",
-  ));
-  assert.ok(match, `fonction SQL absente : ${name}`);
-  return match[0].toLowerCase();
+  const start = sql.toLowerCase().indexOf(`create or replace function ${name.toLowerCase()}`);
+  assert.notEqual(start, -1, `fonction SQL absente : ${name}`);
+  const end = sql.indexOf("$function$;", start);
+  assert.notEqual(end, -1, `fin de fonction SQL absente : ${name}`);
+  return sql.slice(start, end + "$function$;".length).toLowerCase();
 }
 
 const paie = functionBody("private.paie_garde");
@@ -42,7 +40,7 @@ assert.match(adjoint, /update\s+public\.adjoints\s+set\s+user_id\s*=\s*u/);
 
 assert.match(sql, /^begin;/i);
 assert.match(sql.trimEnd(), /commit;$/i);
-assert.doesNotMatch(sql, /\\b(grant|revoke)\\s+/i);
+assert.doesNotMatch(sql, /\b(grant|revoke)\s+/i);
 
 console.log("OK  paie_garde : refus explicite des rôles NULL et paramètres invalides");
 console.log("OK  lier_adjoint : super-admin conditionné à public.is_super_admin() (AAL2)");
