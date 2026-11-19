@@ -1,0 +1,1 @@
+alter function public.journal_consultation(uuid) set search_path = '';
