@@ -5,14 +5,14 @@ Revue en lecture seule du projet Supabase de production. Aucun SQL DDL/DML, aucu
 
 ## Synthèse RLS
 - 67 tables dans le schéma `public`, RLS activé sur 67/67.
-- 12 combinaisons table/opération comportent plus d'une politique permissive. PostgreSQL combine les politiques permissives par OR ; les politiques restrictives s'appliquent ensuite par AND.
+- Une revue manuelle antérieure avait échantillonné 12 groupes table/opération. L'advisor Supabase relancé le 19 novembre recense 56 occurrences de politiques permissives multiples ; ce nombre est plus large que l'échantillon manuel. PostgreSQL combine les politiques permissives par OR ; les politiques restrictives s'appliquent ensuite par AND.
 - La revue des 12 groupes montre des contrôles distincts et cohérents sur l'échantillon : rôles séparés (adjoint/secrétariat), délégation vérifiée par `org_droit`, commune portée par la ligne ou contrôlée par `private.my_commune()`, propriétaire `auth.uid()`, confidentialité du courrier et des documents, et références métier pour l'historique. Cela ne prouve pas l'absence de défaut dans toutes les politiques ; les 56 alertes advisor restent à clôturer individuellement.
 - Les groupes sensibles `paies` et `paie_lignes` sont limités à la commune et à des rôles RH/maire/finances ou à un droit explicite `org_droit('paie','consulter')`. La validation métier de la délégation paie reste un contrôle requis avant de conclure.
 - Les tables `documents`, `courrier`, `instructions` et `ops_historique` ont des règles complémentaires de commune, rôle, confidentialité ou rattachement. Les politiques restrictives `bloque_anonymes`, `isolation_commune` et `maintenance_serveur` sont présentes sur plusieurs tables opérationnelles.
 - Les tables `platform_admins` autorisent la lecture de sa propre ligne et celle du rôle plateforme validé par `private.is_platform_admin()`.
 
 ## RPC SECURITY DEFINER exécutables par anon
-Treize RPC publiques SECURITY DEFINER sont exécutables par `anon` :
+Douze RPC publiques SECURITY DEFINER sont exécutables par `anon` (recomptage SQL du 19 novembre 2026) :
 - Lecture publique de contenu et de configuration : `actualites`, `commune_par_hote`, `commune_par_slug`, `demarches_commune`, `identite_commune`, `infos_commune`, `portail_commune`, `projets_publics`, `planning_rdv`, `creneaux_rdv`.
 - Suivi citoyen : `suivre_demande` et `suivre_demandes`.
 
@@ -77,3 +77,47 @@ Aucune faille RLS démontrée par les groupes échantillonnés, mais plusieurs z
 - Les erreurs de lecture ou d'écriture de `ia_usage` entraînent maintenant un refus (HTTP 503) au lieu de laisser le contrôle de quota échouer silencieusement.
 - La limite reste non atomique en cas de requêtes concurrentes. Elle ne peut être rendue atomique proprement qu'avec une RPC/migration versionnée, à différer jusqu'à la réconciliation des 81 migrations.
 - Les tests couvrent désormais le statut de commune et vérifient la présence des protections CORS et quota fail-closed.
+
+
+## Actualisation de l'audit — 19 novembre 2026, 05:10 UTC
+
+Cette actualisation s'appuie sur une nouvelle lecture des catalogues PostgreSQL, des définitions de fonctions et des politiques actuellement déployées. Elle ne modifie pas la base.
+
+### Comptages confirmés
+- Tables publiques avec RLS : **67/67**.
+- Fonctions `SECURITY DEFINER` dans les schémas `public` et `private` : **152**.
+- Fonctions `SECURITY DEFINER` du schéma `public` exécutables par `anon` : **12**.
+- Fonctions `SECURITY DEFINER` du schéma `public` exécutables par `authenticated` : **89**.
+- Les 152 fonctions observées ont `search_path = ''`.
+- Comptes Auth anonymes présents : **3** ; comptes anonymes possédant une ligne `public.profiles` : **0**.
+
+### Contrôle des comptes anonymes et des droits organisationnels
+Le trigger `private.nouvel_utilisateur()` sur `auth.users` retourne immédiatement lorsque `new.is_anonymous` est vrai ; il ne crée donc pas de profil pour ces comptes. La fonction `public.org_commune()` ne renvoie une commune qu'à partir d'un profil actif. Les politiques de lecture des tables organisationnelles `org_affectations`, `org_agent_affectations`, `org_postes`, `org_role_droits` et `org_roles` sont bornées par cette commune. `org_roles` dispose en plus d'une politique restrictive explicite qui bloque les sessions anonymes.
+Ce constat réduit le risque signalé par l'advisor pour ces tables, mais ne remplace pas un test HTTP/RLS avec un vrai jeton de session anonyme dans un environnement de recette.
+
+### RPC publiques anon — inventaire vérifié
+Les 12 fonctions sont : `actualites`, `commune_par_hote`, `commune_par_slug`, `creneaux_rdv`, `demarches_commune`, `identite_commune`, `infos_commune`, `planning_rdv`, `portail_commune`, `projets_publics`, `suivre_demande` et `suivre_demandes`.
+Les dix fonctions de portail limitent leurs résultats à une commune en essai/active et/ou à des contenus publiés/publics. Les deux fonctions de suivi exigent soit un numéro répondant au format de référence avec suffixe hexadécimal de 32 caractères, soit une correspondance avec `auth.uid()`. `suivre_demandes` borne le tableau à 30 numéros. Ces RPC doivent rester publiques tant que le portail citoyen en dépend ; leur contrat de non-divulgation doit être couvert par des tests dédiés.
+
+### Fonctions d'administration et d'organisation inspectées
+- `admin_attribuer` exige `private.is_platform_admin()` (qui impose AAL2), refuse les rôles hors liste, les utilisateurs anonymes, les comptes administrateurs plateforme, les profils `super_admin` et les transferts intercommunaux implicites.
+- `admin_utilisateurs` ne renvoie les comptes que si `private.is_platform_admin()` est vrai.
+- `is_super_admin()` vérifie un profil actif `super_admin` avec AAL2 ou un administrateur plateforme validé.
+- `org_affecter` exige `org_droit('org','administrer')`, vérifie le profil cible actif dans la même commune, refuse un profil `super_admin`, valide le poste actif et le service communal, puis contrôle que l'appelant peut accorder le rôle cible.
+- `org_deleguer` vérifie que le bénéficiaire est actif dans la même commune, n'est ni `super_admin` ni `citoyen`, interdit l'auto-délégation, borne la durée à un an et exige que le délégant détienne lui-même le droit délégué.
+- `org_droit_user` s'appuie sur un profil actif et sur les droits propres ou une délégation active, non révoquée, de la même commune.
+
+### Politiques RH et paie inspectées
+Pour `paies`, `paie_lignes` et `remunerations`, les politiques restrictives imposent l'isolation par commune, le refus des sessions anonymes et le mode hors maintenance. Les politiques permissives de lecture combinent les rôles historiques (maire/RH/finances selon la table) et les droits organisationnels explicites `org_droit(...,'consulter')`. Le cumul par OR est donc présent, mais les contraintes restrictives s'appliquent ensuite par AND. Aucun accès intercommunal n'a été démontré dans ces définitions ; la recette métier doit néanmoins tester chaque rôle et chaque délégation sur des comptes réels de deux communes distinctes.
+
+### Alertes advisors actuelles
+- Sécurité : 12 RPC anon `SECURITY DEFINER`, 89 RPC `SECURITY DEFINER` exécutables par `authenticated`, alertes liées aux sessions anonymes et protection des mots de passe compromis désactivée.
+- Performance : 56 occurrences de politiques permissives multiples, 7 clés étrangères sans index couvrant, 20 index signalés inutilisés, 1 index dupliqué sur `communes.slug`, et 2 politiques avec initplan Auth à optimiser.
+- Les avertissements de fonctions `SECURITY DEFINER` ne prouvent pas à eux seuls une vulnérabilité : les fonctions privilégiées inspectées imposent des gardes métier/MFA. La revue des 89 fonctions reste toutefois à terminer individuellement.
+- Aucun index n'a été supprimé/ajouté et aucune politique n'a été modifiée : ces opérations exigent une migration réconciliée et des tests de charge/non-régression.
+
+### Statut de validation et limites
+- Workflow GitHub #82 : **success** sur le commit `7c24ffd2d295cd3ae97edf9b9bf732d37f9161fa`.
+- Les contrôles CI valident les tests JavaScript et le `deno check` des six Edge Functions ; ils ne constituent pas une recette RLS réelle.
+- Aucun SQL DDL/DML, changement d'ACL, changement de politique, déploiement Supabase/Cloudflare ou fusion dans `main`.
+- Les 81 migrations Supabase restent non réconciliées avec leurs sources historiques ; aucune migration ne doit être rejouée à ce stade.
