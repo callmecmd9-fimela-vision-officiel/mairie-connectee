@@ -38,20 +38,21 @@ as $function$
 declare
   u uuid;
   a public.adjoints;
-  v_role text := private.my_role();
-  v_super_admin boolean := public.is_super_admin();
 begin
-  -- Maire AAL1 autorisé ; super-admin uniquement si public.is_super_admin()
-  -- confirme AAL2 ou un statut d'administrateur plateforme valide.
-  -- IS DISTINCT FROM et COALESCE rendent le refus explicite en cas de NULL.
-  if v_role is distinct from 'maire'
-     and not coalesce(v_super_admin, false) then
-    raise exception 'Accès refusé' using errcode = '42501';
+  -- Préserve les trois voies autorisées : administrateur plateforme,
+  -- maire de la commune, super-administrateur avec AAL2.
+  -- COALESCE élimine le contournement PL/pgSQL provoqué par un IF NULL.
+  if not (
+    coalesce(private.is_platform_admin(), false)
+    or coalesce(private.my_role() = 'maire', false)
+    or coalesce(public.is_super_admin(), false)
+  ) then
+    raise exception 'Accès refusé';
   end if;
 
   select * into a from public.adjoints where id = p_adjoint;
   if a.id is null or (
-    not coalesce(v_super_admin, false)
+    not private.is_platform_admin()
     and a.commune_id is distinct from private.my_commune()
   ) then
     raise exception 'Adjoint introuvable';
@@ -59,7 +60,6 @@ begin
 
   select id into u from auth.users
   where lower(email) = lower(trim(p_email));
-
   if u is null then
     raise exception 'Aucun compte avec cet e-mail : l’administrateur doit d’abord le créer';
   end if;
