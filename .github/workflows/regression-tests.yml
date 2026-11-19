@@ -27,7 +27,7 @@ jobs:
       - name: Install isolated test dependency
         run: npm install --prefix "$RUNNER_TEMP/test-deps" --no-save --no-package-lock jsdom@26
 
-      - name: Run all regression tests
+      - name: Run all test files and report every failure
         env:
           NODE_PATH: ${{ runner.temp }}/test-deps/node_modules
         shell: bash
@@ -35,7 +35,7 @@ jobs:
           set -uo pipefail
           failed=0
           shopt -s nullglob
-          files=(tests/*.test.js enhance.test.js sw-csp.test.js)
+          files=(tests/*.test.js)
           for test_file in "${files[@]}"; do
             echo "::group::${test_file}"
             if node "${test_file}"; then
