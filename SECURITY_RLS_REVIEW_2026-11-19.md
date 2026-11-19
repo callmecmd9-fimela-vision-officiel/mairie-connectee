@@ -349,3 +349,37 @@ La revue doit encore confirmer les scénarios de cycle de vie d'un compte anonym
 - Le dépôt citoyen anonyme est un chemin fonctionnel plausible et doit être conservé tant que le portail le requiert ; il faut plutôt ajouter une limitation atomique/rate-limit adaptée si les tests confirment un risque de dépassement.
 - Le comptage nb_pieces reste un helper dont l'exposition PostgREST effective n'a pas été établie. Ne pas révoquer ses ACL avant d'avoir confirmé le schéma API exposé et les dépendances.
 - Aucun changement RLS, Storage, ACL, bucket, fonction ou donnée de production n'a été appliqué.
+
+
+## Écart confirmé entre Edge Function IA déployée et code de la branche — 19 novembre 2026
+
+### Constat de production
+La version active de la fonction Supabase `ia-texte` est la **version 9** (JWT verification activée). Son code déployé a été lu directement dans la configuration de la fonction. Cette version :
+- authentifie le JWT via `auth.getUser(token)` ;
+- lit uniquement `role,commune_id` dans `profiles`, sans exiger explicitement `actif=true` ;
+- accepte le rôle `super_admin` sans appeler `is_super_admin()` ni vérifier AAL2 ;
+- lit et incrémente le quota `ia_usage` sans traiter les erreurs de lecture/écriture comme des refus.
+
+Le premier point est une faiblesse d'autorisation confirmée : un profil désactivé conservant un rôle éligible peut encore satisfaire le contrôle de rôle de cette version ; un profil super_admin n'est pas soumis à la vérification MFA AAL2 dans cette fonction. La portée dépend des autres contrôles Auth/RLS et du statut réel des comptes, mais l'Edge Function elle-même ne respecte pas la règle d'accès attendue.
+
+### État du correctif dans le dépôt
+La branche `chore/ci-regression-tests` contient déjà le correctif source :
+- `supabase/functions/ia-texte/authz.mjs` refuse les sessions absentes ou anonymes ;
+- exige un profil présent avec `actif === true) ;
+- limite les rôles communaux à maire/cabinet/secrétariat ;
+- impose `caller.rpc("is_super_admin") === true) pour `super_admin` (échec fermé si erreur) ;
+- vérifie l'état de la commune (essai/actif) et le rattachement communal ;
+- l'index traite les erreurs de lecture et d'écriture du quota en 503.
+
+Le test `tests/ia-texte-auth.test.js` couvre notamment le profil inactif, le refus sans AAL2, l'erreur RPC MFA, le périmètre communal et les communes suspendues. Le workflow CI vérifie également le typage Deno de toutes les Edge Functions.
+
+### Risque opérationnel de divergence
+Le correctif source n'est **pas** le code actuellement actif : production tourne encore sur la version 9 historique. Il existe donc un écart dépôt/production à résoudre par un déploiement contrôlé de la fonction `ia-texte`, après validation CI et vérification des secrets/configurations. Aucun déploiement n'a été réalisé pendant cet audit, conformément à la règle de non-déploiement.
+
+### Quota IA
+Le contrôle actuel reste un schéma lecture-puis-upsert non atomique : deux requêtes simultanées peuvent lire le même compteur et toutes deux écrire la même valeur suivante. Cela peut sous-compter la consommation et dépasser la limite quotidienne de 30 en cas de concurrence. Une correction robuste requiert une primitive atomique côté base (RPC dédiée ou upsert/incrément transactionnel), tests de concurrence et adaptation du consommateur ; ne pas bricoler ce compteur dans l'Edge Function seule.
+
+### Mesures immédiates et limites
+- Priorité élevée : planifier le déploiement contrôlé du code déjà corrigé de `ia-texte` ; ne pas modifier les secrets ni les autres fonctions.
+- Avant déploiement : vérifier les secrets `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, la disponibilité de `is_super_admin()` pour le rôle appelant, le chemin `authz.mjs` inclus dans l'artefact, puis exécuter les tests de non-régression.
+- Ne pas déployer par ce lot : aucune validation fonctionnelle en production ni procédure de rollback n'a été exécutée.
