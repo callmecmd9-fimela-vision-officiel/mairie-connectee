@@ -64,3 +64,10 @@ Aucune faille RLS démontrée par les groupes échantillonnés, mais plusieurs z
 - La comparaison stricte des noms de fichiers avec les 81 noms de migrations enregistrés ne donne qu'une correspondance exacte (`20261118_org_sa_roles.sql` ↔ `20261118_org_sa_roles`).
 - Une différence de nom ne prouve pas qu'une migration n'a jamais été appliquée : certaines sources peuvent être des fragments, des lots ou des scripts d'isolation. Elle prouve en revanche que le dépôt ne fournit pas une correspondance canonique exploitable entre fichiers et historique Supabase.
 - Les fichiers datés après le 19 novembre 2026 sont des sources futures/proposées au regard de la date de cet audit ; ils ne doivent pas être exécutés sans plan de migration explicite.
+
+## Traçabilité des Edge Functions — état de la PR
+- Les six fonctions déployées ont maintenant une source dans `supabase/functions/<slug>/index.ts`.
+- Sources récupérées depuis Supabase : `saas-admin` v3, `sa-admin` v15, `purge-pieces` v2, `bright-worker` v4 et `admin-comptes` v10. `ia-texte` v9 a été repris puis durci (AAL2, profil actif, commune et CORS).
+- `supabase/config.toml` conserve les paramètres JWT observés : `verify_jwt=false` uniquement pour `purge-pieces` (secret Vault vérifié côté RPC), et `true` pour les cinq autres fonctions.
+- Le workflow CI vérifie désormais chaque `index.ts` avec `deno check`, et un test contrôle la présence des six sources et les six paramètres `verify_jwt`.
+- Les versions source sont synchronisées dans Git ; elles ne sont pas encore déployées. Les secrets restent exclusivement dans les secrets Supabase et ne sont pas copiés dans le dépôt.
