@@ -23,7 +23,7 @@ try{
 if(a=="enter"){if(!S.tok)S.err="Veuillez valider la vérification anti-spam, puis réessayer.";else{const r=await sb.auth.signInWithPassword({email:g("em"),password:($("#pw")||{}).value||"",options:{captchaToken:S.tok}});if(r.error)S.err=r.error.message;else if(await profil())await load()}}
 else if(a=="mfa-verify"){
  if(!S.mfa||!S.mfa.factorId||!S.mfa.challengeId)throw new Error("Aucun défi MFA actif. Renvoyez un défi.");
- const code=g("mfa_code");if(!/^\\d{6}$/.test(code))throw new Error("Saisissez le code à 6 chiffres.");
+ const code=g("mfa_code");if(!/^\d{6}$/.test(code))throw new Error("Saisissez le code à 6 chiffres.");
  const v=await sb.auth.mfa.verify({factorId:S.mfa.factorId,challengeId:S.mfa.challengeId,code});
  if(v.error)throw new Error("Code MFA invalide ou expiré. Réessayez.");
  S.mfa=null;if(await profil())await load();
