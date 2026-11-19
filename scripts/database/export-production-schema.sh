@@ -23,9 +23,6 @@ fi
 
 configured_ref="$(sed -nE 's/^[[:space:]]*project_id[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' supabase/config.toml | head -n 1)"
 [[ "$configured_ref" == "$PROJECT_REF" ]] || fail "Le project_id de supabase/config.toml ne correspond pas à la production attendue."
-[[ -f ".temp/project-ref" ]] || fail "Projet local non lié. Exécute d'abord: supabase link --project-ref=$PROJECT_REF"
-linked_ref="$(tr -d '\r\n' < .temp/project-ref)"
-[[ "$linked_ref" == "$PROJECT_REF" ]] || fail "Le projet lié localement ne correspond pas à la production attendue."
 [[ "$PROJECT_NAME" == "fimela-vision-officiel" ]] || fail "Garde-fou projet invalide."
 
 mkdir -p "$OUTPUT_DIR"

@@ -23,7 +23,7 @@ supabase link --project-ref=aiqegpijisspankpkwfj
 bash scripts/database/export-production-schema.sh
 ```
 
-Lors de `supabase link`, le mot de passe de base peut être laissé vide si la CLI le permet. Le script vérifie ensuite que `.temp/project-ref` correspond exactement au projet de production avant tout export.
+Lors de `supabase link`, le mot de passe de base peut être laissé vide si la CLI le permet. Le script contrôle le `project_id` du dépôt et passe explicitement le project ref au CLI ; la CLI vérifie elle-même l'état de liaison avant le dump.
 
 Le script :
 1. vérifie la version majeure de la CLI et le `project_id` local ;
