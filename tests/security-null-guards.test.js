@@ -29,9 +29,10 @@ assert.match(paie, /not\s+coalesce\s*\(\s*r\s*=\s*any\s*\(\s*p_roles\s*\)\s*,\s*
 assert.doesNotMatch(paie, /<>\s*all\s*\(\s*p_roles\s*\)/);
 
 const adjoint = functionBody("public.lier_adjoint");
-assert.match(adjoint, /v_role\s+is\s+distinct\s+from\s+'maire'/);
-assert.match(adjoint, /not\s+coalesce\s*\(\s*v_super_admin\s*,\s*false\s*\)/);
-assert.match(adjoint, /v_super_admin\s+boolean\s*:=\s*public\.is_super_admin\(\)/);
+assert.match(adjoint, /coalesce\s*\(\s*private\.is_platform_admin\(\)\s*,\s*false\s*\)/);
+assert.match(adjoint, /coalesce\s*\(\s*private\.my_role\(\)\s*=\s*'maire'\s*,\s*false\s*\)/);
+assert.match(adjoint, /coalesce\s*\(\s*public\.is_super_admin\(\)\s*,\s*false\s*\)/);
+assert.match(adjoint, /not\s+coalesce\s*\(\s*private\.is_platform_admin\(\)\s*,\s*false\s*\)/);
 assert.match(adjoint, /a\.commune_id\s+is\s+distinct\s+from\s+private\.my_commune\(\)/);
 assert.match(adjoint, /where\s+lower\(email\)\s*=\s*lower\(trim\(p_email\)\)/);
 assert.match(adjoint, /role\s+in\s*\(\s*'maire'\s*,\s*'super_admin'\s*\)/);
@@ -43,5 +44,5 @@ assert.match(sql.trimEnd(), /commit;$/i);
 assert.doesNotMatch(sql, /\b(grant|revoke)\s+/i);
 
 console.log("OK  paie_garde : refus explicite des rôles NULL et paramètres invalides");
-console.log("OK  lier_adjoint : super-admin conditionné à public.is_super_admin() (AAL2)");
+console.log("OK  lier_adjoint : droits existants et contrôle AAL2 préservés, NULL refusé");
 console.log("OK  règles métier, périmètre communal et transaction conservés");
