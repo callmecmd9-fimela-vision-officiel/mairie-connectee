@@ -7,7 +7,7 @@ const vm=require('vm'),fs=require('fs'),path=require('path');let f=0;const ok=(n
  const sb={auth:{getSession:async()=>({data:{session:null}}),signOut:async()=>{}},rpc:async n=>({data:rows[n]||[]})};
  const ctx={supabase:{createClient:()=>sb},document:{querySelector:s=>s=='#app'?app:s=='#tl'?{innerHTML:''}:null,getElementById:()=>null,addEventListener:(n,fn)=>(handlers[n]=handlers[n]||[]).push(fn),createElement:()=>({}),head:{appendChild(){}},documentElement:{style:{setProperty(){},removeProperty(){}}},hidden:false},
   localStorage:{getItem:k=>store[k]??null,setItem:(k,v)=>store[k]=String(v),removeItem:k=>delete store[k]},location:{search:'',pathname:'/',origin:'https://m.x',hostname:'x.workers.dev'},history:{replaceState(){}},navigator:{onLine:true},URL,Blob,URLSearchParams,setInterval(){},setTimeout(){},addEventListener(){},scrollTo(){},console,Promise,JSON,Math,Date,crypto:{},matchMedia:()=>({matches:true})};
- ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,'..','citoyen.js'),'utf8'),ctx);
+ ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','citoyen.js'),'utf8'),ctx);
  await new Promise(r=>setTimeout(r,60));
  const click=async d=>{const t={dataset:d,textContent:''};for(const h of handlers.click)await h({target:{closest:s=>s=='[data-a]'?t:null}})};
  const typeq=q=>handlers.input.forEach(h=>h({target:{id:'q',value:q}}));
