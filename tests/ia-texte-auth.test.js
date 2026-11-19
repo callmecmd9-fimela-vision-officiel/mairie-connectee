@@ -10,7 +10,7 @@ const assert = require("node:assert/strict");
 
   function setup({ user = { id: "u1", is_anonymous: false }, authError = null,
     profile = { role: "maire", commune_id: "c1", actif: true },
-    commune = { id: "c1", nom: "Fimela" }, gate = false, gateError = null } = {}) {
+    commune = { id: "c1", nom: "Fimela", statut: "actif" }, gate = false, gateError = null } = {}) {
     const queries = [];
     const rpcCalls = [];
     const caller = {
@@ -95,7 +95,7 @@ const assert = require("node:assert/strict");
     const x = setup({
       profile: { role: "super_admin", commune_id: null, actif: true },
       gate: true,
-      commune: { id: "c2", nom: "Commune cible" },
+      commune: { id: "c2", nom: "Commune cible", statut: "actif" },
     });
     const r = await authorizeIaUser({ ...x, communeSlug: "commune-cible" });
     assert.equal(r.ok, true);
@@ -114,8 +114,19 @@ const assert = require("node:assert/strict");
   });
 
   await test("refuse un maire qui cible une autre commune", async () => {
-    const x = setup({ commune: { id: "c2", nom: "Autre commune" } });
+    const x = setup({ commune: { id: "c2", nom: "Autre commune", statut: "actif" } });
     const r = await authorizeIaUser({ ...x, communeSlug: "autre-commune" });
+    assert.equal(r.ok, false);
+    assert.equal(r.status, 403);
+  });
+
+  await test("refuse une commune suspendue même pour un super-admin", async () => {
+    const x = setup({
+      profile: { role: "super_admin", commune_id: null, actif: true },
+      gate: true,
+      commune: { id: "c2", nom: "Commune suspendue", statut: "suspendu" },
+    });
+    const r = await authorizeIaUser({ ...x, communeSlug: "commune-suspendue" });
     assert.equal(r.ok, false);
     assert.equal(r.status, 403);
   });
