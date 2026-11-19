@@ -156,3 +156,35 @@ Le refus explicite de `r is null` supprime l'ambiguïté SQL trois-valued logic.
 5. Vérifier les logs et l'audit métier après déploiement contrôlé.
 
 **Mesure prise :** aucune modification SQL, aucun changement d'ACL, aucun déploiement et aucune donnée modifiée. Ce constat devient un bloqueur explicite avant fusion de la PR et avant toute validation de sécurité paie.
+
+
+## Addendum de précision — surcharge paie et appelant résiduel (19 novembre 2026, 05:25 UTC)
+
+La relecture complète des surcharges et des appelants corrige la formulation du constat précédent et localise le défaut avec davantage de précision.
+
+### Deux surcharges distinctes observées en production
+1. `private.paie_garde(text[])` — ancienne surcharge, vulnérable à la logique `NULL` décrite ci-dessus :
+   `if c is null or (select private.my_role()) <> all (p_roles) or not private.hors_maintenance() then ...`
+2. `private.paie_garde(text[], text)` — surcharge plus récente, déjà durcie :
+   elle affecte `r := private.my_role()` puis rejette explicitement `r is null`, et vérifie soit le rôle listé, soit le droit organisationnel correspondant.
+
+### Appelants vérifiés
+Le catalogue PostgreSQL a été interrogé pour identifier toutes les fonctions contenant un appel à `paie_garde(`. Parmi les opérations métier du module paie :
+- `paie_generer`, `paie_maj_ligne`, `paie_ordonnancer`, `paie_retour_brouillon` et `paie_valider` appellent la surcharge récente à deux paramètres.
+- **`paie_payer` est le seul appelant métier qui utilise encore la surcharge historique à un paramètre**, avec `array['maire','finances']`.
+- `paie_payer` est `SECURITY DEFINER` et son droit EXECUTE est accordé à `authenticated`.
+- Les deux surcharges internes ne sont pas directement exécutables par `authenticated` ; le risque provient de leur invocation depuis la RPC privilégiée `paie_payer`.
+
+### Portée de la correction à préparer
+La correction la plus ciblée à étudier est de faire appeler à `paie_payer` la surcharge déjà durcie à deux paramètres, avec la liste de rôles métier inchangée (`maire`, `finances`) et une action cohérente (`payer`). La suppression de l'ancienne surcharge ne devra être envisagée qu'après vérification exhaustive de ses références et de ses dépendances. Ne pas remplacer la logique par un accès `super_admin` implicite : cette opération doit rester soumise à la séparation des rôles métier.
+
+Le catalogue ne montre actuellement aucune ligne de droit organisationnel `paie` dans `org_role_droits` ; les rôles explicites de la liste restent donc la voie d'autorisation observée. Cette donnée doit être recontrôlée dans la migration corrective et la recette.
+
+### Contrôles croisés et limites
+- Un profil super-admin actif rattaché à une commune active hors maintenance et une paie au statut `ordonnance` sont présents au moment de la lecture. Aucun identifiant nominatif ni montant n'est reproduit ici.
+- Aucune exécution de `paie_payer`, aucun test de JWT de production et aucune mutation de donnée n'ont été effectués.
+- Les autres triggers qui utilisent des contrôles permissifs de type `r is not null and r not in (...)` ont été repérés sur les tables actes, courrier, délégations, demandes, dossiers, instructions et sessions du conseil. Pour les tables examinées, les politiques RLS restrictives imposent également une session non anonyme, une commune et, selon les tables, `private.can(...)`. Le contrôle trigger ne doit donc pas être déclaré exploitable isolément : il faut vérifier les politiques complètes et les éventuels chemins service-role avant de conclure.
+- Les six Edge Functions versionnées dans la branche ont été parcourues pour rechercher des mutations directes de ces tables ; aucun appel correspondant n'a été repéré dans ces six sources. Cela ne couvre pas les clés service-role externes, scripts d'exploitation ou intégrations non versionnées.
+
+### Migration et traçabilité
+Le catalogue Supabase expose 81 versions appliquées, dont notamment `20261115183608` (paie initiale), `20261117213250` (droits/postes paie), `20261117213634` (écritures droits/postes), `20261118083148` (audit des lignes paie) et `20261118083150` (séparation des tâches). Les sources SQL originales de ces versions n'ont pas encore été retrouvées et comparées octet par octet dans le dépôt. Le nom et la présence d'une version dans l'historique ne suffisent pas à reconstituer son contenu.
