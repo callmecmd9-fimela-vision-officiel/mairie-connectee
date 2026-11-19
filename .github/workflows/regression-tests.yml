@@ -16,6 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - name: Validate read-only production schema export script
+        run: bash -n scripts/database/export-production-schema.sh
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
