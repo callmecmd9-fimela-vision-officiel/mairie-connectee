@@ -17,3 +17,7 @@ mairie-organisation-lots-A-E.zip
 *.zip
 *.bak
 archive_legacy/
+.github/
+supabase/
+*.mjs
+*.lock
