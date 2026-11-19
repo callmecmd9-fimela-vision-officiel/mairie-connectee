@@ -86,3 +86,11 @@ La revue des fichiers divergents a mis en évidence des incompatibilités réell
 - Suite de tests JavaScript : succès.
 - Vérification Deno des six Edge Functions : succès.
 - Aucun changement de source Edge Function déployée, aucune migration et aucun déploiement.
+
+
+## 8. Chargement des droits de poste — pagination et échec fermé
+- Le chargement des droits `org_role_droits` ne lisait auparavant qu'un maximum de 2 000 lignes.
+- La fonction `orgMine()` utilise maintenant une pagination par blocs de 1 000, vérifie les erreurs de lecture des affectations, postes et droits, et n'expose aucun droit si le chargement échoue ou dépasse la borne de sécurité.
+- La logique de délégations reçues du module Lot D reste inchangée.
+- Test ajouté : `tests/org-permissions-loader.test.js` (pagination multi-pages, erreur de lecture, absence d'affectation).
+- Workflow GitHub #81 : succès sur le commit `6832b03788c5dc5ccfb4ff9cd8811b97f52c07e4` ; suite JavaScript et contrôle Deno réussis.
