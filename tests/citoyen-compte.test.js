@@ -63,7 +63,10 @@ async function boot({user=true,prof={prenom:'Awa',nom:'Diop',village:'Mbodiène'
  await t.click({a:'psave'});
  const up=t.log.filter(x=>x[0]=='upsert')[0];
  ok('profil : enregistré pour l\'utilisateur connecté uniquement',up&&up[2].user_id=='u1'&&up[2].prenom=='Awa'&&up[2].nom=='Diop'&&up[2].village=='Fimela centre');
- // 6. non connecté
+ // 6. non connecté : le mode SMS désactivé conserve l’écran alternatif
+ t=await boot({user:false});await t.click({a:'esp'});
+ ok('SMS désactivé : espace alternatif affiché sans promettre une connexion',/prépare son ouverture/.test(t.H())&&!/Se connecter ou créer un compte/.test(t.H()));
+ // Le mode SMS activé est simulé uniquement pour tester le parcours OTP
  t=await boot({user:false,store:{mc_co:'fimela',mc_d_fimela:JSON.stringify(['FIM-0002-LOCAL000'])}});
  ok('sans compte : dossiers de l\'appareil visibles, aucun appel au compte',t.S().mine.length===1&&!t.rpcs.some(x=>x[0]=='mes_demandes_compte'));
  await t.click({a:'cat',c:'Sport, culture et associations'});
