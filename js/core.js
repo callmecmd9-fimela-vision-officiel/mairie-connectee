@@ -52,8 +52,14 @@ async function exigerMfaSuperAdmin(){
  if(a.data&&a.data.currentLevel==="aal2"){S.mfa=null;return true}
  const fs=await sb.auth.mfa.listFactors();
  if(fs.error){S.mfa={setup:true};S.err="Impossible de vérifier le facteur MFA de ce compte.";return false}
- const f=(fs.data&&fs.data.totp||[]).find(x=>x.status==="verified");
- if(!f){S.mfa={setup:true};S.err="Un facteur TOTP vérifié est requis pour ce compte. Configurez-le dans l’espace SaaS, puis reconnectez-vous.";return false}
+ const ts=fs.data&&fs.data.totp||[];
+ const f=ts.find(x=>x.status==="verified");
+ if(!f){
+  for(const pending of ts)if(pending.status!=="verified"){const r=await sb.auth.mfa.unenroll({factorId:pending.id});if(r.error){S.mfa={setup:true};S.err="Impossible de renouveler le facteur MFA en attente.";return false}}
+  const e=await sb.auth.mfa.enroll({factorType:"totp"});
+  if(e.error){S.mfa={setup:true};S.err="Impossible de configurer le facteur TOTP. Contactez l’administrateur.";return false}
+  S.mfa={setup:true,factorId:e.data.id,qr:e.data.totp.qr_code,secret:e.data.totp.secret};S.err="Scannez le QR code avec votre application d’authentification, puis confirmez le code à 6 chiffres.";return false
+ }
  S.mfa={factorId:f.id,challengeId:null};
  const ch=await sb.auth.mfa.challenge({factorId:f.id});
  if(ch.error){S.err="Impossible de lancer le défi MFA. Vous pouvez réessayer.";return false}
