@@ -94,3 +94,21 @@ La revue des fichiers divergents a mis en évidence des incompatibilités réell
 - La logique de délégations reçues du module Lot D reste inchangée.
 - Test ajouté : `tests/org-permissions-loader.test.js` (pagination multi-pages, erreur de lecture, absence d'affectation).
 - Workflow GitHub #81 : succès sur le commit `6832b03788c5dc5ccfb4ff9cd8811b97f52c07e4` ; suite JavaScript et contrôle Deno réussis.
+
+
+## 9. Mise à jour de la réconciliation des migrations — 19 novembre 2026
+
+Cette section corrige et complète la section 4 ci-dessus, qui concluait à l'absence des 81 sources canoniques dans l'archive ZIP. L'historique de production Supabase conserve les instructions SQL exécutées dans `supabase_migrations.schema_migrations.statements`.
+
+- Historique Supabase lu en lecture seule : **81 migrations** de `20261114184306` à `20261118230324`.
+- 81/81 enregistrements possèdent des instructions SQL non vides, soit 298 702 caractères.
+- Les 81 instructions ont été restaurées sous forme de fichiers versionnés dans `supabase/migrations/`.
+- Les 81 fichiers ont été comparés octet par octet à `statements[1]` dans la base : **81/81 conformes**.
+- Manifeste : `supabase/migrations/recovered-history-manifest.json`.
+- Test d'intégrité : `tests/migration-history-integrity.test.js`.
+- Rapport détaillé et plan de recette : `MIGRATION_RECONCILIATION_AND_REHEARSAL_2026-11-19.md`.
+
+### Limite restante : le socle initial
+La première migration historique modifie des tables déjà existantes, notamment `public.profiles` et `public.indicateurs`. Les 81 migrations rétablissent donc l'historique enregistré, mais pas nécessairement le schéma initial antérieur à la première migration. Il faut retrouver une source canonique de ce socle avant d'affirmer qu'un rejeu intégral depuis une base vide est reproductible.
+
+Les deux migrations candidates du 19 novembre restent en attente dans la branche et n'ont pas été appliquées. Aucune donnée ni configuration de production n'a été modifiée.
