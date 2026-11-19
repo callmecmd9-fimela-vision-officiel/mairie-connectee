@@ -96,3 +96,22 @@ Toute application en production, tout déploiement Edge Function et toute modifi
 - Workflow Regression tests **#164 : succès** sur le commit `2b7c83060c762ffdd1318d157d7413bbd908068b` ; le test d'intégrité des 81 sources est vert, ainsi que la suite JavaScript et le contrôle Deno des six Edge Functions.
 - Workflow PostgreSQL concurrency integration **#68 : succès** sur le même commit ; tests de quota atomique, gardes paie et liaison des adjoints verts sur PostgreSQL éphémère.
 - Un défaut de regex dans la première version du test d'intégrité a été corrigé avant ce résultat final ; le workflow de validation final est entièrement vert.
+
+## 8. Recherche complémentaire du socle initial — 19 novembre 2026
+
+Une recherche ciblée complémentaire a été menée avant toute tentative de rejeu :
+
+- Inventaire des 136 chemins modifiés par la PR #1 : aucun fichier d'archive ZIP, dump PostgreSQL, sauvegarde SQL ou fichier explicitement identifié comme baseline/schéma initial n'y figure.
+- Recherche de code sur la branche par les termes `schema_migrations`, `CREATE TABLE profiles`, `CREATE TABLE indicateurs`, `pg_dump` et `schema-only` : aucun fichier candidat n'a été retourné par l'index de recherche GitHub.
+- Le rapport d'inventaire de l'archive complète recense 28 fichiers SQL distincts après dédoublonnage des ZIP imbriqués, mais ne démontre pas qu'un de ces fichiers constitue le schéma antérieur à la première migration.
+- La migration initiale historique confirme qu'elle modifie des objets préexistants (`public.profiles` et `public.indicateurs`) ; elle ne crée pas ces tables.
+
+### Conclusion de cette recherche
+
+**Aucune source canonique du socle pré-migrations n'a pu être identifiée dans les éléments accessibles du dépôt et de la PR.** Cela ne prouve pas que la source n'existe pas dans une sauvegarde ou dans l'archive originale détenue localement ; cela signifie qu'elle n'est pas vérifiable à partir des éléments actuellement accessibles.
+
+### Élément nécessaire pour lever le blocage
+
+Fournir l'archive originale complète ou, de préférence, un dump SQL historique antérieur à `20261114184306` (schéma seul acceptable pour établir le socle, export de données de recette séparé et anonymisé). Il faudra vérifier sa date, sa provenance, son intégrité et la présence des définitions exactes de `public.profiles` et `public.indicateurs` avant de l'utiliser.
+
+Aucun schéma n'a été reconstruit par déduction, aucun dump actuel n'a été rétrodaté et aucun rejeu non probant n'a été lancé.
