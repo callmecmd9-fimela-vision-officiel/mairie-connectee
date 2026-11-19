@@ -20,7 +20,7 @@ begin
      or r is null
      or p_roles is null
      or cardinality(p_roles) = 0
-     or not (r = any (p_roles))
+     or not coalesce(r = any (p_roles), false)
      or not coalesce(private.hors_maintenance(), false) then
     raise exception 'Accès refusé' using errcode = '42501';
   end if;
