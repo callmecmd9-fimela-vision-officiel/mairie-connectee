@@ -10,7 +10,7 @@ async function boot({user=true,plan,rv=[],slots=['08:00','08:30','09:00'],cancel
  let checked=null;
  const ctx={supabase:{createClient:()=>sb},confirm:()=>conf,document:{querySelector:s=>s=='#app'?app:(s=='input[name="rh"]:checked'?checked:els[s]||null),getElementById:()=>null,addEventListener:(n,fn)=>(handlers[n]=handlers[n]||[]).push(fn),createElement:()=>({}),head:{appendChild(){}},documentElement:{style:{setProperty(){},removeProperty(){}}},hidden:false},
   localStorage:{getItem:k=>store[k]??null,setItem:(k,v)=>store[k]=String(v),removeItem:k=>delete store[k]},location:{search:'',pathname:'/',origin:'https://m.x',hostname:'x.workers.dev'},history:{replaceState(){}},navigator:{onLine:true},URL,Blob,URLSearchParams,setInterval(){},setTimeout(){},addEventListener(){},scrollTo(){},console,Promise,JSON,Math,Date,crypto:{},matchMedia:()=>({matches:true})};
- ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,'..','citoyen.js'),'utf8'),ctx);await new Promise(r=>setTimeout(r,60));
+ ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','citoyen.js'),'utf8'),ctx);await new Promise(r=>setTimeout(r,60));
  const click=async d=>{const t={dataset:d,textContent:'',disabled:false};for(const h of handlers.click)await h({target:{closest:s=>s=='[data-a]'?t:null}})};
  const change=async(id,v)=>{for(const h of handlers.change)await h({target:{id,name:'',value:v}});await new Promise(r=>setTimeout(r,10))};
  return{app,els,rpcs,log,store,click,change,pick:v=>{checked=v?{value:v}:null},H:()=>app.innerHTML,S:()=>vm.runInContext('S',ctx)}}
