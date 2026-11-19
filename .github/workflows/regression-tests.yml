@@ -1,0 +1,46 @@
+name: Regression tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  node-tests:
+    name: JavaScript regression suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install isolated test dependency
+        run: npm install --prefix "$RUNNER_TEMP/test-deps" --no-save --no-package-lock jsdom@26
+
+      - name: Run test files
+        env:
+          NODE_PATH: ${{ runner.temp }}/test-deps/node_modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          for test_file in tests/*.test.js; do
+            echo "::group::${test_file}"
+            node "${test_file}"
+            echo "::endgroup::"
+          done
+          echo "::group::js/smoke.js"
+          node js/smoke.js
+          echo "::endgroup::"
+          echo "::group::js/bandeau.test.js"
+          node js/bandeau.test.js
+          echo "::endgroup::"
