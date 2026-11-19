@@ -20,6 +20,10 @@ function functionBody(name) {
 }
 
 const paie = functionBody("private.paie_garde");
+assert.match(paie, /returns\s+uuid/);
+assert.match(paie, /language\s+plpgsql/);
+assert.match(paie, /stable\s+security\s+definer/);
+assert.match(paie, /set\s+search_path\s+to\s+\x27\x27/);
 assert.match(paie, /c\s+is\s+null/);
 assert.match(paie, /r\s+is\s+null/);
 assert.match(paie, /p_roles\s+is\s+null/);
@@ -29,6 +33,10 @@ assert.match(paie, /not\s+coalesce\s*\(\s*r\s*=\s*any\s*\(\s*p_roles\s*\)\s*,\s*
 assert.doesNotMatch(paie, /<>\s*all\s*\(\s*p_roles\s*\)/);
 
 const adjoint = functionBody("public.lier_adjoint");
+assert.match(adjoint, /returns\s+void/);
+assert.match(adjoint, /language\s+plpgsql/);
+assert.match(adjoint, /security\s+definer/);
+assert.match(adjoint, /set\s+search_path\s+to\s+\x27\x27/);
 assert.match(adjoint, /coalesce\s*\(\s*private\.is_platform_admin\(\)\s*,\s*false\s*\)/);
 assert.match(adjoint, /coalesce\s*\(\s*private\.my_role\(\)\s*=\s*'maire'\s*,\s*false\s*\)/);
 assert.match(adjoint, /coalesce\s*\(\s*public\.is_super_admin\(\)\s*,\s*false\s*\)/);
