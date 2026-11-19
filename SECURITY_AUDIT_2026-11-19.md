@@ -60,3 +60,12 @@ Base de départ : `main` — `a11b53565168cad3bc081b5838ea4638447d6a0e`
 - Correctif préparé sur `chore/ci-regression-tests` : contrôle du JWT avec le client appelant, refus des utilisateurs anonymes/inactifs, appel obligatoire à `public.is_super_admin()` pour le rôle `super_admin`, et vérification du périmètre communal pour les rôles municipaux.
 - Un test de non-régression couvre les cas AAL1/AAL2, utilisateur anonyme, profil inactif, rôle non autorisé et accès intercommunal. Le correctif n'a pas été déployé sur Supabase.
 
+
+## RLS et Storage — revue ciblée complémentaire
+- Les 56 alertes `multiple_permissive_policies` ne constituent pas automatiquement des contournements : sur les tables sensibles échantillonnées, plusieurs politiques sont explicitement `RESTRICTIVE` et imposent notamment l'isolation par commune, le blocage des sessions anonymes, le mode maintenance et les règles de confidentialité. Il faut néanmoins vérifier les 56 combinaisons et leurs droits SQL effectifs.
+- Les 70 alertes liées aux sessions anonymes reflètent le fait que le portail utilise `signInAnonymously()` : plusieurs tables sensibles possèdent une politique restrictive `is_anonymous = false`; d'autres politiques reposent sur un profil nominatif, une commune ou un rôle et doivent être validées table par table.
+- 152 fonctions `SECURITY DEFINER` existent dans les schémas `public` et `private` ; les 152 ont `search_path = ''`. Cela réduit le risque de détournement du search_path mais ne remplace pas la revue des ACL et des contrôles d'autorisation.
+- Les cinq buckets Storage observés (`adjoints`, `archives`, `identite`, `medias`, `pieces`) sont tous privés. Les politiques observées limitent les accès par rôle et commune ; le dépôt de pièces impose notamment propriétaire, commune ouverte, chemin UUID et plafond de trois pièces. La lecture anonyme du bucket `identite` est limitée aux noms de fichiers publics autorisés (blason et bannières).
+- Les alertes de performance sont : 7 clés étrangères sans index, 20 index signalés inutilisés et 1 index dupliqué. Aucune suppression/création d'index n'a été exécutée ; l'impact doit être évalué avec les requêtes et volumes réels.
+- La protection Supabase contre les mots de passe compromis est désactivée. Son activation est à planifier séparément, après évaluation de l'impact utilisateur et de la configuration Auth.
+
