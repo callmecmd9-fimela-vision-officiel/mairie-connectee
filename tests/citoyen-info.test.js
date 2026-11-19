@@ -2,7 +2,7 @@ const vm=require('vm'),fs=require('fs'),path=require('path');let f=0;const ok=(n
 async function boot(pj,pub){const app={innerHTML:''},h={click:[]},store={mc_co:'fimela'},rp=[];
  const sb={auth:{getSession:async()=>({data:{session:null}}),signOut:async()=>{}},rpc:async(n,a)=>{rp.push([n,a]);const r={commune_par_slug:[{id:'c1',slug:'fimela',nom:'Fimela'}],infos_commune:[{nom:'Fimela'}],actualites:pub,projets_publics:pj};return{data:r[n]||[]}}};
  const ctx={supabase:{createClient:()=>sb},document:{querySelector:s=>s=='#app'?app:null,getElementById:()=>null,addEventListener:(n,fn)=>(h[n]=h[n]||[]).push(fn),createElement:()=>({}),head:{appendChild(){}},documentElement:{style:{setProperty(){},removeProperty(){}}},hidden:false},localStorage:{getItem:k=>store[k]??null,setItem(){},removeItem(){}},location:{search:'',pathname:'/',origin:'https://m.x',hostname:'x.workers.dev'},history:{replaceState(){}},navigator:{onLine:true},URL,Blob,URLSearchParams,setInterval(){},setTimeout(){},addEventListener(){},scrollTo(){},console,Promise,JSON,Math,Date,crypto:{},matchMedia:()=>({matches:true})};
- ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,'..','citoyen.js'),'utf8'),ctx);await new Promise(r=>setTimeout(r,60));return{H:()=>app.innerHTML,rp}}
+ ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','citoyen.js'),'utf8'),ctx);await new Promise(r=>setTimeout(r,60));return{H:()=>app.innerHTML,rp}}
 (async()=>{
  let t=await boot([],[]);
  ok('vide : aucun contenu inventé',/Aucune actualité pour le moment/.test(t.H())&&/Aucun projet publié/.test(t.H()));
