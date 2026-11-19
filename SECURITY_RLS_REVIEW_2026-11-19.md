@@ -396,3 +396,22 @@ Lecture du schéma PostgreSQL de production (sans mutation) :
 Conséquence de conception : une RPC de consommation atomique doit rester réservée à `service_role` et conserver l'isolation actuelle. Un simple incrément atomique exécuté après l'appel au fournisseur empêcherait la perte de mises à jour, mais ne limiterait pas le nombre d'appels IA lancés simultanément. Pour préserver la règle métier « seules les générations réussies sont comptabilisées » tout en bloquant les dépassements sous concurrence, le mécanisme robuste doit réserver atomiquement une unité avant l'appel externe, puis libérer cette réservation de façon idempotente en cas d'échec. Cette conception nécessite un identifiant de réservation unique et des tests de concurrence/échec ; elle ne doit pas être remplacée par un incrément naïf qui facturerait les échecs.
 
 La migration de durcissement des gardes paie/adjoint présente sur la branche n'apparaît pas dans l'historique de production consulté : la dernière version enregistrée est `20261118230324`. La migration reste donc non appliquée. Aucun schéma, ACL, compteur, donnée, secret ou fonction de production n'a été modifié lors de cette vérification.
+
+
+## Correctif quota IA atomique préparé sur la branche — 19 novembre 2026
+
+Le correctif est désormais implémenté dans la branche, sans application en production :
+
+- Migration `20261119090000_ia_usage_atomic_reservations.sql` : table privée de réservations, verrou transactionnel par utilisateur/jour, incrément atomique conditionné à `n < limite`, expiration des réservations abandonnées après une heure.
+- RPC `ia_usage_reserver` : réserve une unité avant l'appel au fournisseur ; renvoie NULL lorsque le plafond est atteint.
+- RPC `ia_usage_finaliser` : conserve l'unité si la génération aboutit, ou la libère si le fournisseur échoue / renvoie un résultat vide. L'opération est protégée contre les doubles finalisations.
+- Les deux RPC sont SECURITY DEFINER avec search_path vide ; EXECUTE est révoqué à PUBLIC, anon et authenticated, puis accordé uniquement à service_role. La table privée n'accorde aucun privilège direct aux rôles API.
+- L'Edge Function n'effectue plus de lecture suivie d'un upsert non atomique ; elle réserve avant l'appel IA et finalise ensuite. Les appels fournisseur sont limités à 120 secondes.
+
+### Limites et garanties
+
+Le verrou et l'UPDATE conditionnel empêchent deux requêtes simultanées de consommer la même dernière unité. Les réservations expirées sont purgées lors de la prochaine tentative du même utilisateur et du même jour ; une panne brutale peut donc retenir temporairement une unité, mais ne permet pas de dépasser le plafond. Si la finalisation échoue, la fonction renvoie 503 et ne présente pas la génération comme validée.
+
+Le test statique `tests/ia-texte-quota.test.js` vérifie la cohérence migration/consommateur, les privilèges, le verrou, le plafond et l'ordre réservation-appel-finalisation. Il ne remplace pas un test PostgreSQL concurrent réel ; celui-ci reste requis avant toute migration de production.
+
+**État opérationnel :** migration et code uniquement sur la branche `chore/ci-regression-tests`. Aucune migration appliquée, aucun déploiement Edge Function, aucune modification de secret ou de donnée de production.
