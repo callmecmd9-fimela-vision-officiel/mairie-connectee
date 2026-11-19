@@ -62,6 +62,13 @@ function setup({ role = "super_admin", aal = "aal1", factors = [{ id: "totp-1", 
     catch (error) { failures++; console.error("FAIL", name, error); }
   };
 
+  await test("syntaxe des modules d’authentification mairie", async () => {
+    for (const path of ["js/core.js", "js/actions.js", "js/secretariat.js"]) {
+      const source = fs.readFileSync(require("node:path").join(__dirname, "..", path), "utf8");
+      new vm.Script(source, { filename: path });
+    }
+  });
+
   await test("super-admin AAL1 : accès suspendu et défi TOTP préparé", async () => {
     const x = setup();
     const ok = await vm.runInContext("profil()", x.context);
