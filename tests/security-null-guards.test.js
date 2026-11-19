@@ -25,7 +25,7 @@ assert.match(paie, /r\s+is\s+null/);
 assert.match(paie, /p_roles\s+is\s+null/);
 assert.match(paie, /cardinality\s*\(\s*p_roles\s*\)\s*=\s*0/);
 assert.match(paie, /not\s+coalesce\s*\(\s*private\.hors_maintenance\(\)\s*,\s*false\s*\)/);
-assert.match(paie, /not\s*\(\s*r\s*=\s*any\s*\(\s*p_roles\s*\)\s*\)/);
+assert.match(paie, /not\s+coalesce\s*\(\s*r\s*=\s*any\s*\(\s*p_roles\s*\)\s*,\s*false\s*\)/);
 assert.doesNotMatch(paie, /<>\s*all\s*\(\s*p_roles\s*\)/);
 
 const adjoint = functionBody("public.lier_adjoint");
