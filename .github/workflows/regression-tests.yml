@@ -27,6 +27,11 @@ jobs:
         with:
           node-version: 24
 
+      - name: Lint (erreurs réelles, sans style)
+        run: |
+          npm install --prefix "$RUNNER_TEMP/lint" --no-save --no-package-lock eslint@9 globals@15
+          NODE_PATH="$RUNNER_TEMP/lint/node_modules" "$RUNNER_TEMP/lint/node_modules/.bin/eslint" .
+
       - name: Install isolated test dependency
         run: npm install --prefix "$RUNNER_TEMP/test-deps" --no-save --no-package-lock jsdom@26
 
