@@ -1,0 +1,56 @@
+name: Sauvegarde base de données
+
+# Export logique chiffré, quotidien. Lecture seule : aucune écriture en base.
+# Secrets requis (Settings > Secrets and variables > Actions) :
+#   SUPABASE_DB_URL     chaîne de connexion Postgres (pooler session, port 5432)
+#   BACKUP_PASSPHRASE   phrase de passe de chiffrement (à conserver hors GitHub)
+on:
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Vérifier les secrets
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+          PW: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          [ -n "$DB" ] && [ -n "$PW" ] || { echo "::error::SUPABASE_DB_URL ou BACKUP_PASSPHRASE absent"; exit 1; }
+      - name: Installer pg_dump 17
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client-17
+      - name: Exporter et chiffrer
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+          PW: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          umask 077
+          f="fimela-$(date -u +%Y%m%dT%H%M%SZ).dump"
+          /usr/lib/postgresql/17/bin/pg_dump "$DB" -Fc --no-owner --no-privileges \
+            --schema=public --schema=auth --schema=storage -f "$f"
+          /usr/lib/postgresql/17/bin/pg_restore --list "$f" > /dev/null
+          [ "$(stat -c %s "$f")" -gt 10000 ] || { echo "::error::export anormalement petit"; exit 1; }
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$PW" \
+            --symmetric --cipher-algo AES256 -o "$f.gpg" "$f"
+          rm -f "$f"
+          sha256sum "$f.gpg" | tee "$f.gpg.sha256"
+          echo "BACKUP_FILE=$f.gpg" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sauvegarde-base
+          path: |
+            ${{ env.BACKUP_FILE }}
+            ${{ env.BACKUP_FILE }}.sha256
+          retention-days: 30
+          if-no-files-found: error
