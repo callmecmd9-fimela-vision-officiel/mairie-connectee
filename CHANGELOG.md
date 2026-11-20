@@ -3,13 +3,14 @@
 > **Mise à jour 2026-11-19** : les scripts SQL numérotés de la racine (`20261114_…` à `20261127_…`), `patch-org.js`, `patch-orgd.js`, `js/patch-core.js`, `js/patch-lot4.js`, `js/lot4.block.js`, `js/core_patched.js` et `patched/` ont été retirés du dépôt (commits `57a9265`, `ccf33b3` ; ils restent consultables dans l'historique git). Les migrations de référence sont dans `supabase/migrations/` (voir `recovered-history-manifest.json`) ; toutes les consignes « copier / appliquer / déployer » ci-dessous sont **historiques** : le code est déployé et les migrations sont appliquées en base. Les fichiers `*.append.md` ont été consolidés dans `CHANGELOG.md`, `DECISIONS.md` et `TASKS.md`.
 
 
-## 2026-11-20 — Modernisation de l'interface Super Admin (`/saas`)
-Présentation uniquement : aucune table, RLS, migration, RPC, Edge Function, permission ni règle MFA modifiée ; mêmes appels `saas_*` et `saas-admin` avec les mêmes charges utiles.
-- `css/saas.css` (nouveau, chargé uniquement par `saas.html`) : design system vert institutionnel / blanc / or discret. `css/mairie.css` n'est pas modifié (partagé avec le portail mairie).
-- `saas.html` : feuille `saas.css`, police Newsreader (titres), `body.sa`. Balise `saas.js?v=20261119.1` conservée (exigée par `tests/saas-invitation.test.js`).
-- `js/saas.js` (rendu seulement) : barre latérale (≥1024 px), rail d'icônes (tablette), onglets en bas + tiroir (mobile) ; routage par `#hash` (bouton retour Android) ; tableau de bord en bandeau (mairies + répartition par statut, finances en lignes pointillées), tuiles, panneau « À traiter », activité récente ; formulaire « Nouvelle mairie » repliable ; interrupteurs pour les modules ; états vides ; notifications compactes (succès auto-masqué) ; écran de connexion/A2F harmonisé ; accessibilité (aria-current, focus visible, Échap, cibles ≥ 44 px, `prefers-reduced-motion`).
-- Vérifié : tests existants inchangés (seul `enhance.test.js` requiert `jsdom`, absent hors CI), test Chromium 390/820/1366 px avec la CSP de `_headers` (0 erreur JS, 0 violation CSP, 0 débordement horizontal), appels RPC/Edge contrôlés (création, suspension, modules, paiement).
-- Sauvegarde intégrale avant intervention : `SAUVEGARDE_AVANT_MODERNISATION.zip`. Retour arrière : restaurer `saas.html` et `js/saas.js`, supprimer `css/saas.css`.
+## 2026-11-20 — Modernisation de l'interface Super Admin (/saas)
+
+- Nouvelle feuille de style dédiée `css/saas.css` (vert institutionnel, blanc, or discret ; Source Serif 4 + Figtree). `css/mairie.css` n'est pas modifié.
+- `js/saas.js` : seule la couche de présentation change (coque, navigation, tableau de bord, listes, formulaires, connexion). Actions, RPC, fonction Edge, ids de formulaires et attributs `data-a` sont inchangés.
+- Navigation : barre latérale (ordinateur), rail d'icônes (tablette), onglets du bas + tiroir (Android).
+- Tableau de bord : bandeau de synthèse, indicateurs groupés, panneau « À traiter » (données déjà chargées), raccourcis vers abonnements/factures/mairies.
+- Ajouts mineurs : heure d'actualisation, formulaire « Nouvelle mairie » repliable, toasts fermables, touche Échap pour fermer le tiroir.
+- Aucune modification de Supabase, des migrations, des permissions ni de la CSP.
 
 ## 2026-11-16 — Porte d'entrée citoyenne + durcissement
 ### Base (migrations appliquées, idempotentes, aucune suppression)
