@@ -7,8 +7,11 @@ const ORFK=[
  ["instr","Instructions en cours"],["cin","Courriers en cours"],["actes","Actes en préparation"],
  ["dossiers","Dossiers ouverts"],["citoyens","Demandes citoyennes"],["marches","Marchés en cours"],
  ["projets","Projets actifs"],["projets_retard","Projets en retard"],["conges","Demandes de congés"],
- ["paie","Paies à traiter"],["personnel","Agents actifs"]
+ ["paie","Paies à traiter"],["personnel","Agents actifs"],
+ ["demandes_anciennes","Demandes ouvertes depuis plus de 15 jours"],["rdv","Rendez-vous à confirmer"]
 ];
+const ORFS=[["services","Services actifs"],["postes","Postes actifs"],["affectations","Affectations en cours"],["roles","Rôles actifs"]];
+const orgfKv=v=>v==null?"—":Number(v).toLocaleString("fr-FR");
 const orgfEsc=x=>esc(x==null?"":String(x));
 const orgfRpc=async(n,a)=>{const r=await sb.rpc(n,a);if(r.error)throw new Error(r.error.message||"Opération refusée");return r.data};
 async function orgfLoad(){if(ORGF.loading)return;ORGF.loading=true;ORGF.error="";ORGF.kpiError="";try{
@@ -110,11 +113,12 @@ function orgfRolesView(){
  return pn("Rôles et permissions","shield",rows||emp("Aucun rôle."),`<button class="bt" data-of="role-new">Créer un rôle</button>`)+(ORGF.editRole?orgfRoleForm():"")+(selected?pn("Droits du rôle : "+orgfEsc(selected.nom),"lock",selected.code==="maire"?emp("Les droits du maire sont protégés et ne peuvent pas être modifiés depuis cet écran."):`<p class="mut">Les changements sont contrôlés par les fonctions serveur. Un responsable ne peut pas s’accorder des droits qu’il ne détient pas.</p>${moduleSelect}<div style="padding:8px 0">${checks}</div><button class="bt" data-of="role-rights-save" data-code="${orgfEsc(selected.code)}">Enregistrer les droits de ce module</button>`):"");
 }
 function orgfKpiView(){
- const cards=ORGF.kpi?ORFK.map(([k,l])=>`<div class="kc"><div class="kl">${l}</div><div class="kv">${Number(ORGF.kpi[k]||0).toLocaleString("fr-FR")}</div></div>`).join(""):emp(orgfEsc(ORGF.kpiError||"Les indicateurs ne sont pas disponibles pour le moment."));
- return pn("Indicateurs de la commune","chart",`${ORGF.kpi?`<div class="kp">${cards}</div>`:cards}<p class="mut">Ces chiffres sont agrégés au niveau communal et calculés par la fonction sécurisée org_kpi(). Ils ne constituent pas encore une ventilation individuelle par poste.</p>`,`<button class="tg" data-of="refresh">Actualiser</button>`);
+ const adm=ORGF.kpi&&ORGF.kpi.profil==="admin_mairie",card=([k,l])=>`<div class="kc"><div class="kl">${l}</div><div class="kv">${orgfKv(ORGF.kpi[k])}</div></div>`;
+ const cards=ORGF.kpi?ORFS.map(card).join("")+(adm?"":ORFK.map(card).join("")):emp(orgfEsc(ORGF.kpiError||"Les indicateurs ne sont pas disponibles pour le moment."));
+ return pn("Indicateurs de la commune","chart",`${ORGF.kpi?`<div class="kp">${cards}</div>`:cards}${adm?`<p class="mut">Les indicateurs métier (demandes, courriers, paie…) ne sont pas accessibles à l'administrateur municipal : ils restent réservés aux postes concernés.</p>`:""}<p class="mut">Ces chiffres sont agrégés au niveau communal et calculés par la fonction sécurisée org_kpi(). Ils ne constituent pas encore une ventilation individuelle par poste.</p>`,`<button class="tg" data-of="refresh">Actualiser</button>`);
 }
 function orgfView(){
- if(S.pr!=="maire"&&!S.sa)return pn("Services et équipes","shield",emp("Cette gestion est réservée au maire ou au super-administrateur."));
+ if(S.pr!=="admin_mairie"&&!S.sa)return pn("Services et équipes","shield",emp("Cette gestion est réservée à l’administrateur municipal ou au super-administrateur."));
  if(!ORGF.data&&!ORGF.loading){orgfLoad();return emp("Chargement des services et du personnel…")}
  if(ORGF.loading&&!ORGF.data)return emp("Chargement…");
  if(ORGF.error&&!ORGF.data)return pn("Services et équipes","alert",emp(orgfEsc(ORGF.error))+`<button class="bo" data-of="refresh">Réessayer</button>`);
@@ -125,7 +129,7 @@ return scope+tabs("orgf",[["services","Services"],["postes","Postes"],["agents",
   (t==="services"?orgfServicesView():t==="postes"?orgfPostesView():t==="agents"?orgfAgentsView():t==="affect"?orgfAffectView():t==="roles"?orgfRolesView():orgfKpiView());
 }
 SP.administration.subs.push(["orgf","Services et équipes"]);
-RP.orgf=["maire"];
+RP.orgf=["admin_mairie"];
 SPL.orgf="Services, personnel et affectations";
 SUB.orgf=orgfView;
 document.addEventListener("click",async e=>{
