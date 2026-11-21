@@ -3,14 +3,18 @@ name: PostgreSQL concurrency integration
 on:
   pull_request:
     paths:
-      - 'supabase/migrations/20261119090000_ia_usage_atomic_reservations.sql'
+      - 'supabase/migrations/**'
+      - 'supabase/production-ready/**'
+      - 'supabase/proposed/**'
       - 'tests/postgres/**'
       - '.github/workflows/postgres-concurrency.yml'
   push:
     branches:
       - chore/ci-regression-tests
     paths:
-      - 'supabase/migrations/20261119090000_ia_usage_atomic_reservations.sql'
+      - 'supabase/migrations/**'
+      - 'supabase/production-ready/**'
+      - 'supabase/proposed/**'
       - 'tests/postgres/**'
       - '.github/workflows/postgres-concurrency.yml'
 
@@ -46,3 +50,11 @@ jobs:
         run: bash tests/postgres/ia-usage-concurrency.sh
       - name: PostgreSQL 17 — MFA, paie and adjoint authorization guards
         run: bash tests/postgres/security-guards-integration.sh
+      - name: PostgreSQL 17 — roles admin_mairie, statuts, anti-élévation, isolation
+        run: bash tests/postgres/roles-admin-mairie-integration.sh
+      - name: PostgreSQL 17 — droits admin_mairie (correctif)
+        run: bash tests/postgres/org-role-droit-set-integration.sh
+      - name: PostgreSQL 17 — indicateurs KPI v2
+        run: bash tests/postgres/org-kpi-integration.sh
+      - name: PostgreSQL 17 — notifications push et SMS
+        run: bash tests/postgres/notifications-sms-integration.sh
