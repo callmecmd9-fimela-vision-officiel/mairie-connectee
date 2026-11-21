@@ -53,3 +53,44 @@
 - Hors périmètre : tableaux de bord KPI propres à chaque poste (seul « Mon poste » : postes, écrans, délégations, demandes du service).
 
 
+
+
+## Rôles : séparation Super Admin / admin_mairie / maire (2026-11-20, validée par l'utilisateur)
+- **D-R1** Nouveau rôle `profiles.role='admin_mairie'` : administration technique de SA commune uniquement (module `org`, services, postes, affectations). Aucun droit métier, jamais affectable à un poste.
+- **D-R2** Le `maire` garde supervision, validations, signatures, délégations métier ; il perd l'écriture sur le module `org` (`org_gest`, `org_droit_propre`). Aucun privilège automatique d'administration technique.
+- **D-R3** Seule la plateforme (Super Admin AAL2) crée, affecte, active, suspend un `admin_mairie`. Aucun admin ne modifie son propre rôle/commune/statut.
+- **D-R4** Création anticipée : compte Auth **existant** réutilisé (aucun doublon/suppression/changement d'identifiants/mot de passe). Statuts dérivés par trigger : `en_attente` (sans commune, aucun droit) → `affecte` → `actif` ↔ `suspendu`.
+- **D-R5** Gardes en **triggers additifs** (aucune réécriture des fonctions opérationnelles) ; les appels système (service_role, migrations, inscription Auth) passent.
+- **D-R6** `saas_creer_commune` crée un `admin_mairie` inactif (et non plus un `maire`) ; le maire est attribué ensuite via `admin_attribuer`.
+- **D-R7** Le compte maire actuel de Diofior n'est ni modifié ni désigné `admin_principal`.
+- **D-R8** Droits réservés = module `org` en écriture (`creer/modifier/supprimer/administrer`) : jamais accordables à un poste ni délégables par un acteur municipal.
+- **D-R9** `params` reste au maire (contenu public de la commune) : hors périmètre `admin_mairie` (extension possible ultérieure).
+- **D-R10** Aucun test d'expérimentation en production, même transaction annulée : base PostgreSQL jetable uniquement.
+- **D-R11** Stratégie de test (reprise 2026-11-20) : Docker indisponible (registre bloqué) → PostgreSQL 16 local jetable, socket Unix seule. Schéma simulé par stubs ; Edge `sa-admin` émulée dans le test navigateur. Ces tests ne remplacent pas une répétition sur clone du schéma réel ni un test des Edge Functions déployées en staging.
+- **D-R12** Le bouton « Modifier » des postes (Organigramme) est réservé à `admin_mairie` ; le maire voit l'organigramme sans affordance inerte.
+
+## Session 2026-11-21 (MAJ3)
+- Appliquées en production : security_null_mfa_guards, ia_usage_atomic_reservations (historique cohérent). Non appliquées : 20261120100000 (répétition requise) et suppression de l index doublon communes_slug_uq (proposée dans supabase/proposed/, accord requis). bright-worker : inerte, suppression soumise à accord.
+- Edge Functions déployées = sources du dépôt (saas-admin v3, sa-admin v15, admin-comptes v10, bright-worker v4, purge-pieces v2, ia-texte v9).
+- Décision : toute suppression de ressource et toute migration fonctionnelle de production restent soumises à autorisation explicite ; ZIP de référence : SAAS_MUNICIPAL_MAJ4.zip.
+
+## D-M5 (2026-11-21) — Icônes, push, SMS, langues
+- D-M5-1 Icônes générées **côté navigateur** par la mairie et stockées en public (aucune migration, aucun serveur d'images) ; neutres par défaut, jamais le blason d'une autre commune.
+- D-M5-2 Push : webhook DB → Edge Function (pas de trigger SQL : le secret ne vit pas en base) ; charge utile minimale ; désactivé tant que la clé VAPID publique est vide.
+- D-M5-3 SMS : file + adaptateurs, fail-closed, désactivé par commune par défaut ; aucun fournisseur imposé ; corps issus de modèles uniquement.
+- D-M5-4 Langues : aucune traduction non validée n'est jamais affichée (statut + 100 % de couverture exigés).
+- D-M5-5 Les SQL push/SMS restent dans `supabase/proposed/` (hors historique de migrations) : application sur accord explicite après staging.
+
+## MAJ6 (2026-11-21)
+- D-R13 : `admin_mairie` (actif, de la commune) peut accorder tout droit métier aux rôles de sa commune ; la limite « droits que l'on détient » ne s'applique plus qu'aux autres appelants. Les écritures `org` restent interdites par trigger. (Auparavant l'anomalie bloquait toute attribution.)
+- D-K1 : `org_kpi` reste SECURITY INVOKER (RLS métier appliquée) ; seule la structure organisationnelle passe par un helper DEFINER limité à la commune de l'appelant. Pour `admin_mairie`, métier = null (« — »).
+- D-S1 : SMS automatiques en français seulement, opt-in par commune, jamais bloquants ; wolof/sérère après validation.
+- D-V1 : les versions de migration de production (horodatage d'application) diffèrent des noms de fichiers du dépôt ; correspondance dans `supabase/PRODUCTION_VERSION_MAP.md`. Ne pas renommer ni rejouer.
+
+- **Projets visibles aux citoyens seulement si la mairie les publie** (`projets.public`, défaut false).
+- **Catégories d'info** = colonne `publications.categorie`, pas de nouvelles tables.
+- **Navigation** : 5 entrées de la spécification ; « Travaux et projets » est une section de l'accueil, pas un lien de menu.
+
+- **Projets visibles aux citoyens seulement si la mairie les publie** (`projets.public`, défaut false).
+- **Catégories d'info** = colonne `publications.categorie`, pas de nouvelles tables.
+- **Navigation** : 5 entrées de la spécification ; « Travaux et projets » est une section de l'accueil, pas un lien de menu.

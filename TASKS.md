@@ -18,8 +18,7 @@
 - supabase/20261114_super_admin.sql périmé : remplacer par un export ou retirer.
 - 33 « multiple permissive policies » : fusionner si une commune grossit.
 ## Plus tard
-- Icônes PNG 192/512 générées par commune (le blason publié est en webp, non « maskable »).
-- Chargement `load()` en deux temps ; compteurs serveur > 10 000 lignes/table ; notifications push ; pagination page 0 sans tri par id.
+- Compteurs serveur > 10 000 lignes/table ; pagination page 0 sans tri par id.
 ## Fait (audits précédents)
 - Audit 3 : numéro de suivi non devinable, commune fermée refusée, droits retirés, enhance.js, citoyen_id FK ON DELETE SET NULL.
 - Audit 2 : fuite `communes`, pièces, SW hors-ligne, CSP, .assetsignore. Correctif actualisation KO (SW mc-v9).
@@ -75,4 +74,29 @@
 - Versionner dans le dépôt : `20261125_org_rbac.sql` (lot A, encore à exporter), `20261127_lot_d.sql`.
 - Reste : KPI par poste ; tracer l'ouverture de pièces confidentielles des archives (documents_consultations existe déjà) ; test d'isolation Lot C avec données réelles dans Diofior.
 
+## Rôles admin_mairie — à faire (priorité 1, nouvelle session)
+- [x] **Exécuté** (2026-11-20, reprise) `bash tests/postgres/roles-admin-mairie-integration.sh` sur PostgreSQL 16 jetable : 59/59 OK, aucun écart dans la migration `20261120100000` (le script, lui, n'était pas rejouable : corrigé).
+- [ ] **Répéter** la migration sur un **clone du schéma de production** (le test actuel utilise des stubs ; voir `docs/database/SCHEMA_RECONSTRUCTION_RUNBOOK.md`) avant application.
+- [ ] Après vert : **accord explicite** puis appliquer `20261119070000`, `20261119090000`, `20261120100000` (ordre), déployer `sa-admin` + `saas-admin`, puis le front.
+- [ ] Via l'interface Super Admin : préparer `admindiofior@gmail.com` et `adminjoal@gmail.com` (en attente), affecter Diofior (`commune-de-diofior`), créer Joal (via `/saas`), affecter, activer.
+- [ ] Fatick et Djirnda : communes inexistantes en production — noms, slugs, offre à fournir.
+- [ ] Vérifier avant migration qu'aucune ligne `org_role_droits`/`org_delegations_droits` existante ne porte `org` en écriture pour un poste non voulu (les gardes ne s'appliquent qu'aux nouvelles écritures).
+- [ ] Décider d'étendre ou non `admin_mairie` à `params` / journal d'audit de commune (D-R9).
+- [x] Test navigateur Super Admin « Administrateurs municipaux » + `admin_mairie`/maire/agent : `tests/browser/` (53/53). Reste à tester avec les **Edge Functions réelles** (staging) et un vrai flux MFA/e-mail.
+- [ ] Optionnel : ajouter `tests/browser/run.sh` à la CI (Playwright + Chromium).
 
+## Mise à jour 2026-11-21
+- Fait en production : 20261119070000 et 20261119090000 (historique cohérent, voir CHANGELOG).
+- Reste, accord requis : appliquer `supabase/proposed/20261121_drop_duplicate_communes_slug_index.sql` ; supprimer la fonction `bright-worker` (déjà inerte, aucune dépendance) ; 20261120100000 après répétition sur copie fidèle du schéma (export `scripts/database/export-production-schema.sh` + PostgreSQL local/CI).
+- Reste, hors capacité de cet environnement : tests navigateur et PostgreSQL réels, staging des Edge Functions (secrets ALLOWED_ORIGIN/SITE_URL, Turnstile), SMS, wolof/sereer.
+
+## Mise à jour 2026-11-21 (MAJ5)
+- Fait : icônes PNG par commune (+ neutres), chargement en deux temps, carte d'installation, push (code complet), SMS (architecture), wolof/sereer (préparation).
+- Après accord, en staging puis production : republier le blason de chaque commune (« Publier le blason et les icônes ») ; appliquer `supabase/proposed/20261121_push_notifications.sql` et `…_sms_outbox.sql` ; déployer `push-send` et `sms-dispatch` ; voir docs/PUSH_NOTIFICATIONS.md et SMS_ARCHITECTURE.md.
+- Impossible sans externe : clés VAPID + webhook, fournisseur SMS et son contrat, textes wolof/sereer validés, test sur appareils réels (installation PWA, push Android/iOS), Edge Functions réelles en staging.
+- Toujours en attente d'accord (inchangé) : migration 20261120100000 après répétition sur schéma fidèle, index doublon `communes_slug_uq`, suppression `bright-worker`.
+
+## Mise à jour 2026-11-21 (MAJ6)
+- Fait (testé en local) : correctif `org_role_droit_set`, `org_kpi` v2, accessibilité (`a11y.js`), SQL push/SMS testés sur PostgreSQL, trigger SMS proposé.
+- **Reste, accord explicite requis** (rien n'a été touché en production) : (1) appliquer `20261121090000` puis `20261121091000` ; (2) déployer `sa-admin` et `saas-admin` du dépôt (prod = anciennes versions), puis le front ; (3) suppression `bright-worker` ; (4) en staging : `push_notifications`, `sms_outbox`, `sms_triggers`, `push-send`, `sms-dispatch`.
+- **Bloqué hors de cet environnement** : Edge Functions réelles (Deno/staging) et flux MFA/e-mail réels ; clés VAPID + webhook ; fournisseur SMS et contrat ; textes wolof/sérère validés ; appareils réels (PWA, push Android/iOS) ; comptes admin Diofior/Joal (via interface Super Admin) ; Fatick et Djirnda (noms, slugs, offre à fournir) ; rejouer `ia-usage-concurrency.sh` et `security-guards-integration.sh`.

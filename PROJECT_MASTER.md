@@ -25,8 +25,19 @@ Lot 1-8 faits : accueil/identité, navigation, espace citoyen (SMS indisponible 
 ## Base (migrations dans l'ordre)
 20261116_audit3 → 20261117_demarches_statuts → 20261119_citoyen_prenom → 20261120_lot5_statuts_retrait → 20261121_lot6_rdv → 20261122_lot6bis_creneaux → 20261123_lot7_infos → 20261124_catalogue
 
+## Rôles et permissions
+Super Admin (plateforme) > `admin_mairie` (admin technique de sa commune) ; `maire` = décisions/validations/signatures sans administration technique. Statuts admin : en_attente → affecte → actif ↔ suspendu. Détail, procédures, retour arrière : `docs/ROLES_ET_PERMISSIONS.md`. Migration `20261120100000` **proposée, non appliquée**. Reprise : `REPRISE_SESSION.md`.
+
 ## Tests
 `node tests/<nom>.test.js` pour chaque fichier ; `node tests/smoke.js` ; `enhance.test.js` exige `npm i jsdom` ; `tests/isolation_test.sql` à lancer dans Supabase.
 
 ## Documents liés
 CHANGELOG.md, DECISIONS.md, TASKS.md, SETUP.md
+
+## Session 2026-11-21 (MAJ3)
+- Appliquées en production : security_null_mfa_guards, ia_usage_atomic_reservations (historique cohérent). Non appliquées : 20261120100000 (répétition requise) et suppression de l index doublon communes_slug_uq (proposée dans supabase/proposed/, accord requis). bright-worker : inerte, suppression soumise à accord.
+- Edge Functions déployées = sources du dépôt (saas-admin v3, sa-admin v15, admin-comptes v10, bright-worker v4, purge-pieces v2, ia-texte v9).
+- Décision : toute suppression de ressource et toute migration fonctionnelle de production restent soumises à autorisation explicite ; ZIP de référence : SAAS_MUNICIPAL_MAJ4.zip.
+
+## Reprise (MAJ7)
+État : tout le code est prêt ; production inchangée. Reste, sur autorisation : appliquer `supabase/production-ready/` (01→05), déployer les Edge Functions, `wrangler deploy` — voir `DEPLOIEMENT_COMMANDES.md`. Externe : fournisseur SMS, clés VAPID.

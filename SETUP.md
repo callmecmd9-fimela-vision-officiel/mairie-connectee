@@ -19,6 +19,9 @@
 - Turnstile : ajouter le domaine du Worker aux domaines autorisés.
 - Sous-domaine par commune : DNS wildcard + route (la base résout déjà `sous_domaine` / `domaine_perso`).
 
+## Administrateurs municipaux (rôle `admin_mairie`)
+Voir `docs/ROLES_ET_PERMISSIONS.md`. Interface Super Admin → Gestion des utilisateurs → *Administrateurs municipaux* : créer/rattacher un compte existant (commune facultative), affecter, activer, suspendre. Ne jamais saisir ni transmettre de mot de passe. Variables d'Edge Functions : `.env.example` (jamais de valeur réelle dans le dépôt). Tests Postgres : base jetable uniquement.
+
 ## Nouvelle commune
 Espace `/saas` > Gestion des mairies > Nouvelle mairie. Puis, dans `/mairie` : Paramètres (identité, images), Citoyens > Démarches, Rendez-vous (jours/heures), Administration > Lien citoyen (couleur, blason, bannière, affiche QR).
 
@@ -27,3 +30,8 @@ Espace `/saas` > Gestion des mairies > Nouvelle mairie. Puis, dans `/mairie` : P
 - `_headers` : `manifest-src 'self' blob:`, `img-src` avec le domaine Supabase.
 - Ouvrir `/?c=slug` sur mobile : bannière, services, rendez-vous, suivi.
 - Catalogue configurable : migration 20261124_catalogue.sql (ordre : après lot7).
+
+## Session 2026-11-21 (MAJ3)
+- Appliquées en production : security_null_mfa_guards, ia_usage_atomic_reservations (historique cohérent). Non appliquées : 20261120100000 (répétition requise) et suppression de l index doublon communes_slug_uq (proposée dans supabase/proposed/, accord requis). bright-worker : inerte, suppression soumise à accord.
+- Edge Functions déployées = sources du dépôt (saas-admin v3, sa-admin v15, admin-comptes v10, bright-worker v4, purge-pieces v2, ia-texte v9).
+- Décision : toute suppression de ressource et toute migration fonctionnelle de production restent soumises à autorisation explicite ; ZIP de référence : SAAS_MUNICIPAL_MAJ4.zip.
