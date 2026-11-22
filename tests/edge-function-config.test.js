@@ -13,6 +13,7 @@ const expected = {
   "admin-comptes": true,
   "push-send": false,
   "sms-dispatch": false,
+  "manifest-commune": false,
 };
 
 for (const [slug, verifyJwt] of Object.entries(expected)) {

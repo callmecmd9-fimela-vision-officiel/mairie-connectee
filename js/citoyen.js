@@ -491,9 +491,31 @@ function manifest() {
       MFU = null;
     }
     if (!S.slug || !S.co) {
+      l.removeAttribute("crossorigin");
       l.setAttribute("href", MF0);
       return;
     }
+    /* Manifest serveur par commune (URL réelle, nécessaire à l'installation Android) ; repli sur le manifest local si indisponible */
+    const fu = URLS + "/functions/v1/manifest-commune?c=" + encodeURIComponent(S.slug) + "&o=" + encodeURIComponent(location.origin);
+    if (S.mfs === "ok:" + S.slug) {
+      l.setAttribute("crossorigin", "anonymous");
+      l.setAttribute("href", fu);
+      return;
+    }
+    if (S.mfs !== "try:" + S.slug && typeof fetch == "function") {
+      S.mfs = "try:" + S.slug;
+      const sl = S.slug;
+      fetch(fu).then(
+        r => {
+          if (r.ok && S.slug === sl) {
+            S.mfs = "ok:" + sl;
+            manifest();
+          }
+        },
+        () => {}
+      );
+    }
+    l.removeAttribute("crossorigin");
     const o = location.origin,
       st = o + "/?c=" + encodeURIComponent(S.slug),
       b = blUrl();

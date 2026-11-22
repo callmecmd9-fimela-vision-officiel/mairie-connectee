@@ -1,5 +1,6 @@
 # CHANGELOG
 
+- Installation Android : manifeste par commune servi par une URL réelle (Edge Function `manifest-commune`, déployée en production) ; repli automatique sur le manifeste local si indisponible.
 - Icônes de l’application (écran d’accueil) : bucket public dédié `icones-pwa` (3 PNG par commune, migration `20261122135230`, appliquée en production) ; le bucket `identite` reste privé. À régénérer une fois : « Régénérer les icônes ».
 ## 2026-11-22 (MAJ21) — correctifs portail citoyen
 - Loader « Chargement… » permanent : sélecteur CSS `+` cassé par `#dlg` → `~`.
