@@ -416,9 +416,31 @@ const KM = () => "mc_d_" + S.slug,
 const SHIELD =
   '<svg width="56" height="56" viewBox="0 0 24 24" fill="#0B5A2E" aria-hidden="true"><path d="M12 2l9 3v6c0 5-4 9-9 11C7 20 3 16 3 11V5z"/></svg>';
 const cnm = () => String(S.co || "").replace(/^Commune de\s+/i, "");
-const blUrl = () => (S.idt && S.idt.blason && S.cid ? URLS + "/storage/v1/object/public/identite/" + S.cid + "/blason.webp" : "");
+/* Le bucket « identite » est privé : blason et bannière sont lus par liens signés (lecture anonyme limitée par la politique identite_published_assets_read) ; repli sur l'URL publique si la signature échoue. */
+const pubI = n => URLS + "/storage/v1/object/public/identite/" + S.cid + "/" + n;
+async function signIdt() {
+  const w = [];
+  if (S.idt && S.idt.blason) w.push("blason.webp");
+  if (S.pt && S.pt.bandeau) w.push("bandeau.webp", "bandeau-m.webp");
+  S.u = {};
+  w.forEach(n => {
+    S.u[n] = pubI(n);
+  });
+  if (!w.length || !S.cid || !sb.storage || !sb.storage.from) return;
+  try {
+    const r = await sb.storage.from("identite").createSignedUrls(
+      w.map(n => S.cid + "/" + n),
+      21600
+    );
+    (r.data || []).forEach(x => {
+      if (x && x.signedUrl && !x.error) S.u[String(x.path).split("/").pop()] = x.signedUrl;
+    });
+  } catch (e) {}
+}
+const blUrl = () => (S.idt && S.idt.blason && S.cid ? (S.u || {})["blason.webp"] || pubI("blason.webp") : "");
 /* photo de bannière : deux fichiers WebP publiés par la commune (bandeau.webp ordinateur, bandeau-m.webp mobile) */
-const bnUrl = () => (S.pt && S.pt.bandeau && S.cid ? URLS + "/storage/v1/object/public/identite/" + S.cid + "/bandeau" : "");
+const bnUrl = () => (S.pt && S.pt.bandeau && S.cid ? (S.u || {})["bandeau.webp"] || pubI("bandeau.webp") : "");
+const bnM = () => (S.u || {})["bandeau-m.webp"] || bnUrl();
 const okCol = c => {
   if (!/^#[0-9a-f]{6}$/i.test(c || "")) return false;
   const v = [1, 3, 5]
@@ -623,6 +645,7 @@ async function choose(c) {
     const q = pl && !pl.error && (pl.data || [])[0];
     S.plan = q && q.actif && Array.isArray(q.jours) && q.jours.length ? q : null;
   }
+  await signIdt();
   cacheSet();
   /* Chargement en deux temps : l'accueil s'affiche dès les informations essentielles ; dossiers personnels, rendez-vous et projets arrivent ensuite (rendu relancé). */
   const cs = c.slug;
@@ -687,11 +710,11 @@ const NAVL = [
 ];
 const navb = c => NAVL.map(n => `<button class="${c}" data-a="goto" data-t="${n[0]}">${n[1]}</button>`).join("");
 const head = () =>
-  `<header class="tp" id="top"><a class="sk" href="#mc">${tr("u_aller_au_contenu")}</a><div class="in hdr">${logo()}<div class="hn"><b class="tn">Commune de ${esc(cnm())}</b><i class="ts">${esc(S.info.slogan || tr("v_votre_mairie_a_votre"))}</i></div><nav class="nv" aria-label="${tr("u_menu_principal")}">${navb("nl")}</nav><button class="bt tm" data-a="esp">${btl()}</button><button class="mb" data-a="mnu" aria-label="${tr("u_menu")}" aria-expanded="${S.menu ? "true" : "false"}" aria-controls="mnav">${ic(S.menu ? "x" : "menu", 26)}</button></div>${S.menu ? `<nav id="mnav" class="mnv" aria-label="${tr("u_menu_principal")}">${navb("ml")}</nav>` : ""}</header>`;
+  `<header class="tp" id="top"><a class="sk" href="#mc">${tr("u_aller_au_contenu")}</a><div class="in hdr">${logo()}<div class="hn"><b class="tn"><small>Commune de</small> ${esc(cnm())}</b><i class="ts">${esc(S.info.slogan || tr("v_votre_mairie_a_votre"))}</i></div><nav class="nv" aria-label="${tr("u_menu_principal")}">${navb("nl")}</nav><button class="bt tm" data-a="esp">${btl()}</button><button class="mb" data-a="mnu" aria-label="${tr("u_menu")}" aria-expanded="${S.menu ? "true" : "false"}" aria-controls="mnav">${ic(S.menu ? "x" : "menu", 26)}</button></div>${S.menu ? `<nav id="mnav" class="mnv" aria-label="${tr("u_menu_principal")}">${navb("ml")}</nav>` : ""}</header>`;
 const bnP = () => {
   const u = bnUrl();
   return u
-    ? `<picture class="hph"><source media="(max-width:720px)" srcset="${esc(u)}-m.webp"><img class="bn" src="${esc(u)}.webp" alt="Mairie de ${esc(cnm())}" fetchpriority="high" decoding="async"></picture>`
+    ? `<picture class="hph"><source media="(max-width:720px)" srcset="${esc(bnM())}"><img class="bn" src="${esc(u)}" alt="Mairie de ${esc(cnm())}" fetchpriority="high" decoding="async"></picture>`
     : "";
 };
 const hero = () =>
