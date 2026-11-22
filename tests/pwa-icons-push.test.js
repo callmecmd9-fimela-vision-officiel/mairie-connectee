@@ -17,7 +17,7 @@ assert.match(dm, /data-m="lnkicons"/); assert.match(dm, /contentType:"image\/png
 assert.match(rd("mairie.html"), /\/js\/icons\.js/);
 // --- manifest citoyen : icônes de la commune seulement si elles existent (HEAD), sinon icônes neutres
 const ct = compact(rd("js/citoyen.js"));
-assert.match(ct, /method:"HEAD"/); assert.match(ct, /identite\/"\+S\.cid\+"\/"/); assert.match(ct, /icon-defaut-192\.png/);
+assert.match(ct, /method:"HEAD"/); assert.match(ct, /icones-pwa\/"\+S\.cid\+"\/"/); assert.match(ct, /icon-defaut-192\.png/);
 assert.match(ct, /apple-touch-icon/);
 // --- push : service worker, client, Edge Function, migration proposée (non appliquée)
 const sw = rd("sw.js");

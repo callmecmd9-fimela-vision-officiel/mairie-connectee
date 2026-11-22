@@ -502,7 +502,7 @@ function manifest() {
       { src: o + "/icon-defaut-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
       { src: o + "/icon-defaut-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" }
     ];
-    const ib = URLS + "/storage/v1/object/public/identite/" + S.cid + "/";
+    const ib = URLS + "/storage/v1/object/public/icones-pwa/" + S.cid + "/";
     if (b && S.icn === undefined && typeof fetch == "function") {
       S.icn = null;
       try {
@@ -526,7 +526,7 @@ function manifest() {
         { src: ib + "icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" }
       ];
       touchIcon(ib + "icon-192.png");
-    } else if (b) ic.unshift({ src: b, sizes: "512x512", type: "image/webp", purpose: "any" });
+    }
     const m = {
       id: "/?c=" + S.slug,
       name: "Mairie de " + S.co,

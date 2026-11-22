@@ -179,13 +179,13 @@ SP.administration.subs.push(["lienc", "Lien citoyen"]);
 RP.lienc = ["maire", "cabinet", "secretariat"];
 SPL.lienc = "Lien citoyen et QR code";
 SUB.lienc = lienc;
-/* icônes PNG de la PWA citoyenne (192, 512, maskable) générées depuis le blason et la couleur, publiées dans le bucket public « identite » */
+/* icônes PNG de la PWA citoyenne (192, 512, maskable) générées depuis le blason et la couleur, publiées dans le bucket public « icones-pwa » (le bucket « identite » reste privé) */
 async function pubIcons(bl, col) {
   if (!window.mcIcons) throw new Error("Générateur d’icônes indisponible : rechargez la page.");
   const o = await mcIcons.make(bl, { color: col || S.ind.couleur, name: S.co });
   let n = 0;
   for (const k of Object.keys(o)) {
-    const up = await sb.storage.from("identite").upload(S.cid + "/" + k, o[k], { upsert: true, contentType: "image/png" });
+    const up = await sb.storage.from("icones-pwa").upload(S.cid + "/" + k, o[k], { upsert: true, contentType: "image/png" });
     if (up.error) throw new Error(up.error.message);
     n++;
   }
