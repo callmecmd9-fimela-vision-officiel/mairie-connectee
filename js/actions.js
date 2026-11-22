@@ -1029,6 +1029,19 @@ document.addEventListener("click", async e => {
             o[k] = pa;
             await run(sb.from("indicateurs").upsert(o));
             if (!S.err) S.err = "Image enregistrée (" + kb(bl.size) + ").";
+            /* blason et bannière : publication automatique vers l'application citoyenne (même routine que les boutons « Publier ») */
+            if (!S.err.startsWith("Envoi") && (k == "bandeau" || k == "blason")) {
+              const want = k == "bandeau" ? "lnkbandeau" : "lnkblason";
+              (async () => {
+                for (let n = 0; n < 25 && S.ind[k] !== pa; n++) await new Promise(r => setTimeout(r, 200));
+                const b = document.createElement("button");
+                b.dataset.m = want;
+                b.hidden = true;
+                document.body.appendChild(b);
+                b.click();
+                b.remove();
+              })();
+            }
           }
         } else S.err = "Choisissez d’abord une image.";
       }
