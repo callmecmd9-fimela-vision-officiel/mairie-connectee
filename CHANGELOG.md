@@ -1,5 +1,6 @@
 # CHANGELOG
 
+- Espace mairie : bouton « Couleur par défaut » (vert #0B5A2E) à côté de « Enregistrer la couleur ».
 - Portail : plus d’appel `mes_rdvs` sans session (401 à chaque visite) ; couleur trop claire refusée avec message explicite dans l’espace mairie.
 - Audit des droits par rôle (docs/AUDIT_DROITS_2026-11-22.md) ; accueil adapté au poste dans l’interface unique ; module « Territoire » retiré du cabinet (non autorisé côté serveur).
 - Installation Android : manifeste par commune servi par une URL réelle (Edge Function `manifest-commune`, déployée en production) ; repli automatique sur le manifeste local si indisponible.

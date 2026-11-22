@@ -171,7 +171,7 @@ const lienc = () => {
     pn(
       "Identité affichée aux citoyens",
       "gear",
-      `<p>Couleur principale de l’application citoyenne (choisissez une couleur assez foncée pour que le texte blanc reste lisible).</p><p><input id="lc_co" type="color" value="${esc(col)}" aria-label="Couleur principale" data-sty="max-width:90px"> <button class="bo" data-m="lnkcolor">Enregistrer la couleur</button></p><p data-sty="margin-top:14px">Blason : après l’avoir envoyé dans Paramètres &gt; Images, publiez-le pour l’afficher sur l’application citoyenne ; les icônes PNG de l’application (écran d’accueil, couleur de la commune) sont créées automatiquement. À refaire si vous changez de blason.</p><p><button class="bo" data-m="lnkblason">Publier le blason et les icônes</button> <button class="bo" data-m="lnkicons">Régénérer les icônes</button></p><p data-sty="margin-top:14px">Photo de la mairie (bannière d’accueil) : après l’avoir envoyée dans Paramètres &gt; Images (« Bandeau d’accueil »), publiez-la. Elle est réduite automatiquement pour l’ordinateur et pour le téléphone. À refaire si vous changez de photo.</p><p><button class="bo" data-m="lnkbandeau">Publier la photo de bannière</button></p>`
+      `<p>Couleur principale de l’application citoyenne (choisissez une couleur assez foncée pour que le texte blanc reste lisible).</p><p><input id="lc_co" type="color" value="${esc(col)}" aria-label="Couleur principale" data-sty="max-width:90px"> <button class="bo" data-m="lnkcolor">Enregistrer la couleur</button> <button class="bo" data-m="lnkcolordef">Couleur par défaut</button></p><p data-sty="margin-top:14px">Blason : après l’avoir envoyé dans Paramètres &gt; Images, publiez-le pour l’afficher sur l’application citoyenne ; les icônes PNG de l’application (écran d’accueil, couleur de la commune) sont créées automatiquement. À refaire si vous changez de blason.</p><p><button class="bo" data-m="lnkblason">Publier le blason et les icônes</button> <button class="bo" data-m="lnkicons">Régénérer les icônes</button></p><p data-sty="margin-top:14px">Photo de la mairie (bannière d’accueil) : après l’avoir envoyée dans Paramètres &gt; Images (« Bandeau d’accueil »), publiez-la. Elle est réduite automatiquement pour l’ordinateur et pour le téléphone. À refaire si vous changez de photo.</p><p><button class="bo" data-m="lnkbandeau">Publier la photo de bannière</button></p>`
     )
   );
 };
@@ -218,8 +218,8 @@ document.addEventListener("click", async e => {
         return;
       }
       throw new Error("Affiche indisponible : le QR code n’est pas chargé. Réessayez dans un instant.");
-    } else if (m == "lnkcolor") {
-      const c = g("lc_co");
+    } else if (m == "lnkcolor" || m == "lnkcolordef") {
+      const c = m == "lnkcolordef" ? "#0b5a2e" : g("lc_co");
       if (!/^#[0-9a-fA-F]{6}$/.test(c)) throw new Error("Couleur invalide.");
       /* même règle que le portail citoyen : texte blanc lisible (luminance < 0,3), sinon la couleur serait ignorée */
       const lum = [1, 3, 5]
