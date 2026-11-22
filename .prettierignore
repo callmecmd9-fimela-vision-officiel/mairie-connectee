@@ -3,3 +3,4 @@ js/leaflet.js
 js/qr.js
 js/*.test.js
 js/smoke.js
+js/mdp-policy.js

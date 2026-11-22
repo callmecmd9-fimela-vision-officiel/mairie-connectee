@@ -1,5 +1,5 @@
 # Correspondance dépôt ↔ historique de production (relevé en lecture seule le 2026-11-22, projet aiqegpijisspankpkwfj)
-Toutes les migrations du dépôt sont **appliquées en production** (le ZIP MAJ16 les croyait en attente). Ne rien rejouer.
+Toutes les migrations du dépôt sont **appliquées en production** (le ZIP MAJ16 les croyait en attente), y compris la dernière ligne du tableau ci-dessous. Ne rien rejouer.
 
 | Fichier du dépôt | Version en production | État |
 |---|---|---|
@@ -18,6 +18,7 @@ Toutes les migrations du dépôt sont **appliquées en production** (le ZIP MAJ1
 | proposed/20261121_sms_outbox.sql | 20261121130621 | appliquée (SMS inactifs par commune) |
 | proposed/20261121_sms_triggers.sql | 20261121130628 | appliquée |
 | 20261122081303_perf_fk_indexes_et_initplan_restrictives.sql | 20261122081303 | **appliquée le 2026-11-22** (7 index de clés étrangères, 2 policies RESTRICTIVE en `(select auth.jwt())`) |
+| 20261123090000_politique_mot_de_passe_30_jours.sql | 20261122214824 | **appliquée le 2026-11-22** après test en transaction annulée (17 comptes suivis, RLS active, `anon` sans accès ; `js/mdp-policy.js` à déployer pour activer l'alerte) |
 
 Les instructions des migrations appliquées ont été compactées par l'outil d'application (tailles différentes) : ne pas comparer octet par octet.
 
