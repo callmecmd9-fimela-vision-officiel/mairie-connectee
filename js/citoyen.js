@@ -1162,7 +1162,8 @@ const KR = () => "mc_r_" + S.slug,
   };
 async function loadRdv() {
   try {
-    S.rv = S.slug ? (await sb.rpc("mes_rdvs", { p_commune: S.slug, p_numeros: getR() })).data || [] : [];
+    const ses = S.slug ? (sb.auth && typeof sb.auth.getSession == "function" ? ((await sb.auth.getSession()).data || {}).session : true) : null;
+    S.rv = ses || (S.slug && getR().length) ? (await sb.rpc("mes_rdvs", { p_commune: S.slug, p_numeros: getR() })).data || [] : [];
   } catch (e) {
     S.rv = S.rv || [];
   }

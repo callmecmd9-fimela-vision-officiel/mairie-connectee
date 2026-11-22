@@ -221,6 +221,12 @@ document.addEventListener("click", async e => {
     } else if (m == "lnkcolor") {
       const c = g("lc_co");
       if (!/^#[0-9a-fA-F]{6}$/.test(c)) throw new Error("Couleur invalide.");
+      /* même règle que le portail citoyen : texte blanc lisible (luminance < 0,3), sinon la couleur serait ignorée */
+      const lum = [1, 3, 5]
+        .map(i => parseInt(c.slice(i, i + 2), 16) / 255)
+        .map(x => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4)));
+      if (0.2126 * lum[0] + 0.7152 * lum[1] + 0.0722 * lum[2] >= 0.3)
+        throw new Error("Couleur trop claire : le texte blanc ne serait pas lisible. Choisissez une couleur plus foncée.");
       const r = await sb.from("indicateurs").upsert({ commune_id: S.cid, couleur: c });
       if (r.error) throw new Error(r.error.message);
       S.ind.couleur = c;
