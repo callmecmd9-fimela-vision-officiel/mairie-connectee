@@ -140,7 +140,9 @@ const pn = (t, b, r = "") => `<section class="pn"><header class="ph"><h2>${t}</h
     `<div class="sx-tile${w ? " warn" : ""}"><div class="sx-ti">${ic(i)}</div><div><div class="sx-tv">${v}</div><div class="sx-tl">${l}</div></div></div>`;
 const rw = (a, b) => `<div class="rw"><div class="rl">${a}</div><div>${b}</div></div>`,
   tg = (t, c, a = "", x = "") =>
-    a ? `<button class="tg ${c}" data-a="${a}" ${x}>${esc(t)}</button>` : `<span class="tg ${c}" data-sty="cursor:default">${esc(t)}</span>`;
+    a
+      ? `<button class="tg ${c}" data-a="${a}" ${x}>${esc(t)}</button>`
+      : `<span class="tg ${c}" data-sty="cursor:default">${esc(t)}</span>`;
 const inp = (id, l, v = "", ty = "text", x = "") =>
   `<div><label for="${id}">${l}</label><input id="${id}" type="${ty}" value="${esc(v)}" ${x}></div>`;
 const slugify = s =>

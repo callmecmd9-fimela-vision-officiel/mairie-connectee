@@ -16,7 +16,6 @@
   }
   scan(document.documentElement);
   new MutationObserver(function (ms) {
-    for (var i = 0; i < ms.length; i++)
-      for (var j = 0; j < ms[i].addedNodes.length; j++) scan(ms[i].addedNodes[j]);
+    for (var i = 0; i < ms.length; i++) for (var j = 0; j < ms[i].addedNodes.length; j++) scan(ms[i].addedNodes[j]);
   }).observe(document.documentElement, { childList: true, subtree: true });
 })();

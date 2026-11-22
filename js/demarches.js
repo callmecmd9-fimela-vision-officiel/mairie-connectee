@@ -291,7 +291,11 @@ document.addEventListener("click", async e => {
         " téléphone) : elle s’affiche maintenant sur l’application citoyenne.";
       const bk = sb.storage.from("identite"),
         vf = typeof bk.createSignedUrl == "function" ? await bk.createSignedUrl(S.cid + "/bandeau.webp", 60) : { data: true };
-      if (vf.error || !vf.data) S.err = "Fichier envoyé mais introuvable après publication (" + ((vf.error && vf.error.message) || "inconnu") + ") : contactez le support.";
+      if (vf.error || !vf.data)
+        S.err =
+          "Fichier envoyé mais introuvable après publication (" +
+          ((vf.error && vf.error.message) || "inconnu") +
+          ") : contactez le support.";
     }
   } catch (x) {
     S.err = x.message || "Erreur réseau.";

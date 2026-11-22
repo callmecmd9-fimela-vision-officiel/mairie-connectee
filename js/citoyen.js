@@ -721,9 +721,7 @@ const pick = () =>
 const unread = () => (S.nt || []).filter(n => !n.lu).length,
   btl = () => "Mon espace" + (S.user && unread() ? " (" + unread() + ")" : "");
 const logo = () =>
-  blUrl()
-    ? `<img class="bz c-bz56" src="${esc(blUrl())}" alt="Blason de la commune de ${esc(cnm())}" width="56" height="56">`
-    : SHIELD;
+  blUrl() ? `<img class="bz c-bz56" src="${esc(blUrl())}" alt="Blason de la commune de ${esc(cnm())}" width="56" height="56">` : SHIELD;
 /* --- En-tête commun à tous les écrans : logo, nom, navigation, Mon espace, menu mobile --- */
 const NAVL = [
   ["top", "Accueil"],
@@ -1008,8 +1006,7 @@ const ecRec = () => {
   const k = ecK(),
     d = S.d,
     m = d.ecm || "n",
-    row = (a, b) =>
-      b ? `<div class="rw c-cdf"><span class="mu">${a}</span><b class="c-tar">${esc(b)}</b></div>` : "";
+    row = (a, b) => (b ? `<div class="rw c-cdf"><span class="mu">${a}</span><b class="c-tar">${esc(b)}</b></div>` : "");
   return `${head()}<main id="mc" class="mn nh">${msgs()}<div class="cd"><button class="lk c-cg" data-a="ecedit">${tr("u_modifier")}</button><h1>${tr("u_verifiez_votre_demande")}</h1>${row("Document", "Extrait d’acte de " + ECL[k])}${row(tr("v_personne_concernee"), d.ecp)}${row("Conjoint", d.ecc)}${m == "n" ? row("N° d’acte", d.ecn) + row(tr("v_annee"), d.eca) : row(tr("v_pieces_jointes"), (d.files || []).map(f => f.name).join(", "))}${row("Demandeur", d.fn)}${row(tr("v_telephone"), d.ft)}<p class="mu sm">Le document se retire en mairie. ${S.user ? tr("v_vous_serez_prevenu_dans") : tr("v_gardez_le_numero_de")}</p>${S.user ? "" : '<div id="ts"></div>'}<p><button class="bt" id="sd" data-a="send">${tr("u_envoyer_ma_demande")}</button> <button class="bo" data-a="ecedit">${tr("u_modifier2")}</button></p></div></main>`;
 };
 /* Lot 4 : formulaires par modèle (identite, legalisation, foncier, social ; libre = formulaire générique) */
@@ -1131,8 +1128,7 @@ const modRec = () => {
   const x = dmSel(),
     m = MD[x.modele],
     d = S.d,
-    row = (a, b) =>
-      b ? `<div class="rw c-cdf"><span class="mu">${esc(a)}</span><b class="c-tar">${esc(b)}</b></div>` : "";
+    row = (a, b) => (b ? `<div class="rw c-cdf"><span class="mu">${esc(a)}</span><b class="c-tar">${esc(b)}</b></div>` : "");
   return `${head()}<main id="mc" class="mn nh">${msgs()}<div class="cd"><button class="lk c-cg" data-a="medit">${tr("u_modifier")}</button><h1>${tr("u_verifiez_votre_demande")}</h1>${row(tr("u_demarche"), x.titre)}${m.f.map(f => row(f[1], d.mf[f[0]])).join("")}${row(tr("v_pieces_jointes"), (d.files || []).map(f => f.name).join(", "))}${row("Frais", frX(x))}${row("Service", svOf(x))}${row("Demandeur", d.fn)}${row(tr("v_telephone"), d.ft)}${x.retrait ? `<p class="mu sm">${esc(x.retrait)}</p>` : ""}${S.user ? "" : '<div id="ts"></div>'}<p><button class="bt" id="sd" data-a="send">${tr("u_envoyer_ma_demande")}</button> <button class="bo" data-a="medit">${tr("u_modifier2")}</button></p></div></main>`;
 };
 /* Lot 6 : rendez-vous. Le citoyen propose une date ; le service confirme (jamais automatique). */
@@ -1162,7 +1158,11 @@ const KR = () => "mc_r_" + S.slug,
   };
 async function loadRdv() {
   try {
-    const ses = S.slug ? (sb.auth && typeof sb.auth.getSession == "function" ? ((await sb.auth.getSession()).data || {}).session : true) : null;
+    const ses = S.slug
+      ? sb.auth && typeof sb.auth.getSession == "function"
+        ? ((await sb.auth.getSession()).data || {}).session
+        : true
+      : null;
     S.rv = ses || (S.slug && getR().length) ? (await sb.rpc("mes_rdvs", { p_commune: S.slug, p_numeros: getR() })).data || [] : [];
   } catch (e) {
     S.rv = S.rv || [];
