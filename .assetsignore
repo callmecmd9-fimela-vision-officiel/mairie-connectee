@@ -21,3 +21,19 @@ supabase/
 docs/
 .env.example
 test-results/
+package.json
+package-lock.json
+CODEOWNERS
+# --- Liste blanche (D-A1, 2026-11-22) : tout ce qui est à la racine est exclu SAUF ce qui est listé ci-dessous.
+# Un nouveau fichier ajouté à la racine n'est donc PAS publié tant qu'il n'est pas autorisé ici.
+/*
+!/index.html
+!/mairie.html
+!/confidentialite.html
+!/saas.html
+!/sw.js
+!/_headers
+!/manifest-*.webmanifest
+!/icon-*.png
+!/css/
+!/js/

@@ -35,3 +35,7 @@ Espace `/saas` > Gestion des mairies > Nouvelle mairie. Puis, dans `/mairie` : P
 - Appliquées en production : security_null_mfa_guards, ia_usage_atomic_reservations (historique cohérent). Non appliquées : 20261120100000 (répétition requise) et suppression de l index doublon communes_slug_uq (proposée dans supabase/proposed/, accord requis). bright-worker : inerte, suppression soumise à accord.
 - Edge Functions déployées = sources du dépôt (saas-admin v3, sa-admin v15, admin-comptes v10, bright-worker v4, purge-pieces v2, ia-texte v9).
 - Décision : toute suppression de ressource et toute migration fonctionnelle de production restent soumises à autorisation explicite ; ZIP de référence : SAAS_MUNICIPAL_MAJ4.zip.
+
+## Sauvegarde et publication (MAJ17)
+- Sauvegarde chiffrée : créer les secrets GitHub `SUPABASE_DB_URL` et `BACKUP_PASSPHRASE` (voir `docs/SAUVEGARDE.md`).
+- Publication : seuls les fichiers listés en liste blanche dans `.assetsignore` sont servis ; tout nouveau fichier public (page, dossier) doit y être ajouté, et `tests/assets-ignore.test.js` mis à jour.

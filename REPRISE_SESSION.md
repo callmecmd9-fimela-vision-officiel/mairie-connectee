@@ -32,3 +32,9 @@ Base : sauvegarde MAJ4 (MAJ5.zip non reçu). Ajouts : `js/icons.js`, `js/i18n.js
 
 ## Session 2026-11-21 (MAJ6)
 Base : MAJ5.zip. Production en lecture seule. Voir CHANGELOG « MAJ6 », `supabase/PRODUCTION_VERSION_MAP.md`, `test-results/RESULTATS_TESTS_2026-11-21_MAJ6.txt`. Suite complète : `for t in tests/*.test.js js/*.test.js js/smoke.js; do node $t; done` (npm i jsdom) ; PostgreSQL jetable : `tests/postgres/{roles-admin-mairie,org-role-droit-set,notifications-sms,org-kpi}-integration.sh` ; navigateur : `tests/browser/run.sh`. ZIP de référence : SAAS_MUNICIPAL_MAJ6.zip.
+
+## Session 2026-11-22 (MAJ17)
+Base : SAAS_MUNICIPAL_MAJ16_COMPLET. Production non touchée, SMS exclu. Voir CHANGELOG « MAJ17 » et TASKS.md (assaini). Suite : `npm i` puis `npm test` (ou `for t in tests/*.test.js js/*.test.js js/smoke.js; do node $t; done` avec jsdom). ZIP de référence : SAAS_MUNICIPAL_MAJ17_COMPLET.zip.
+
+## Session 2026-11-22 (MAJ18)
+Base : MAJ17. Production relevée : tout est appliqué (voir `supabase/PRODUCTION_VERSION_MAP.md`) ; seule écriture : migration perf `20261122081303`. Code JS formaté (Prettier) : lancer `npm run format` avant commit ; tests : `npm test`. ZIP de référence : SAAS_MUNICIPAL_MAJ18_COMPLET.zip.

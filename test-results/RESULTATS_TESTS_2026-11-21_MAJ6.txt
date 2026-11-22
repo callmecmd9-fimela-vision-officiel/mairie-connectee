@@ -1,0 +1,40 @@
+Session 2026-11-21 (MAJ6) — tests REELLEMENT executes (node v22, PostgreSQL 16 local jetable, Chromium Playwright ; aucune ecriture en production)
+REEL PASS  tests/a11y.test.js
+REEL PASS  tests/assets-ignore.test.js
+REEL PASS  tests/catalogue.test.js
+REEL PASS  tests/citoyen-compte.test.js
+REEL PASS  tests/citoyen-etatcivil.test.js
+REEL PASS  tests/citoyen-info.test.js
+REEL PASS  tests/citoyen-nav.test.js
+REEL PASS  tests/citoyen-rdv-creneaux.test.js
+REEL PASS  tests/citoyen-rdv.test.js
+REEL PASS  tests/citoyen.test.js
+REEL PASS  tests/edge-function-config.test.js
+REEL PASS  tests/enhance.test.js
+REEL PASS  tests/i18n.test.js
+REEL PASS  tests/ia-texte-auth.test.js
+REEL PASS  tests/ia-texte-quota.test.js
+REEL PASS  tests/lien-citoyen.test.js
+REEL PASS  tests/mairie-mfa.test.js
+REEL PASS  tests/mairie-rdv-planning.test.js
+REEL PASS  tests/migration-history-integrity.test.js
+REEL PASS  tests/org-d.test.js
+REEL PASS  tests/org-e.test.js
+REEL PASS  tests/org-f.test.js
+REEL PASS  tests/org-permissions-loader.test.js
+REEL PASS  tests/org.test.js
+REEL PASS  tests/pwa-icons-push.test.js
+REEL PASS  tests/roles-admin-mairie.test.js
+REEL PASS  tests/saas-invitation.test.js
+REEL PASS  tests/security-null-guards.test.js
+REEL PASS  tests/sms-architecture.test.js
+REEL PASS  tests/superadmin-edge-contract.test.js
+REEL PASS  tests/sw-csp.test.js
+REEL PASS  js/bandeau.test.js
+REEL PASS  js/smoke.js
+REEL PASS  tests/postgres/roles-admin-mairie-integration.sh (59 assertions OK)
+REEL PASS  tests/postgres/org-role-droit-set-integration.sh (74 assertions OK)
+REEL PASS  tests/postgres/notifications-sms-integration.sh (92 assertions OK)
+REEL PASS  tests/postgres/org-kpi-integration.sh (71 assertions OK)
+REEL        tests/browser/run.sh : BILAN UI : 53/53 OK, 0 échec(s)
+NON EXECUTES (impossible ici) : tests/postgres/ia-usage-concurrency.sh et security-guards-integration.sh non rejoues cette session ; Edge Functions reelles (Deno/staging absents) ; push/SMS reels (VAPID, fournisseur) ; appareils reels.

@@ -60,3 +60,11 @@ Il enchaîne, avec la session MFA du super admin : saas_preparer_admin_mairie �
 - Supprimer : réservé aux mairies ARCHIVÉES, slug re-saisi, et totalement vides (seuls abonnement, indicateurs, compteurs auto et admin_mairie tolérés). Le compte admin_mairie est libéré (citoyen), jamais supprimé. Journalisé dans platform_audit.
 - Pas d'archivage/suppression de compte : utiliser Désactiver (conserve l'historique).
 - Site : saas.html + js/saas.js (v=20261121.4) + css/saas.css.
+
+## Espace admin municipal (migration 20261121120000 + js/admin-mairie.js)
+Cause du menu réduit : le menu complet (10 entrées) est celui du rôle super_admin (plateforme, MFA). Un admin_mairie n'avait que Accueil + Administration.
+Nouveau menu admin_mairie, limité à SA mairie : Tableau de bord, Utilisateurs de la mairie (consultation), Paramètres de la mairie (identité/coordonnées),
+Journal d'audit, puis Accueil et Administration (organigramme et droits, services et équipes, délégations).
+Exclus volontairement : sauvegardes, maintenance, sécurité globale, modules, création/activation de comptes.
+Garde serveur : public._garde_am (admin_mairie actif de la commune demandée, ou super-admin existant). Testée : lecture d'une autre mairie refusée.
+Déploiement site : mairie.html, js/core.js, js/admin-mairie.js (+ saas.html, js/saas.js, css/saas.css déjà livrés).

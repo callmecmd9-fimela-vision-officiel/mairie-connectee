@@ -29,7 +29,7 @@ function inp(id,label,type='text',value='',placeholder='',extra=''){return '<lab
 function sel(id,label,options,value){return '<label>'+label+'<select id="'+id+'">'+options.map(x=>'<option value="'+x[0]+'"'+(x[0]===value?' selected':'')+'>'+x[1]+'</option>').join('')+'</select></label>';}
 const ctx = {
   console, Date, Promise, Math, Number, confirm:()=>true,
-  S:{pr:'maire',sa:false,cid:'cid-fimela',co:'Fimela',cs:[{id:'cid-fimela',slug:'fimela',nom:'Fimela'}],tab:{},err:''},
+  S:{pr:'admin_mairie',sa:false,cid:'cid-fimela',co:'Fimela',cs:[{id:'cid-fimela',slug:'fimela',nom:'Fimela'}],tab:{},err:''},
   SP:{administration:{subs:[]}}, RP:{}, SPL:{}, SUB:{}, SANAV:[], V:{}, sb,
   slug:()=> 'fimela', render(){}, esc:x=>String(x??''),
   pn:(title,icon,body,right='')=>'<section><h2>'+title+'</h2>'+right+body+'</section>',
@@ -49,7 +49,7 @@ async function click(dataset){
   E('orgfView()');
   await new Promise(resolve=>setTimeout(resolve,0));
   let html=E('orgfView()');
-  ok('module ajouté au menu Administration, réservé au maire',ctx.SP.administration.subs.some(x=>x[0]==='orgf')&&ctx.RP.orgf[0]==='maire');
+  ok('module ajouté au menu Administration, réservé à l\'admin municipal',ctx.SP.administration.subs.some(x=>x[0]==='orgf')&&ctx.RP.orgf[0]==='admin_mairie');
   ok('chargement par slug et lecture KPI',calls.some(x=>x[0]==='org_sa_organigramme'&&x[1].p_commune==='fimela')&&calls.some(x=>x[0]==='org_kpi'));
   ok('services affichés depuis la réponse serveur',/Administration/.test(html));
   E('S.tab.orgf="agents"'); html=E('orgfView()');
@@ -58,13 +58,18 @@ async function click(dataset){
   ok('historique des affectations visible',/Responsable technique/.test(html)&&/2026-01-01/.test(html));
   E('S.tab.orgf="kpi"'); html=E('orgfView()');
   ok('indicateurs agrégés clairement distingués des KPI individuels',/Indicateurs de la commune/.test(html)&&/ventilation individuelle par poste/.test(html)&&/7/.test(html));
+  ok('nouveaux indicateurs : demandes anciennes et RDV',/Rendez-vous à confirmer/.test(html)&&/plus de 15 jours/.test(html));
+  E('ORGF.kpi={profil:"admin_mairie",services:3,postes:5,affectations:4,roles:6,citoyens:null,projets:null}'); html=E('orgfView()');
+  ok('admin_mairie : structure affichée, aucun indicateur métier ni « 0 » trompeur',/Services actifs/.test(html)&&/Postes actifs/.test(html)&&!/Demandes citoyennes/.test(html)&&!/Paies à traiter/.test(html)&&/réservés aux postes concernés/.test(html));
+  E('ORGF.kpi={profil:"metier",services:1,postes:1,affectations:1,roles:1,citoyens:null}'); html=E('orgfView()');
+  ok('valeur null rendue « — » (et non 0)',/Demandes citoyennes<\/div><div class="kv">—/.test(html));
   E('S.tab.orgf="postes"'); html=E('orgfView()');
   ok('postes vacants et modification de poste visibles',/Poste vacant/.test(html)&&/Modifier/.test(html)&&/Nouveau poste/.test(html));
   E('S.tab.orgf="roles";ORGF.roleSelected="resp_tech"'); html=E('orgfView()');
   ok('rôles et droits chargés depuis la RPC dédiée',/Responsable technique/.test(html)&&/Droits du rôle/.test(html)&&/Consulter/.test(html));
   E('S.pr="super_admin";S.sa=true;S.cs=[{id:"cid-fimela",slug:"fimela",nom:"Fimela"}]'); html=E('orgfView()');
   ok('super-administrateur : sélection de commune et écran organigramme',/Commune gérée/.test(html)&&ctx.SANAV.some(x=>x[0]==='sa_org')&&typeof ctx.V.sa_org==='function');
-  E('S.pr="maire";S.sa=false');
+  E('S.pr="admin_mairie";S.sa=false');
 
   els.of_sc={value:'Code Invalide'}; els.of_sn={value:'Test'}; els.of_st={value:'service'}; els.of_sp={value:''}; els.of_sr={value:''}; els.of_sa={value:'1'};
   const before=calls.length;
@@ -103,7 +108,7 @@ async function click(dataset){
 
   E('S.pr="agent";S.sa=false;ORGF.data=null;ORGF.loading=false');
   const count=calls.length; html=E('orgfView()');
-  ok('autre rôle : écran refusé sans appel de données',/réservée au maire/.test(html)&&calls.length===count);
+  ok('autre rôle : écran refusé sans appel de données',/réservée à l’administrateur municipal/.test(html)&&calls.length===count);
   console.log(failures?'ECHECS: '+failures:'TOUS OK');
   process.exit(failures?1:0);
 })();

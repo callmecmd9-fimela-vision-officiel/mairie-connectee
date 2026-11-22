@@ -1,71 +1,481 @@
 /* Lot B : organigramme, rôles, droits, affectations, délégations (Administration > Organigramme et droits).
    Affichage seulement : les droits réels sont contrôlés côté serveur (org_droit, fonctions org_*). */
-const ORG={ok:0,ld:0,R:[],P:[],A:[],G:[],DR:[],U:[],sr:"",ep:null};
-const ORGM=[["cabinet","Cabinet du maire"],["instr","Instructions"],["rapports","Rapports"],["cin","Courrier entrant"],["cout","Courrier sortant"],["actes","Actes"],["dossiers","Dossiers"],["archives","Archives"],["conseil","Conseil municipal"],["citoyens","Demandes citoyennes"],["pub","Publications"],["med","Médiathèque"],["budget","Budget"],["marches","Marchés publics"],["regie","Régie"],["personnel","Personnel"],["conges","Congés"],["paie","Paie"],["remun","Rémunérations"],["projets","Projets"],["territoire","Territoire"],["patrimoine","Patrimoine"],["civil","État civil"],["params","Paramètres"],["deleg","Délégations"],["org","Organigramme et droits"]];
-const ORGA=[["consulter","Consulter"],["creer","Créer"],["modifier","Modifier"],["supprimer","Supprimer"],["valider","Valider"],["rejeter","Rejeter"],["signer","Signer"],["exporter","Exporter"],["imprimer","Imprimer"],["partager","Partager"],["administrer","Administrer"]];
+const ORG = { ok: 0, ld: 0, R: [], P: [], A: [], G: [], DR: [], U: [], sr: "", ep: null };
+const ORGM = [
+  ["cabinet", "Cabinet du maire"],
+  ["instr", "Instructions"],
+  ["rapports", "Rapports"],
+  ["cin", "Courrier entrant"],
+  ["cout", "Courrier sortant"],
+  ["actes", "Actes"],
+  ["dossiers", "Dossiers"],
+  ["archives", "Archives"],
+  ["conseil", "Conseil municipal"],
+  ["citoyens", "Demandes citoyennes"],
+  ["pub", "Publications"],
+  ["med", "Médiathèque"],
+  ["budget", "Budget"],
+  ["marches", "Marchés publics"],
+  ["regie", "Régie"],
+  ["personnel", "Personnel"],
+  ["conges", "Congés"],
+  ["paie", "Paie"],
+  ["remun", "Rémunérations"],
+  ["projets", "Projets"],
+  ["territoire", "Territoire"],
+  ["patrimoine", "Patrimoine"],
+  ["civil", "État civil"],
+  ["params", "Paramètres"],
+  ["deleg", "Délégations"],
+  ["org", "Organigramme et droits"]
+];
+const ORGA = [
+  ["consulter", "Consulter"],
+  ["creer", "Créer"],
+  ["modifier", "Modifier"],
+  ["supprimer", "Supprimer"],
+  ["valider", "Valider"],
+  ["rejeter", "Rejeter"],
+  ["signer", "Signer"],
+  ["exporter", "Exporter"],
+  ["imprimer", "Imprimer"],
+  ["partager", "Partager"],
+  ["administrer", "Administrer"]
+];
 /* droits de consultation du poste de l'utilisateur connecté : alimente can() (affichage des écrans) */
-const orgCan=k=>{const o=S.orgMy;if(!o||S.sa||S.pr=="maire"||S.pr=="admin_mairie"||(S.mod||{})[k]===false)return false;if(S.pu&&k in S.pu)return false;return o.has("consulter|"+k)};
-async function orgMine(){
- S.orgMy=null;
- if(!S.uid||S.sa||S.pr=="maire"||S.pr=="admin_mairie")return;
- try{
-  const today=new Date().toISOString().slice(0,10);
-  const ar=await sb.from("org_affectations").select("poste_code,debut,fin").eq("user_id",S.uid).eq("actif",true);
-  if(ar.error)throw ar.error;
-  const assignments=(ar.data||[]).filter(x=>x.debut<=today&&(!x.fin||x.fin>=today)).map(x=>x.poste_code);
-  if(!assignments.length)return;
-  const pr=await sb.from("org_postes").select("role_code").in("code",assignments).eq("actif",true);
-  if(pr.error)throw pr.error;
-  const roles=[...new Set((pr.data||[]).map(x=>x.role_code).filter(Boolean))];
-  if(!roles.length)return;
-  let rights=[],offset=0;
-  for(;;){
-   const page=await sb.from("org_role_droits").select("module,action").in("role_code",roles).range(offset,offset+999);
-   if(page.error)throw page.error;
-   rights=rights.concat(page.data||[]);
-   if(!page.data||page.data.length<1000)break;
-   offset+=1000;
-   if(offset>20000)throw new Error("Trop de droits à charger : arrêt de sécurité.");
+const orgCan = k => {
+  const o = S.orgMy;
+  if (!o || S.sa || S.pr == "maire" || S.pr == "admin_mairie" || (S.mod || {})[k] === false) return false;
+  if (S.pu && k in S.pu) return false;
+  return o.has("consulter|" + k);
+};
+async function orgMine() {
+  S.orgMy = null;
+  if (!S.uid || S.sa || S.pr == "maire" || S.pr == "admin_mairie") return;
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const ar = await sb.from("org_affectations").select("poste_code,debut,fin").eq("user_id", S.uid).eq("actif", true);
+    if (ar.error) throw ar.error;
+    const assignments = (ar.data || []).filter(x => x.debut <= today && (!x.fin || x.fin >= today)).map(x => x.poste_code);
+    if (!assignments.length) return;
+    const pr = await sb.from("org_postes").select("role_code").in("code", assignments).eq("actif", true);
+    if (pr.error) throw pr.error;
+    const roles = [...new Set((pr.data || []).map(x => x.role_code).filter(Boolean))];
+    if (!roles.length) return;
+    let rights = [],
+      offset = 0;
+    for (;;) {
+      const page = await sb
+        .from("org_role_droits")
+        .select("module,action")
+        .in("role_code", roles)
+        .range(offset, offset + 999);
+      if (page.error) throw page.error;
+      rights = rights.concat(page.data || []);
+      if (!page.data || page.data.length < 1000) break;
+      offset += 1000;
+      if (offset > 20000) throw new Error("Trop de droits à charger : arrêt de sécurité.");
+    }
+    S.orgMy = new Set(rights.map(x => x.action + "|" + x.module));
+  } catch (e) {
+    S.orgMy = null;
   }
-  S.orgMy=new Set(rights.map(x=>x.action+"|"+x.module));
- }catch(e){S.orgMy=null}
 }
-const _orgLoad0=load;load=async function(o){await _orgLoad0(o);if(!o)await orgMine()};
-async function orgLoad(){ORG.ld=1;try{const q=t=>sb.from(t).select("*"),[r,p,a,g,u]=await Promise.all([q("org_roles").order("nom"),q("org_postes").order("nom"),q("org_affectations").order("created_at",{ascending:false}).limit(500),q("org_delegations_droits").order("created_at",{ascending:false}).limit(200),sb.from("profiles").select("id,nom,role,service,actif").eq("commune_id",S.cid)]);
-if(r.error||p.error)throw 0;let dr=[],off=0;for(;;){const x=await sb.from("org_role_droits").select("role_code,module,action").order("role_code").order("module").order("action").range(off,off+999);if(x.error||!x.data)throw 0;dr=dr.concat(x.data);if(x.data.length<1000||off>20000)break;off+=1000}
-Object.assign(ORG,{R:r.data||[],P:p.data||[],A:a.data||[],G:g.data||[],DR:dr,U:(u&&!u.error&&u.data)||[],ok:1});if(!ORG.sr||!ORG.R.some(x=>x.code==ORG.sr))ORG.sr=(ORG.R[0]||{}).code||""}catch(e){ORG.ok=-1;S.err="Organigramme : chargement impossible. Réessayez (bouton Actualiser)."}ORG.ld=0}
-const orgRn=c=>(ORG.R.find(x=>x.code==c)||{}).nom||c,orgPn=c=>(ORG.P.find(x=>x.code==c)||{}).nom||c;
-const orgUs=()=>(ORG.U.length?ORG.U:D().an.map(x=>({id:x.user_id,nom:x.nom,role:x.role}))).filter(x=>x.actif!==false&&!["citoyen","super_admin"].includes(x.role)),orgUn=i=>{const u=orgUs().find(x=>x.id==i)||ORG.U.find(x=>x.id==i);return u?(u.nom||"Sans nom"):"—"};
-const orgSlug=s=>String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"").slice(0,36);
-const orgHas=(r,m,a)=>ORG.DR.some(x=>x.role_code==r&&x.module==m&&x.action==a);
-const orgTree=()=>{const W=S.pr=="admin_mairie"&&!S.sa,P=ORG.P,ids=new Set(P.map(x=>x.code)),by={};P.forEach(x=>{const k=x.parent_code&&ids.has(x.parent_code)?x.parent_code:"";(by[k]=by[k]||[]).push(x)});
-const w=(k,l,s)=>(by[k]||[]).map(x=>s.includes(x.code)?"":`<div class="rw" style="padding-left:${l*16}px"><div class="rl"><b>${esc(x.nom)}</b> ${x.actif?"":st2("Inactif","rd")}<div class="mut" style="font-size:13px">${esc(orgRn(x.role_code))} · ${ORG.A.filter(a=>a.poste_code==x.code&&a.actif).length} personne(s)</div></div>${W?act2(`<button class="tg" data-m="orgpe" data-id="${esc(x.code)}">Modifier</button>`):""}</div>`+w(x.code,l+1,s.concat(x.code))).join("");return w("",0,[])||emp("Aucun poste. Utilisez « Compléter l’organigramme par défaut ».")};
-const orgPoste=()=>{if(!ORG.ep)return `<p><button class="bo" data-m="orgpn">Nouveau poste</button></p>`;const n=ORG.ep=="new",e=n?{actif:true}:ORG.P.find(x=>x.code==ORG.ep)||{actif:true};
-return pn(n?"Nouveau poste":"Modifier le poste","user",frm(inp("op_nm","Intitulé du poste","text",e.nom||"")+inp("op_fa","Famille (service)","text",e.famille||"")+sel("op_rl","Rôle (droits du poste)",ORG.R.filter(x=>x.actif).map(x=>[x.code,x.nom]),e.role_code||"agent_polyvalent")+sel("op_pa","Poste supérieur",[["","Aucun"]].concat(ORG.P.filter(x=>x.code!=e.code).map(x=>[x.code,x.nom])),e.parent_code||"")+sel("op_ac","Statut",[["1","Actif"],["0","Désactivé"]],e.actif===false?"0":"1"))+`<p style="margin-top:10px"><button class="bt" data-m="orgps" data-id="${esc(n?"":e.code)}">Enregistrer</button> <button class="bo" data-m="orgpx">Annuler</button></p>`)};
-const orgRoles=()=>{const r=ORG.sr,ro=ORG.R.find(x=>x.code==r),W=S.pr=="admin_mairie"&&!S.sa;
-return pn("Rôles","shield",`<div class="sa-ac">${ORG.R.map(x=>`<button class="tg${x.code==r?" ok":""}" data-m="orgrp" data-id="${esc(x.code)}">${esc(x.nom)}</button>`).join("")}</div>`)+
-(ro?pn("Droits du rôle : "+esc(ro.nom),"lock",(r=="maire"?emp("Le maire dispose de tous les droits : non modifiable."):`<p class="mut">Touchez une action pour l’accorder ou la retirer. Vous ne pouvez accorder que des droits que vous détenez. Aucun droit de comptable public n’existe ici : le paiement reste une confirmation externe.</p>`+ORGM.map(m=>`<div class="rw" style="align-items:flex-start"><div class="rl"><b>${esc(m[1])}</b></div><div class="sa-ac" style="margin:0">${ORGA.map(a=>{const on=orgHas(r,m[0],a[0]);return `<button class="tg${on?" ok":""}" data-m="orgdr" data-r="${esc(r)}" data-mo="${m[0]}" data-ac="${a[0]}" data-on="${on?0:1}" aria-pressed="${on}"${W?"":" disabled"}>${a[1]}</button>`}).join("")}</div></div>`).join(""))):"")+
-(W?pn("Créer un rôle personnalisé","user",frm(inp("or_nm","Nom du rôle")+inp("or_ds","Description"))+`<p style="margin-top:10px"><button class="bt" data-m="orgrs">Créer le rôle</button></p>`+emp("Le nouveau rôle n’a aucun droit : accordez-les ensuite ci-dessus.")):"")};
-const orgAff=()=>{const W=S.pr=="admin_mairie"&&!S.sa,t=T;return (W?pn("Affecter une personne à un poste","user",frm(sel("oa_us","Personne",orgUs().map(x=>[x.id,(x.nom||"Sans nom")+" ("+(RL[x.role]||x.role)+")"])) +sel("oa_po","Poste",ORG.P.filter(x=>x.actif).map(x=>[x.code,x.nom]))+inp("oa_d1","Début","date",t)+inp("oa_d2","Fin (facultatif)","date"))+`<p style="margin-top:10px"><button class="bt" data-m="orgas">Affecter</button></p>`+emp("L’affectation donne les droits du rôle du poste. Les accès actuels de la personne restent inchangés.")):"")+
-pn("Affectations","users",ORG.A.map(a=>rw(`<b>${esc(orgUn(a.user_id))}</b><div class="mut" style="font-size:13px">${esc(orgPn(a.poste_code))} · du ${fdd(a.debut)}${a.fin?" au "+fdd(a.fin):""}</div>`,a.actif&&(!a.fin||a.fin>=t)?(W?`<button class="tg rd" data-m="orgae" data-id="${a.id}">Mettre fin</button>`:st2("En cours","ok")):st2("Terminée","")) ).join("")||emp("Aucune affectation."))};
-const orgDel=()=>{const now=new Date(),st=g=>g.revoque_le?["Révoquée","rd"]:new Date(g.fin)<now?["Expirée",""]:new Date(g.debut)>now?["À venir","bl"]:["Active","ok"];
-return pn("Déléguer un droit (temporaire)","brief",frm(sel("od_us","Bénéficiaire",orgUs().filter(x=>x.id!=S.uid).map(x=>[x.id,(x.nom||"Sans nom")+" ("+(RL[x.role]||x.role)+")"]))+sel("od_mo","Module",ORGM)+sel("od_ac","Action",ORGA)+inp("od_d2","Jusqu’au (1 an maximum)","date")+inp("od_mt","Motif"))+`<p style="margin-top:10px"><button class="bt" data-m="orgds">Déléguer</button></p>`+emp("On ne peut déléguer que les droits que l’on détient. Le bénéficiaire ne peut pas les redéléguer. Révocation immédiate possible."))+
-pn("Délégations de droits","brief",ORG.G.map(g=>{const s=st(g);return rw(`<b>${esc(orgUn(g.a_user))}</b> · ${esc((ORGM.find(m=>m[0]==g.module)||[0,g.module])[1])} / ${esc(g.action)}<div class="mut" style="font-size:13px">de ${esc(orgUn(g.de_user))} · ${fdd(String(g.debut).slice(0,10))} → ${fdd(String(g.fin).slice(0,10))}${g.motif?" · "+esc(g.motif):""}</div>`,`<div style="display:grid;gap:4px;justify-items:end">${st2(s[0],s[1])}${s[0]=="Active"||s[0]=="À venir"?`<button class="tg rd" data-m="orgdv" data-id="${g.id}">Révoquer</button>`:""}</div>`)}).join("")||emp("Aucune délégation."))};
-const orgView=()=>{if(!ORG.ok&&!ORG.ld){orgLoad().then(()=>render())}
-if(ORG.ok!=1)return ORG.ok==-1?pn("Organigramme","alert",emp("Chargement impossible.")+`<button class="bo" data-m="orgrf">Actualiser</button>`):emp("Chargement…");
-const t=S.tab.orgt||"org",W=S.pr=="admin_mairie"&&!S.sa;
-return tabs("orgt",[["org","Organigramme"],["roles","Rôles et droits"],["aff","Affectations"]].concat(S.pr=="admin_mairie"?[]:[["del","Délégations"]]))+(t=="org"?pn("Organigramme de "+esc(S.co),"users",orgTree(),W?`<button class="tg" data-m="orgin">Compléter l’organigramme par défaut</button>`:"")+(W?orgPoste():""):t=="roles"?orgRoles():t=="aff"?orgAff():orgDel())};
-SP.administration.subs.push(["org","Organigramme et droits"]);RP.org=["maire","admin_mairie"];SPL.org="Organigramme, rôles et droits";SUB.org=orgView;
-const ORGAC={
-async orgrf(){ORG.ok=0},async orgpn(){ORG.ep="new"},async orgpe(t){ORG.ep=t.dataset.id},async orgpx(){ORG.ep=null},async orgrp(t){ORG.sr=t.dataset.id},
-async orgin(){await rpc("org_init");await orgLoad();S.err="Organigramme complété (rien n’est écrasé)."},
-async orgps(t,g){const n=!t.dataset.id,nm=g("op_nm");if(nm.length<2)throw new Error("L’intitulé est obligatoire.");const code=n?(orgSlug(nm)||"poste")+(ORG.P.some(x=>x.code==orgSlug(nm))?"_"+Date.now().toString(36).slice(-3):""):t.dataset.id;await rpc("org_poste_save",{p_code:code,p_nom:nm,p_famille:g("op_fa")||null,p_role:g("op_rl"),p_parent:g("op_pa")||null,p_service:null,p_actif:g("op_ac")=="1"});ORG.ep=null;await orgLoad();S.err="Poste enregistré."},
-async orgrs(t,g){const nm=g("or_nm");if(nm.length<2)throw new Error("Le nom du rôle est obligatoire.");const code="perso_"+(orgSlug(nm)||"role");await rpc("org_role_save",{p_code:code,p_nom:nm,p_desc:g("or_ds")||null});ORG.sr=code;await orgLoad();ORG.sr=code;S.err="Rôle créé. Accordez-lui ses droits."},
-async orgdr(t){const d=t.dataset,on=d.on=="1";await rpc("org_role_droit_set",{p_role:d.r,p_module:d.mo,p_action:d.ac,p_on:on});if(on)ORG.DR.push({role_code:d.r,module:d.mo,action:d.ac});else ORG.DR=ORG.DR.filter(x=>!(x.role_code==d.r&&x.module==d.mo&&x.action==d.ac));S.keep=true},
-async orgas(t,g){if(!g("oa_us")||!g("oa_po"))throw new Error("Choisissez une personne et un poste.");await rpc("org_affecter",{p_user:g("oa_us"),p_poste:g("oa_po"),p_service:null,p_debut:g("oa_d1")||null,p_fin:g("oa_d2")||null});await orgLoad();S.err="Affectation enregistrée."},
-async orgae(t){if(!confirm("Mettre fin à cette affectation ?"))return;await rpc("org_affectation_fin",{p_id:t.dataset.id});await orgLoad();S.err="Affectation terminée."},
-async orgds(t,g){const f=g("od_d2");if(!g("od_us")||!f)throw new Error("Choisissez le bénéficiaire et la date de fin.");await rpc("org_deleguer",{p_a:g("od_us"),p_module:g("od_mo"),p_action:g("od_ac"),p_debut:null,p_fin:new Date(f+"T23:59:59").toISOString(),p_motif:g("od_mt")||null});await orgLoad();S.err="Délégation enregistrée."},
-async orgdv(t){if(!confirm("Révoquer cette délégation immédiatement ?"))return;await rpc("org_revoquer",{p_id:t.dataset.id});await orgLoad();S.err="Délégation révoquée."}};
-document.addEventListener("click",async e=>{const t=e.target.closest("[data-m^=org]"),f=t&&ORGAC[t.dataset.m];if(!f||S.sa)return;const g=id=>(($("#"+id)||{}).value||"").trim();S.err="";S.keep=false;
-try{await f(t,g)}catch(x){S.err=x&&x.message&&!/fetch|network|Failed/i.test(x.message)?x.message:"Erreur réseau. Réessayez."}
-render();if(!S.keep)window.scrollTo(0,0)});
+const _orgLoad0 = load;
+load = async function (o) {
+  await _orgLoad0(o);
+  if (!o) await orgMine();
+};
+async function orgLoad() {
+  ORG.ld = 1;
+  try {
+    const q = t => sb.from(t).select("*"),
+      [r, p, a, g, u] = await Promise.all([
+        q("org_roles").order("nom"),
+        q("org_postes").order("nom"),
+        q("org_affectations").order("created_at", { ascending: false }).limit(500),
+        q("org_delegations_droits").order("created_at", { ascending: false }).limit(200),
+        sb.from("profiles").select("id,nom,role,service,actif").eq("commune_id", S.cid)
+      ]);
+    if (r.error || p.error) throw 0;
+    let dr = [],
+      off = 0;
+    for (;;) {
+      const x = await sb
+        .from("org_role_droits")
+        .select("role_code,module,action")
+        .order("role_code")
+        .order("module")
+        .order("action")
+        .range(off, off + 999);
+      if (x.error || !x.data) throw 0;
+      dr = dr.concat(x.data);
+      if (x.data.length < 1000 || off > 20000) break;
+      off += 1000;
+    }
+    Object.assign(ORG, {
+      R: r.data || [],
+      P: p.data || [],
+      A: a.data || [],
+      G: g.data || [],
+      DR: dr,
+      U: (u && !u.error && u.data) || [],
+      ok: 1
+    });
+    if (!ORG.sr || !ORG.R.some(x => x.code == ORG.sr)) ORG.sr = (ORG.R[0] || {}).code || "";
+  } catch (e) {
+    ORG.ok = -1;
+    S.err = "Organigramme : chargement impossible. Réessayez (bouton Actualiser).";
+  }
+  ORG.ld = 0;
+}
+const orgRn = c => (ORG.R.find(x => x.code == c) || {}).nom || c,
+  orgPn = c => (ORG.P.find(x => x.code == c) || {}).nom || c;
+const orgUs = () =>
+    (ORG.U.length ? ORG.U : D().an.map(x => ({ id: x.user_id, nom: x.nom, role: x.role }))).filter(
+      x => x.actif !== false && !["citoyen", "super_admin"].includes(x.role)
+    ),
+  orgUn = i => {
+    const u = orgUs().find(x => x.id == i) || ORG.U.find(x => x.id == i);
+    return u ? u.nom || "Sans nom" : "—";
+  };
+const orgSlug = s =>
+  String(s)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 36);
+const orgHas = (r, m, a) => ORG.DR.some(x => x.role_code == r && x.module == m && x.action == a);
+const orgTree = () => {
+  const W = S.pr == "admin_mairie" && !S.sa,
+    P = ORG.P,
+    ids = new Set(P.map(x => x.code)),
+    by = {};
+  P.forEach(x => {
+    const k = x.parent_code && ids.has(x.parent_code) ? x.parent_code : "";
+    (by[k] = by[k] || []).push(x);
+  });
+  const w = (k, l, s) =>
+    (by[k] || [])
+      .map(x =>
+        s.includes(x.code)
+          ? ""
+          : `<div class="rw" data-sty="padding-left:${l * 16}px"><div class="rl"><b>${esc(x.nom)}</b> ${x.actif ? "" : st2("Inactif", "rd")}<div class="mut" data-sty="font-size:13px">${esc(orgRn(x.role_code))} · ${ORG.A.filter(a => a.poste_code == x.code && a.actif).length} personne(s)</div></div>${W ? act2(`<button class="tg" data-m="orgpe" data-id="${esc(x.code)}">Modifier</button>`) : ""}</div>` +
+            w(x.code, l + 1, s.concat(x.code))
+      )
+      .join("");
+  return w("", 0, []) || emp("Aucun poste. Utilisez « Compléter l’organigramme par défaut ».");
+};
+const orgPoste = () => {
+  if (!ORG.ep) return `<p><button class="bo" data-m="orgpn">Nouveau poste</button></p>`;
+  const n = ORG.ep == "new",
+    e = n ? { actif: true } : ORG.P.find(x => x.code == ORG.ep) || { actif: true };
+  return pn(
+    n ? "Nouveau poste" : "Modifier le poste",
+    "user",
+    frm(
+      inp("op_nm", "Intitulé du poste", "text", e.nom || "") +
+        inp("op_fa", "Famille (service)", "text", e.famille || "") +
+        sel(
+          "op_rl",
+          "Rôle (droits du poste)",
+          ORG.R.filter(x => x.actif).map(x => [x.code, x.nom]),
+          e.role_code || "agent_polyvalent"
+        ) +
+        sel(
+          "op_pa",
+          "Poste supérieur",
+          [["", "Aucun"]].concat(ORG.P.filter(x => x.code != e.code).map(x => [x.code, x.nom])),
+          e.parent_code || ""
+        ) +
+        sel(
+          "op_ac",
+          "Statut",
+          [
+            ["1", "Actif"],
+            ["0", "Désactivé"]
+          ],
+          e.actif === false ? "0" : "1"
+        )
+    ) +
+      `<p data-sty="margin-top:10px"><button class="bt" data-m="orgps" data-id="${esc(n ? "" : e.code)}">Enregistrer</button> <button class="bo" data-m="orgpx">Annuler</button></p>`
+  );
+};
+const orgRoles = () => {
+  const r = ORG.sr,
+    ro = ORG.R.find(x => x.code == r),
+    W = S.pr == "admin_mairie" && !S.sa;
+  return (
+    pn(
+      "Rôles",
+      "shield",
+      `<div class="sa-ac">${ORG.R.map(x => `<button class="tg${x.code == r ? " ok" : ""}" data-m="orgrp" data-id="${esc(x.code)}">${esc(x.nom)}</button>`).join("")}</div>`
+    ) +
+    (ro
+      ? pn(
+          "Droits du rôle : " + esc(ro.nom),
+          "lock",
+          r == "maire"
+            ? emp("Le maire dispose de tous les droits : non modifiable.")
+            : `<p class="mut">Touchez une action pour l’accorder ou la retirer. Vous ne pouvez accorder que des droits que vous détenez. Aucun droit de comptable public n’existe ici : le paiement reste une confirmation externe.</p>` +
+                ORGM.map(
+                  m =>
+                    `<div class="rw" data-sty="align-items:flex-start"><div class="rl"><b>${esc(m[1])}</b></div><div class="sa-ac" data-sty="margin:0">${ORGA.map(
+                      a => {
+                        const on = orgHas(r, m[0], a[0]);
+                        return `<button class="tg${on ? " ok" : ""}" data-m="orgdr" data-r="${esc(r)}" data-mo="${m[0]}" data-ac="${a[0]}" data-on="${on ? 0 : 1}" aria-pressed="${on}"${W ? "" : " disabled"}>${a[1]}</button>`;
+                      }
+                    ).join("")}</div></div>`
+                ).join("")
+        )
+      : "") +
+    (W
+      ? pn(
+          "Créer un rôle personnalisé",
+          "user",
+          frm(inp("or_nm", "Nom du rôle") + inp("or_ds", "Description")) +
+            `<p data-sty="margin-top:10px"><button class="bt" data-m="orgrs">Créer le rôle</button></p>` +
+            emp("Le nouveau rôle n’a aucun droit : accordez-les ensuite ci-dessus.")
+        )
+      : "")
+  );
+};
+const orgAff = () => {
+  const W = S.pr == "admin_mairie" && !S.sa,
+    t = T;
+  return (
+    (W
+      ? pn(
+          "Affecter une personne à un poste",
+          "user",
+          frm(
+            sel(
+              "oa_us",
+              "Personne",
+              orgUs().map(x => [x.id, (x.nom || "Sans nom") + " (" + (RL[x.role] || x.role) + ")"])
+            ) +
+              sel(
+                "oa_po",
+                "Poste",
+                ORG.P.filter(x => x.actif).map(x => [x.code, x.nom])
+              ) +
+              inp("oa_d1", "Début", "date", t) +
+              inp("oa_d2", "Fin (facultatif)", "date")
+          ) +
+            `<p data-sty="margin-top:10px"><button class="bt" data-m="orgas">Affecter</button></p>` +
+            emp("L’affectation donne les droits du rôle du poste. Les accès actuels de la personne restent inchangés.")
+        )
+      : "") +
+    pn(
+      "Affectations",
+      "users",
+      ORG.A.map(a =>
+        rw(
+          `<b>${esc(orgUn(a.user_id))}</b><div class="mut" data-sty="font-size:13px">${esc(orgPn(a.poste_code))} · du ${fdd(a.debut)}${a.fin ? " au " + fdd(a.fin) : ""}</div>`,
+          a.actif && (!a.fin || a.fin >= t)
+            ? W
+              ? `<button class="tg rd" data-m="orgae" data-id="${a.id}">Mettre fin</button>`
+              : st2("En cours", "ok")
+            : st2("Terminée", "")
+        )
+      ).join("") || emp("Aucune affectation.")
+    )
+  );
+};
+const orgDel = () => {
+  const now = new Date(),
+    st = g =>
+      g.revoque_le
+        ? ["Révoquée", "rd"]
+        : new Date(g.fin) < now
+          ? ["Expirée", ""]
+          : new Date(g.debut) > now
+            ? ["À venir", "bl"]
+            : ["Active", "ok"];
+  return (
+    pn(
+      "Déléguer un droit (temporaire)",
+      "brief",
+      frm(
+        sel(
+          "od_us",
+          "Bénéficiaire",
+          orgUs()
+            .filter(x => x.id != S.uid)
+            .map(x => [x.id, (x.nom || "Sans nom") + " (" + (RL[x.role] || x.role) + ")"])
+        ) +
+          sel("od_mo", "Module", ORGM) +
+          sel("od_ac", "Action", ORGA) +
+          inp("od_d2", "Jusqu’au (1 an maximum)", "date") +
+          inp("od_mt", "Motif")
+      ) +
+        `<p data-sty="margin-top:10px"><button class="bt" data-m="orgds">Déléguer</button></p>` +
+        emp(
+          "On ne peut déléguer que les droits que l’on détient. Le bénéficiaire ne peut pas les redéléguer. Révocation immédiate possible."
+        )
+    ) +
+    pn(
+      "Délégations de droits",
+      "brief",
+      ORG.G.map(g => {
+        const s = st(g);
+        return rw(
+          `<b>${esc(orgUn(g.a_user))}</b> · ${esc((ORGM.find(m => m[0] == g.module) || [0, g.module])[1])} / ${esc(g.action)}<div class="mut" data-sty="font-size:13px">de ${esc(orgUn(g.de_user))} · ${fdd(String(g.debut).slice(0, 10))} → ${fdd(String(g.fin).slice(0, 10))}${g.motif ? " · " + esc(g.motif) : ""}</div>`,
+          `<div data-sty="display:grid;gap:4px;justify-items:end">${st2(s[0], s[1])}${s[0] == "Active" || s[0] == "À venir" ? `<button class="tg rd" data-m="orgdv" data-id="${g.id}">Révoquer</button>` : ""}</div>`
+        );
+      }).join("") || emp("Aucune délégation.")
+    )
+  );
+};
+const orgView = () => {
+  if (!ORG.ok && !ORG.ld) {
+    orgLoad().then(() => render());
+  }
+  if (ORG.ok != 1)
+    return ORG.ok == -1
+      ? pn("Organigramme", "alert", emp("Chargement impossible.") + `<button class="bo" data-m="orgrf">Actualiser</button>`)
+      : emp("Chargement…");
+  const t = S.tab.orgt || "org",
+    W = S.pr == "admin_mairie" && !S.sa;
+  return (
+    tabs(
+      "orgt",
+      [
+        ["org", "Organigramme"],
+        ["roles", "Rôles et droits"],
+        ["aff", "Affectations"]
+      ].concat(S.pr == "admin_mairie" ? [] : [["del", "Délégations"]])
+    ) +
+    (t == "org"
+      ? pn(
+          "Organigramme de " + esc(S.co),
+          "users",
+          orgTree(),
+          W ? `<button class="tg" data-m="orgin">Compléter l’organigramme par défaut</button>` : ""
+        ) + (W ? orgPoste() : "")
+      : t == "roles"
+        ? orgRoles()
+        : t == "aff"
+          ? orgAff()
+          : orgDel())
+  );
+};
+SP.administration.subs.push(["org", "Organigramme et droits"]);
+RP.org = ["maire", "admin_mairie"];
+SPL.org = "Organigramme, rôles et droits";
+SUB.org = orgView;
+const ORGAC = {
+  async orgrf() {
+    ORG.ok = 0;
+  },
+  async orgpn() {
+    ORG.ep = "new";
+  },
+  async orgpe(t) {
+    ORG.ep = t.dataset.id;
+  },
+  async orgpx() {
+    ORG.ep = null;
+  },
+  async orgrp(t) {
+    ORG.sr = t.dataset.id;
+  },
+  async orgin() {
+    await rpc("org_init");
+    await orgLoad();
+    S.err = "Organigramme complété (rien n’est écrasé).";
+  },
+  async orgps(t, g) {
+    const n = !t.dataset.id,
+      nm = g("op_nm");
+    if (nm.length < 2) throw new Error("L’intitulé est obligatoire.");
+    const code = n
+      ? (orgSlug(nm) || "poste") + (ORG.P.some(x => x.code == orgSlug(nm)) ? "_" + Date.now().toString(36).slice(-3) : "")
+      : t.dataset.id;
+    await rpc("org_poste_save", {
+      p_code: code,
+      p_nom: nm,
+      p_famille: g("op_fa") || null,
+      p_role: g("op_rl"),
+      p_parent: g("op_pa") || null,
+      p_service: null,
+      p_actif: g("op_ac") == "1"
+    });
+    ORG.ep = null;
+    await orgLoad();
+    S.err = "Poste enregistré.";
+  },
+  async orgrs(t, g) {
+    const nm = g("or_nm");
+    if (nm.length < 2) throw new Error("Le nom du rôle est obligatoire.");
+    const code = "perso_" + (orgSlug(nm) || "role");
+    await rpc("org_role_save", { p_code: code, p_nom: nm, p_desc: g("or_ds") || null });
+    ORG.sr = code;
+    await orgLoad();
+    ORG.sr = code;
+    S.err = "Rôle créé. Accordez-lui ses droits.";
+  },
+  async orgdr(t) {
+    const d = t.dataset,
+      on = d.on == "1";
+    await rpc("org_role_droit_set", { p_role: d.r, p_module: d.mo, p_action: d.ac, p_on: on });
+    if (on) ORG.DR.push({ role_code: d.r, module: d.mo, action: d.ac });
+    else ORG.DR = ORG.DR.filter(x => !(x.role_code == d.r && x.module == d.mo && x.action == d.ac));
+    S.keep = true;
+  },
+  async orgas(t, g) {
+    if (!g("oa_us") || !g("oa_po")) throw new Error("Choisissez une personne et un poste.");
+    await rpc("org_affecter", {
+      p_user: g("oa_us"),
+      p_poste: g("oa_po"),
+      p_service: null,
+      p_debut: g("oa_d1") || null,
+      p_fin: g("oa_d2") || null
+    });
+    await orgLoad();
+    S.err = "Affectation enregistrée.";
+  },
+  async orgae(t) {
+    if (!confirm("Mettre fin à cette affectation ?")) return;
+    await rpc("org_affectation_fin", { p_id: t.dataset.id });
+    await orgLoad();
+    S.err = "Affectation terminée.";
+  },
+  async orgds(t, g) {
+    const f = g("od_d2");
+    if (!g("od_us") || !f) throw new Error("Choisissez le bénéficiaire et la date de fin.");
+    await rpc("org_deleguer", {
+      p_a: g("od_us"),
+      p_module: g("od_mo"),
+      p_action: g("od_ac"),
+      p_debut: null,
+      p_fin: new Date(f + "T23:59:59").toISOString(),
+      p_motif: g("od_mt") || null
+    });
+    await orgLoad();
+    S.err = "Délégation enregistrée.";
+  },
+  async orgdv(t) {
+    if (!confirm("Révoquer cette délégation immédiatement ?")) return;
+    await rpc("org_revoquer", { p_id: t.dataset.id });
+    await orgLoad();
+    S.err = "Délégation révoquée.";
+  }
+};
+document.addEventListener("click", async e => {
+  const t = e.target.closest("[data-m^=org]"),
+    f = t && ORGAC[t.dataset.m];
+  if (!f || S.sa) return;
+  const g = id => (($("#" + id) || {}).value || "").trim();
+  S.err = "";
+  S.keep = false;
+  try {
+    await f(t, g);
+  } catch (x) {
+    S.err = x && x.message && !/fetch|network|Failed/i.test(x.message) ? x.message : "Erreur réseau. Réessayez.";
+  }
+  render();
+  if (!S.keep) window.scrollTo(0, 0);
+});

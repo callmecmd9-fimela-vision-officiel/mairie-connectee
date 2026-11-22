@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 const ORIGIN=Deno.env.get("ALLOWED_ORIGIN")??"",SITE=Deno.env.get("SITE_URL")??ORIGIN;
-const ROLES=["maire","adjoint","cabinet","secretariat","finances","rh","etat_civil","technique","agent"];
+const ROLES=["admin_mairie","maire","adjoint","cabinet","secretariat","finances","rh","etat_civil","technique","agent"];
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS","Vary":"Origin","Content-Type":"application/json"};
 const out=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers});
 const fail=(message:string,status=400)=>out({error:message},status);
@@ -37,6 +37,18 @@ Deno.serve(async(req)=>{
    if(pe){await admin.auth.admin.deleteUser(invite.user.id);return fail("Invitation créée mais profil impossible à enregistrer : "+pe.message,500)}
    await audit(String(commune.id),"user_invite",email,{role,nom,actif:false});return out({ok:true,id:invite.user.id,status:"invited_inactive"});
   }
+  if(action==="affecter_admin_mairie"){
+   // Création anticipée : commune facultative. Sans commune -> statut « en_attente »
+   // (aucun droit) ; avec commune -> « affecte ». Jamais actif : l'activation reste
+   // l'action distincte « activer ». Aucun mot de passe, aucun doublon Auth.
+   const email=clean(b.email,254).toLowerCase(),communeSlug=clean(b.commune,80),nom=clean(b.nom,120);
+   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return fail("Adresse e-mail invalide.");
+   const {data:uid,error:ae}=communeSlug
+    ?await caller.rpc("saas_affecter_admin_mairie",{p_email:email,p_slug:communeSlug,p_nom:nom||null})
+    :await caller.rpc("saas_preparer_admin_mairie",{p_email:email,p_nom:nom||null});
+   if(ae)return fail(ae.message,403);
+   return out({ok:true,id:uid,status:communeSlug?"affecte":"en_attente"});
+  }
   const id=clean(b.id,60);if(!id)return fail("Compte manquant.");
   const {data:target,error:te}=await admin.from("profiles").select("id,role,commune_id,actif,nom,service").eq("id",id).maybeSingle();
   if(te||!target)return fail("Compte introuvable.",404);
@@ -53,7 +65,7 @@ Deno.serve(async(req)=>{
    await audit(communeId,"user_update",id,patch);return out({ok:true});
   }
   if(action==="activer"){
-   const actif=b.actif===true;if(isSA)return fail("Les comptes super-administrateur sont gérés séparément.");if(!actif&&self)return fail("Vous ne pouvez pas désactiver votre propre compte.");
+   const actif=b.actif===true;if(isSA)return fail("Les comptes super-administrateur sont gérés séparément.");if(actif&&target.role==="admin_mairie"&&!communeId)return fail("Un administrateur municipal doit être rattaché à une commune.",409);if(!actif&&self)return fail("Vous ne pouvez pas désactiver votre propre compte.");
    const {data:authTarget,error:authReadError}=await admin.auth.admin.getUserById(id);if(authReadError||!authTarget.user)return fail("Compte Auth introuvable.",404);if(actif&&!authTarget.user.email_confirmed_at)return fail("L’invitation doit être acceptée et l’adresse e-mail confirmée avant l’activation.",409);const {error:ae}=await admin.auth.admin.updateUserById(id,{ban_duration:actif?"none":"876000h"});if(ae)return fail(ae.message);
    const {error:pe}=await admin.from("profiles").update({actif}).eq("id",id);if(pe)return fail(pe.message,500);
    if(!actif)await admin.rpc("_revoquer_sessions",{p_user:id});

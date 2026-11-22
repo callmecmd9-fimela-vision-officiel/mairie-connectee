@@ -189,7 +189,38 @@ Production : **lecture seule uniquement** (aucune écriture, aucun déploiement)
 - Tests : tous OK sauf a11y et enhance (exigent `npm i jsdom`).
 - Ajout `supabase/proposed/20261123_lot7_infos.sql` (projets_publics, publications.categorie, projets.public). Idempotent ; non appliqué en production : accord requis.
 
-## MAJ16 — 2026-11-21 — correctif déploiement admin_mairie
-- Cause du message « Ce compte n’a pas encore accès à l’espace mairie » pour les 4 admins municipaux : le site en production avait l’ancien `core.js` (rôle `admin_mairie` inconnu). Base vérifiée : 4 profils `admin_mairie`, actifs, affectés, e-mail confirmé. Aucune donnée modifiée.
-- Service worker `mc-v11` et paramètres `?v=20261121.9` dans `mairie.html` pour forcer le rechargement des scripts.
-- À déployer en entier (core.js, org*.js, icons.js, i18n.js, a11y.js, mairie.html, sw.js), puis vider le cache/PWA.
+## MAJ17 — 2026-11-22 (dépôt uniquement ; production non touchée ; SMS exclu)
+- Sécurité : `index.ts` racine archivé (`archive_legacy/racine_2026-11-22/`) ; `.assetsignore` en liste blanche ; CSP sans `unsafe-inline` pour les balises `<style>` (`css/citoyen.css` créé, CSS de `a11y.js` déplacé dans les 3 feuilles, `a11y.js` n'injecte plus de `<style>`) ; nouveau test `innerhtml-escape`.
+- Correctif : `js/guard.js` — le bouton « Réessayer » de l'écran d'échec utilisait un `onclick` en ligne, bloqué par la CSP (inopérant) ; remplacé par un écouteur (`?v=20261122.1`). Contrôle navigateur des 3 pages sous la CSP du dépôt : 0 violation.
+- Exploitation : job navigateur en CI ; sauvegarde chiffrée hebdomadaire (`db-backup.yml`, `docs/SAUVEGARDE.md`) ; `package.json`, `npm test`.
+- Documentation : `TASKS.md` assaini (historique dans `docs/TASKS_HISTORIQUE_avant_MAJ17.md`) ; `docs/DEPENDANCES_EMBARQUEES.md`.
+- Versions `?v=` : `citoyen.css`, `mairie.css`, `saas.css` = 20261122.1.
+- Tests : 35 fichiers JS verts (jsdom installé, `a11y` et `enhance` inclus).
+
+## MAJ18 — 2026-11-22 (accès complet ; SMS exclu)
+- Production relevée (lecture seule) : toutes les migrations du dépôt sont appliquées ; Edge `sa-admin` v16 / `saas-admin` v4 déployées. Récupération de `20261121130228_org_modele_toutes_mairies.sql` et `20261121130836_nettoyage_doublon_trigger_org_seed.sql` ; `PRODUCTION_VERSION_MAP.md` et `production-ready/README.md` mis à jour.
+- Production écrite (accord explicite) : migration `20261122081303_perf_fk_indexes_et_initplan_restrictives` (7 index FK, 2 policies RESTRICTIVE en `(select auth.jwt())`), vérifiée.
+- Prettier appliqué à `js/*.js` (hors bibliothèques embarquées) ; `tests/_compact.js` ; contrôle `prettier --check` en CI ; 35 fichiers de test verts.
+- `tests/migration-history-integrity.test.js` : 8 migrations postérieures à la capture déclarées.
+
+## MAJ19 — 2026-11-22 (dépôt uniquement ; production lue, non modifiée ; SMS exclu)
+- Production relevée : 91 migrations, tout le dépôt appliqué ; conseillers sécurité = avertissements voulus (RPC publiques, connexions anonymes, mots de passe compromis = plan Pro) ; performance : les 2 alertes « initplan » restantes (`paiements`, `org_roles`) sont des faux positifs (policies déjà en `(select auth.jwt())`).
+- Conformité : `confidentialite.html` (information sur les données personnelles, loi 2008-12, CDP) liée en pied de `index.html` ; **texte général à compléter et faire valider par chaque commune**.
+- En-têtes : `X-Frame-Options: DENY`, `Permissions-Policy` étendue, `COOP same-origin-allow-popups`, cache 7 jours des icônes.
+- Performance : `preconnect` Supabase et polices (portail citoyen et mairie).
+- Déploiement : `tests/predeploy.test.js` (ressources référencées présentes et publiées, `?v=`, icônes des manifestes) ; workflow manuel `deploy-front.yml` (tests puis `wrangler deploy`) ; `dependabot.yml` ; annulation des CI redondantes. `guard.js` versionné dans `saas.html`. CSS `citoyen.css?v=20261122.2`.
+- Tests : 36 fichiers verts.
+- i18n (MAJ19) : `citoyen.js` passe de 27 à 163 textes traduisibles (`tr("clé")`), transformation par analyse syntaxique (gabarits HTML et messages d’erreur uniquement) ; rendu français inchangé (36 tests verts). `scripts/i18n-export.js` réparé (cassé par Prettier) ; `docs/i18n/textes_a_valider.csv` régénéré (163 lignes). Aucune traduction wolof/sereer écrite par l’IA.
+- Wolof (2026-11-22) : 163 textes fournis par Cheikhou Diop intégrés dans `js/i18n.js` (`MC_TX.wo`), langue `valide` → sélecteur Français/Wolof actif ; sérère inchangé (`a_valider`, vide, masqué). Test `i18n` mis à jour (wolof complet, aucune clé vide). 6 textes dépassent la longueur indicative (`h_dep`, `h_cur`, `u_mairie_connectee`, `u_code_incorrect_ou_expire`, `u_prenom`, `u_tout_marquer_comme_lu`) : vérifier l’affichage sur téléphone.
+- i18n lot 2 (2026-11-22) : 92 textes supplémentaires traduisibles (statuts de dossier et de rendez-vous, étapes, types d’actualités/projets, messages d’erreur et de confirmation) — `citoyen.js` : tables `SL/SX/SV/RVS/RVX/PCL/PJL/ST` rendues dépendantes de la langue (`lk()`), 49 messages passés par `tr()`. Wolof : 255 textes au total, couverture 100 %. 36 tests verts. Textes encore en français : catalogue `CATS`/titres de démarches (valeurs liées à la base), phrases assemblées par concaténation. 6 textes dépassent la longueur indicative (aucun débordement constaté à 320 px).
+
+## MAJ19 (suite) — 2026-11-22 : styles inline et garde de chargement
+- `js/guard.js` : l'écran « Le chargement a échoué » est construit par le DOM (createElement, textContent, `style.cssText`), sans `innerHTML` ni attribut `style=""` ; sortie immédiate si `#app` est absent ou déjà rempli.
+- `js/citoyen.js` : les 49 attributs `style=""` statiques sont remplacés par des classes `c-*` (définies à la fin de `css/citoyen.css`). Plus aucun `style=""` dans le portail citoyen.
+- Versions : `citoyen.js/css ?v=20261122.3`, `guard.js ?v=20261122.2`.
+- Tests : 34/36 (`a11y` et `enhance` exigent `jsdom`, non installé dans cet environnement : à lancer chez toi après `npm i`).
+- Reste : ~140 `style=""` dans l'espace mairie (`core`, `adjoints`, `maire`, `secretariat`, `superadmin`, `org*`, `saas`, `demarches`, `actions`). `style-src-attr 'unsafe-inline'` doit rester dans `_headers` tant qu'ils existent.
+
+## 2026-11-22 — Styles inline supprimés (espace mairie, SaaS)
+- 316 `style=""` des modules mairie/SaaS convertis en `data-sty=""`, appliqués via CSSOM par `js/dstyle.js` (rendu identique, compatible CSP). `style-src-attr 'unsafe-inline'` retiré de `_headers`. SW `mc-v11`.
+- Retour arrière si besoin : remettre ` style-src-attr 'unsafe-inline';` dans `_headers`.

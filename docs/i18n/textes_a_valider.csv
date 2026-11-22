@@ -1,0 +1,256 @@
+cle,francais,wolof,sereer,longueur_max,statut_validation,validateur,date
+back,← Retour,← Dellu,,12,a_verifier,Cheikhou Diop,2026-11-22
+pick,Que voulez-vous faire ?,Lan nga bëgg def?,,33,a_verifier,Cheikhou Diop,2026-11-22
+delay,Délai indicatif :,Waxtu bi ñu xaar :,,24,a_verifier,Cheikhou Diop,2026-11-22
+other,Autre demande,Beneen laaj,,19,a_verifier,Cheikhou Diop,2026-11-22
+otherSub,Écrivez votre demande avec vos mots,Bindal li nga bëgg ci say wax,,49,a_verifier,Cheikhou Diop,2026-11-22
+found,Démarches trouvées,Yoon yi ñu gis,,26,a_verifier,Cheikhou Diop,2026-11-22
+none,Aucun service ne correspond. Essayez un autre mot.,Gisunu sarwiis bi. Jéemal beneen baat.,,70,a_verifier,Cheikhou Diop,2026-11-22
+h_req,Faire une demande,Yónnee laaj,,24,a_verifier,Cheikhou Diop,2026-11-22
+h_req_s,Déposez votre dossier en ligne,Yónnee sa dosiye ci internet,,42,a_verifier,Cheikhou Diop,2026-11-22
+h_trk,Suivre ma demande,Topp sama laaj,,24,a_verifier,Cheikhou Diop,2026-11-22
+h_trk_s,Consultez l’état d’avancement de votre dossier,Xool fu sa dosiye tollu,,65,a_verifier,Cheikhou Diop,2026-11-22
+h_rdv,Prendre rendez-vous,Sàkku rendez-vous,,27,a_verifier,Cheikhou Diop,2026-11-22
+h_rdv_s,Avec le Maire ou un service,Ak maire bi walla sarwiis bi,,38,a_verifier,Cheikhou Diop,2026-11-22
+h_svc,Nos services municipaux,Sarwiis yu mairie bi,,33,a_verifier,Cheikhou Diop,2026-11-22
+h_trk_p,Entrez le numéro de suivi reçu lors de votre demande,Dugalal nimero toppandoo bi ñu la jox ci sa laaj,,73,a_verifier,Cheikhou Diop,2026-11-22
+h_go,Consulter,Xool,,13,a_verifier,Cheikhou Diop,2026-11-22
+h_mine,Mes demandes,Samay laaj,,17,a_verifier,Cheikhou Diop,2026-11-22
+h_dep,Déposées,Yónnee nañu leen,,12,a_verifier,Cheikhou Diop,2026-11-22
+h_cur,En cours,Mi ngi ci dox,,12,a_verifier,Cheikhou Diop,2026-11-22
+h_done,Terminées,Jeex na,,13,a_verifier,Cheikhou Diop,2026-11-22
+h_info,Informations pratiques,Xibaar yu am solo,,31,a_verifier,Cheikhou Diop,2026-11-22
+h_contact,Contact,Jokkoo,,10,a_verifier,Cheikhou Diop,2026-11-22
+h_call,Appeler la mairie,Woo mairie bi,,24,a_verifier,Cheikhou Diop,2026-11-22
+h_mail,Écrire un e-mail,Yónnee email,,23,a_verifier,Cheikhou Diop,2026-11-22
+h_actu,Actualités de la commune,Xibaar yu bees ci komun bi,,34,a_verifier,Cheikhou Diop,2026-11-22
+h_works,Travaux et projets,Ligéey ak projee yi,,26,a_verifier,Cheikhou Diop,2026-11-22
+h_trk_ph,Numéro de suivi…,Nimero toppandoo…,,23,a_verifier,Cheikhou Diop,2026-11-22
+u_demande_enregistree,Demande enregistrée.,Ñu denc nañu sa laaj.,,28,a_verifier,Cheikhou Diop,2026-11-22
+u_votre_numero_de_suivi,Votre numéro de suivi :,Nimero toppandoo bu sa laaj :,,33,a_verifier,Cheikhou Diop,2026-11-22
+u_copier_le_numero,Copier le numéro,Kopie nimero bi,,23,a_verifier,Cheikhou Diop,2026-11-22
+u_reessayer,Réessayer,Jéemaat,,13,a_verifier,Cheikhou Diop,2026-11-22
+u_espace_citoyen,Espace citoyen,Barabu askan wi,,20,a_verifier,Cheikhou Diop,2026-11-22
+u_mairie_connectee,Mairie connectée,Mairie bi jokkoo na ak internet,,23,a_verifier,Cheikhou Diop,2026-11-22
+u_les_services_de_votre,"Les services de votre mairie, en quelques clics",Sarwiis yi sa mairie ci ay klik rekk,,66,a_verifier,Cheikhou Diop,2026-11-22
+u_utilisez_le_lien_ou,Utilisez le lien ou le QR code de votre mairie,Jëfandikool lien bi walla QR code bu sa mairie,,65,a_verifier,Cheikhou Diop,2026-11-22
+u_pour_acceder_aux_services,"Pour accéder aux services de votre commune, ouvrez le lien officiel de votre mairie ou scannez le QR code affiché à la mairie.","Ngir jot ci sarwiis yu sa komun, ubil lien bu sa mairie walla scan QR code bi ci mairie bi.",,177,a_verifier,Cheikhou Diop,2026-11-22
+u_j_ai_un_code,J’ai un code de commune,Am naa code bu komun bi,,33,a_verifier,Cheikhou Diop,2026-11-22
+u_code_de_la_commune,Code de la commune,Code bu komun bi,,26,a_verifier,Cheikhou Diop,2026-11-22
+u_ouvrir,Ouvrir,Ubbi,,9,a_verifier,Cheikhou Diop,2026-11-22
+u_menu_principal,Menu principal,Menu bu mag bi,,20,a_verifier,Cheikhou Diop,2026-11-22
+u_aller_au_contenu,Aller au contenu,Dem ci li nekk bi,,23,a_verifier,Cheikhou Diop,2026-11-22
+u_menu,Menu,Menu,,6,a_verifier,Cheikhou Diop,2026-11-22
+u_bienvenue_sur_le,Bienvenue sur le,Dalal ak jàmm ci,,23,a_verifier,Cheikhou Diop,2026-11-22
+u_portail_citoyen_de,Portail Citoyen de,Portail askan wi bu,,26,a_verifier,Cheikhou Diop,2026-11-22
+u_ma_mairie_a_portee,"Ma mairie, à portée de main !",Sama mairie ci sama loxo!,,41,a_verifier,Cheikhou Diop,2026-11-22
+u_effectuez_vos_demarches_suivez,"Effectuez vos démarches, suivez vos demandes et restez informé des services de votre mairie.","Defal say laaj, topp say dosiye te xam sarwiis yu sa mairie.",,129,a_verifier,Cheikhou Diop,2026-11-22
+u_que_recherchez_vous,Que recherchez-vous ?,Lan nga bëgg seet?,,30,a_verifier,Cheikhou Diop,2026-11-22
+u_rechercher_un_document_un,"Rechercher un document, un service ou une démarche","Seetal ab dokimaa, sarwiis walla yoon wi",,70,a_verifier,Cheikhou Diop,2026-11-22
+u_rechercher,Rechercher,Seet,,14,a_verifier,Cheikhou Diop,2026-11-22
+u_avancement,Avancement,Fu mu tollu,,14,a_verifier,Cheikhou Diop,2026-11-22
+u_ajouter_les_pieces_demandees,"Ajouter les pièces demandées (3 maximum, photo ou PDF, 3 Mo)","Yokk dokimaa yi ñu laaj (3 maximum, foto walla PDF, 3 Mo)",,84,a_verifier,Cheikhou Diop,2026-11-22
+u_envoyer_les_pieces,Envoyer les pièces,Yónnee dokimaa yi,,26,a_verifier,Cheikhou Diop,2026-11-22
+u_service_responsable,Service responsable :,Sarwiis bi topp sa dosiye :,,30,a_verifier,Cheikhou Diop,2026-11-22
+u_historique,Historique,Li weesu,,14,a_verifier,Cheikhou Diop,2026-11-22
+u_service,Service :,Sarwiis :,,13,a_verifier,Cheikhou Diop,2026-11-22
+u_choisir,Choisir,Tànn,,10,a_verifier,Cheikhou Diop,2026-11-22
+u_nous_n_avons_pas,Nous n’avons pas trouvé ce document. Vous pouvez nous préciser votre besoin dans la rubrique Autres demandes.,Gisunu dokimaa boobu. Mën nga wax li nga soxla ci barab bu ñuy wax Beneen laaj.,,153,a_verifier,Cheikhou Diop,2026-11-22
+u_autres_demandes,Autres demandes,Yeneen laaj,,21,a_verifier,Cheikhou Diop,2026-11-22
+u_quel_document_recherchez_vous,Quel document recherchez-vous ?,Ban dokimaa nga bëgg seet?,,44,a_verifier,Cheikhou Diop,2026-11-22
+u_fermer,Fermer,Tëj,,9,a_verifier,Cheikhou Diop,2026-11-22
+u_rechercher_un_document,Rechercher un document…,Seetal ab dokimaa…,,33,a_verifier,Cheikhou Diop,2026-11-22
+u_rechercher_un_document2,Rechercher un document,Seetal ab dokimaa,,31,a_verifier,Cheikhou Diop,2026-11-22
+u_pieces_a_fournir,Pièces à fournir,Dokimaa yi war a joxe,,23,a_verifier,Cheikhou Diop,2026-11-22
+u_conditions,Conditions :,Sart yi :,,17,a_verifier,Cheikhou Diop,2026-11-22
+u_frais,Frais :,Feyukaay :,,10,a_verifier,Cheikhou Diop,2026-11-22
+u_retrait,Retrait :,Fu ñuy jële :,,13,a_verifier,Cheikhou Diop,2026-11-22
+u_la_mairie_vous_orientera,La mairie vous orientera vers l’organisme compétent.,Mairie bi dina la wax fu nga war a dem.,,73,a_verifier,Cheikhou Diop,2026-11-22
+u_numero_de_l_acte,Numéro de l’acte,Nimero bu acte bi,,23,a_verifier,Cheikhou Diop,2026-11-22
+u_annee_de_l_acte,Année de l’acte,Atum acte bi,,21,a_verifier,Cheikhou Diop,2026-11-22
+u_photo_ou_scan_de,"Photo ou scan de l’ancien extrait (3 maximum, photo ou PDF, 3 Mo)","Foto walla scan bu extrait bu yàgg bi (3 maximum, foto walla PDF, 3 Mo)",,91,a_verifier,Cheikhou Diop,2026-11-22
+u_nom_du_conjoint_facultatif,Nom du conjoint (facultatif),Turug sa séy (su fekkee am na),,40,a_verifier,Cheikhou Diop,2026-11-22
+u_demande_en_ligne_le,Demande en ligne. Le document se retire ensuite en mairie.,"Yónnee laaj bi ci internet. Boo noppee, jëlal dokimaa bi ci mairie.",,82,a_verifier,Cheikhou Diop,2026-11-22
+u_que_savez_vous,Que savez-vous ?,Lan nga xam?,,23,a_verifier,Cheikhou Diop,2026-11-22
+u_nom_complet_de_la,Nom complet de la personne concernée,Tur ak sant bu nit ki,,51,a_verifier,Cheikhou Diop,2026-11-22
+u_verifier_ma_demande,Vérifier ma demande,Seetal sama laaj,,27,a_verifier,Cheikhou Diop,2026-11-22
+u_indiquez_le_nom_complet,Indiquez le nom complet de la personne concernée.,Bindal tur ak sant bu nit ki.,,69,a_verifier,Cheikhou Diop,2026-11-22
+u_indiquez_le_numero_de,Indiquez le numéro de l’acte (chiffres et lettres).,Bindal nimero bu acte bi (lim ak araf).,,72,a_verifier,Cheikhou Diop,2026-11-22
+u_indiquez_l_annee_de,Indiquez l’année de l’acte (4 chiffres).,Bindal atum acte bi (4 lim).,,56,a_verifier,Cheikhou Diop,2026-11-22
+u_joignez_la_photo_ou,Joignez la photo ou le scan de l’ancien extrait.,Yokk foto walla scan bu extrait bu yàgg bi.,,68,a_verifier,Cheikhou Diop,2026-11-22
+u_indiquez_votre_nom_complet,Indiquez votre nom complet.,Bindal sa tur ak sant.,,38,a_verifier,Cheikhou Diop,2026-11-22
+u_modifier,← Modifier,← Soppi,,14,a_verifier,Cheikhou Diop,2026-11-22
+u_verifiez_votre_demande,Vérifiez votre demande,Seetal sa laaj,,31,a_verifier,Cheikhou Diop,2026-11-22
+u_envoyer_ma_demande,Envoyer ma demande,Yónnee sama laaj,,26,a_verifier,Cheikhou Diop,2026-11-22
+u_modifier2,Modifier,Soppi,,12,a_verifier,Cheikhou Diop,2026-11-22
+u_joignez_les_pieces_demandees,Joignez les pièces demandées.,Yokk dokimaa yi ñu laaj.,,41,a_verifier,Cheikhou Diop,2026-11-22
+u_demande_de_rendez_vous,Demande de rendez-vous envoyée.,Yónnee nañu sa laaj bu rendez-vous.,,44,a_verifier,Cheikhou Diop,2026-11-22
+u_numero,Numéro :,Nimero :,,12,a_verifier,Cheikhou Diop,2026-11-22
+u_ce_n_est_pas,Ce n’est pas encore une confirmation : le service vous répondra. Suivez-le dans « Mes rendez-vous ».,"Lii mooy laaj rekk, du dëggal rendez-vous bi. Sarwiis bi dina la tontu. Toppal ko ci « Samay rendez-vous ».",,140,a_verifier,Cheikhou Diop,2026-11-22
+u_reponse,Réponse :,Tontu :,,13,a_verifier,Cheikhou Diop,2026-11-22
+u_annuler_ce_rendez_vous,Annuler ce rendez-vous,Dindi rendez-vous bii,,31,a_verifier,Cheikhou Diop,2026-11-22
+u_mes_rendez_vous,Mes rendez-vous,Samay rendez-vous,,21,a_verifier,Cheikhou Diop,2026-11-22
+u_heure_souhaitee,Heure souhaitée,Waxtu bi nga bëgg,,21,a_verifier,Cheikhou Diop,2026-11-22
+u_impossible_de_lire_les,Impossible de lire les heures libres. Vérifiez votre réseau puis choisissez à nouveau la date.,Mëneesul gis waxtu yi féex. Seetal sa internet te tànnalaat bés bi.,,132,a_verifier,Cheikhou Diop,2026-11-22
+u_choisissez_le_service_et,Choisissez le service et une date. Le rendez-vous n’est confirmé que lorsque le service vous répond.,Tànnal sarwiis bi ak ab bés. Rendez-vous bi dëggu rekk bu sarwiis bi tontoo.,,140,a_verifier,Cheikhou Diop,2026-11-22
+u_avec_qui,Avec qui ?,Ak kan?,,14,a_verifier,Cheikhou Diop,2026-11-22
+u_motif_du_rendez_vous,Motif du rendez-vous,Lu tax nga bëgg rendez-vous?,,28,a_verifier,Cheikhou Diop,2026-11-22
+u_date_souhaitee,Date souhaitée,Bés bi nga bëgg,,20,a_verifier,Cheikhou Diop,2026-11-22
+u_indiquez_le_motif_en,Indiquez le motif en quelques mots.,Waxal lu tax ci ay baat yu néew.,,49,a_verifier,Cheikhou Diop,2026-11-22
+u_choisissez_une_date,Choisissez une date.,Tànnal ab bés.,,28,a_verifier,Cheikhou Diop,2026-11-22
+u_choisissez_une_heure_parmi,Choisissez une heure parmi les heures libres.,Tànnal benn waxtu ci waxtu yi féex.,,63,a_verifier,Cheikhou Diop,2026-11-22
+u_veuillez_valider_la_verification,"Veuillez valider la vérification anti-spam, puis réessayer.","Dëggal seetlu bi ngir wone ne doo robot, nga jéemaat.",,83,a_verifier,Cheikhou Diop,2026-11-22
+u_verification_refusee_reessayez,Vérification refusée. Réessayez.,Seetlu bi antuwul. Jéemaat.,,45,a_verifier,Cheikhou Diop,2026-11-22
+u_modifier_mon_profil,Modifier mon profil,Soppi sama profil,,27,a_verifier,Cheikhou Diop,2026-11-22
+u_votre_nom_complet,Votre nom complet,Sa tur ak sant,,24,a_verifier,Cheikhou Diop,2026-11-22
+u_telephone_facultatif_pour_vous,"Téléphone (facultatif, pour vous rappeler)","Telefon (du war, ngir man ñu woo la)",,59,a_verifier,Cheikhou Diop,2026-11-22
+u_demarche,Démarche,Yoon wi,,12,a_verifier,Cheikhou Diop,2026-11-22
+u_nature_de_la_demarche,Nature de la démarche,Xeetu laaj bi,,30,a_verifier,Cheikhou Diop,2026-11-22
+u_objet_de_la_demande,Objet de la demande,Laaj bi jëm ci lan?,,27,a_verifier,Cheikhou Diop,2026-11-22
+u_votre_message,Votre message,Sa bataaxal,,19,a_verifier,Cheikhou Diop,2026-11-22
+u_pieces_justificatives_3_maximum,"Pièces justificatives (3 maximum, photo ou PDF, 3 Mo)","Dokimaa yi dëggal laaj bi (3 maximum, foto walla PDF, 3 Mo)",,75,a_verifier,Cheikhou Diop,2026-11-22
+u_toutes_les_demandes_ne,"Toutes les demandes ne relèvent pas de la mairie. Si besoin, votre dossier sera réorienté vers le service de l’État ou l’organisme compétent.","Du laaj yépp mairie bi moo leen di saytu. Bu soxla, dinañu yónnee sa dosiye ci sarwiis bu État walla ci organ bu ko war a saytu.",,198,a_verifier,Cheikhou Diop,2026-11-22
+u_mon_espace_citoyen,Mon espace citoyen,Sama barabu askan,,26,a_verifier,Cheikhou Diop,2026-11-22
+u_votre_espace_personnel_prepare,"Votre espace personnel prépare son ouverture. Comme le baobab, il prend le temps de grandir avant d’offrir son ombre. En attendant, toutes vos démarches restent ouvertes, sans compte.","Sa barab bopp dina ubbi. Ni garab gu baobab, dafay yàgg ngir màgg ba mu man a may ker. Ci jamono jii, mën nga yónnee say laaj te amul compte.",,257,a_verifier,Cheikhou Diop,2026-11-22
+u_continuer_mes_demarches,Continuer mes démarches,Kontine samay laaj,,33,a_verifier,Cheikhou Diop,2026-11-22
+u_vous_etes_prevenu_des,"Vous êtes prévenu dès que votre dossier avance, même quand l’application est fermée.","Dinañu la yégal saa yu sa dosiye soppee, sax bu application bi tëj.",,118,a_verifier,Cheikhou Diop,2026-11-22
+u_desactiver_les_alertes,Désactiver les alertes,Tëj yëgle yi,,31,a_verifier,Cheikhou Diop,2026-11-22
+u_les_notifications_sont_bloquees,Les notifications sont bloquées dans votre navigateur. Autorisez-les dans ses réglages pour être prévenu.,Yëgle yi tëju nañu ci sa navigateur. Ubbi leen ci réglages ngir man ñu yégal la.,,147,a_verifier,Cheikhou Diop,2026-11-22
+u_recevez_une_alerte_quand,"Recevez une alerte quand votre dossier avance (titre seulement, sans détail personnel).","Jot yëgle bu sa dosiye soppee (tur bi rekk, dara lu la jëm ci sa bopp du feeñ).",,122,a_verifier,Cheikhou Diop,2026-11-22
+u_activer_les_alertes,Activer les alertes,Suqali yëgle yi,,27,a_verifier,Cheikhou Diop,2026-11-22
+u_alertes_sur_ce_telephone,Alertes sur ce téléphone,Yëgle ci telefon bii,,34,a_verifier,Cheikhou Diop,2026-11-22
+u_installer_l_application,Installer l’application,Samp application bi,,33,a_verifier,Cheikhou Diop,2026-11-22
+u_sur_votre_telephone_acces,"sur votre téléphone : accès direct, sans passer par le navigateur.","Ci sa telefon : ubbi ko ci lu yomb, te doo soxla navigateur.",,93,a_verifier,Cheikhou Diop,2026-11-22
+u_installer,Installer,Samp,,13,a_verifier,Cheikhou Diop,2026-11-22
+u_plus_tard,Plus tard,Ci kanam,,13,a_verifier,Cheikhou Diop,2026-11-22
+u_ajoutez_l_application_a,Ajoutez l’application à votre écran d’accueil :,Yokk application bi ci écran bu njëkk :,,66,a_verifier,Cheikhou Diop,2026-11-22
+u_touchez_le_bouton_partager,"touchez le bouton Partager de Safari, puis « Sur l’écran d’accueil ».","Bësal bouton Partager bu Safari, topp tànn « Sur l’écran d’accueil ».",,97,a_verifier,Cheikhou Diop,2026-11-22
+u_masquer,Masquer,Nëbb,,10,a_verifier,Cheikhou Diop,2026-11-22
+u_langue,Langue,Làkk,,9,a_verifier,Cheikhou Diop,2026-11-22
+u_accedez_a_votre_compte,Accédez à votre compte pour gérer vos démarches.,Duggal ci sa compte ngir saytu say laaj.,,68,a_verifier,Cheikhou Diop,2026-11-22
+u_se_connecter,Se connecter,Duggal,,17,a_verifier,Cheikhou Diop,2026-11-22
+u_creer_un_compte,Créer un compte,Sos compte,,21,a_verifier,Cheikhou Diop,2026-11-22
+u_tel,Tél. :,Tel. :,,9,a_verifier,Cheikhou Diop,2026-11-22
+u_e_mail,E-mail :,E-mail :,,12,a_verifier,Cheikhou Diop,2026-11-22
+u_une_question_contactez_la,Une question ? Contactez la mairie.,Am nga laaj? Jokkoo ak mairie bi.,,49,a_verifier,Cheikhou Diop,2026-11-22
+u_numero_de_suivi,Numéro de suivi,Nimero toppandoo,,21,a_verifier,Cheikhou Diop,2026-11-22
+u_service_gratuit_certaines_demarches,Service gratuit. Certaines démarches nécessitent des pièces justificatives ou un passage en mairie.,Sarwiis bi amul fay. Yenn laaj dañuy soxla dokimaa walla nga dem ci mairie.,,139,a_verifier,Cheikhou Diop,2026-11-22
+u_ce_n_est_pas2,Ce n’est pas votre commune ?,Moom du sa komun?,,40,a_verifier,Cheikhou Diop,2026-11-22
+u_code_invalide,Code invalide.,Code bi baaxul.,,20,a_verifier,Cheikhou Diop,2026-11-22
+u_code_incorrect_ou_expire,Code incorrect ou expiré.,Code bi jubul walla jamonoam weesu na.,,35,a_verifier,Cheikhou Diop,2026-11-22
+u_indiquez_votre_prenom_et,Indiquez votre prénom et votre nom.,Bindal sa turu njëkk ak sa sant.,,49,a_verifier,Cheikhou Diop,2026-11-22
+u_enregistrement_impossible,Enregistrement impossible.,Mëneesul denc.,,37,a_verifier,Cheikhou Diop,2026-11-22
+u_entrez_votre_numero_de,"Entrez votre numéro de téléphone : vous recevrez un code par SMS. Si vous n’avez pas encore de compte, il est créé automatiquement. Vous retrouvez vos demandes sur tous vos appareils. Le compte est facultatif : vous pouvez aussi faire une demande sans compte.","Dugalal sa nimero telefon : dinañu la yónnee code ci SMS. Su amuloo compte, dinañu la ko sosal. Mën nga gis say laaj ci say telefon yépp. Compte bi du war : mën nga it yónnee laaj te amul compte.",,363,a_verifier,Cheikhou Diop,2026-11-22
+u_valider,Valider,Dëggal,,10,a_verifier,Cheikhou Diop,2026-11-22
+u_changer_de_numero,Changer de numéro,Soppi nimero,,24,a_verifier,Cheikhou Diop,2026-11-22
+u_numero_de_telephone,Numéro de téléphone,Nimero telefon,,27,a_verifier,Cheikhou Diop,2026-11-22
+u_recevoir_le_code,Recevoir le code,Jot code bi,,23,a_verifier,Cheikhou Diop,2026-11-22
+u_prenom,Prénom,Turu njëkk,,9,a_verifier,Cheikhou Diop,2026-11-22
+u_nom,Nom,Sant,,5,a_verifier,Cheikhou Diop,2026-11-22
+u_village_quartier_ou_adresse,"Village, quartier ou adresse","Dëkk, quartier walla adres",,40,a_verifier,Cheikhou Diop,2026-11-22
+u_enregistrer,Enregistrer,Denc,,16,a_verifier,Cheikhou Diop,2026-11-22
+u_se_deconnecter,Se déconnecter,Génn,,20,a_verifier,Cheikhou Diop,2026-11-22
+u_tout_marquer_comme_lu,Tout marquer comme lu,Màndargaal lépp ni jàng nañu ko,,30,a_verifier,Cheikhou Diop,2026-11-22
+u_voir_le_dossier,Voir le dossier,Xool dosiye bi,,21,a_verifier,Cheikhou Diop,2026-11-22
+u_notifications,Notifications,Yëgle yi,,19,a_verifier,Cheikhou Diop,2026-11-22
+u_indiquez_votre_nom_et,Indiquez votre nom et votre message.,Bindal sa tur ak sa bataaxal.,,51,a_verifier,Cheikhou Diop,2026-11-22
+u_choisissez_au_moins_une,Choisissez au moins une pièce.,Tànnal benn dokimaa walla lu ëpp.,,42,a_verifier,Cheikhou Diop,2026-11-22
+u_commune_introuvable_verifiez_le,Commune introuvable. Vérifiez le code ou utilisez le lien de votre mairie.,Gisunu komun bi. Seetal code bi walla jëfandikool lien bu sa mairie.,,104,a_verifier,Cheikhou Diop,2026-11-22
+u_ce_dossier_n_est,Ce dossier n’est pas disponible dans cette commune.,Dosiye bii amul ci komun bii.,,72,a_verifier,Cheikhou Diop,2026-11-22
+u_annulation_impossible_ce_rendez,Annulation impossible : ce rendez-vous n’est plus modifiable.,Mëneesul dindi : dootul man a soppi rendez-vous bii.,,86,a_verifier,Cheikhou Diop,2026-11-22
+u_aucune_demande_avec_ce,Aucune demande avec ce numéro. Vérifiez-le et réessayez.,Amul laaj bu am nimero bii. Seetal nimero bi te jéemaat.,,79,a_verifier,Cheikhou Diop,2026-11-22
+u_erreur_reseau_reessayez,Erreur réseau. Réessayez.,Amul jokkoo ak internet. Jéemaat.,,35,a_verifier,Cheikhou Diop,2026-11-22
+u_connexion_limitee_les_informations,Connexion limitée : les informations affichées sont celles enregistrées sur cet appareil.,Internet bi dafa néew. Xibaar yi nga gis mooy yi ñu denc ci telefon bii.,,125,a_verifier,Cheikhou Diop,2026-11-22
+u_connexion_impossible_verifiez_votre,Connexion impossible. Vérifiez votre réseau puis réessayez.,Mëneesul jokkoo ak internet. Seetal sa réseau te jéemaat.,,83,a_verifier,Cheikhou Diop,2026-11-22
+sl_nouvelle,Demande envoyée,Yónnee nañu,,21,a_verifier,Cheikhou Diop,2026-11-22
+sl_orientee,Transmise au service compétent,Yónnee nañu ko ci serwiis bi,,42,a_verifier,Cheikhou Diop,2026-11-22
+sl_en_cours,En cours de traitement,Mi ngi ci dox,,31,a_verifier,Cheikhou Diop,2026-11-22
+sl_a_valider,En cours de vérification,Mi ngi ci seet,,34,a_verifier,Cheikhou Diop,2026-11-22
+sl_en_attente_pieces,Informations complémentaires nécessaires,Am na lu ci des ci say kayit,,56,a_verifier,Cheikhou Diop,2026-11-22
+sl_acceptee,Demande acceptée,Nangu nañu ko,,23,a_verifier,Cheikhou Diop,2026-11-22
+sl_pret_a_retirer,Document prêt à retirer,"Dokimaa bi pare na, ñëwal jël ko",,33,a_verifier,Cheikhou Diop,2026-11-22
+sl_traitee,Demande terminée,Jeex na,,23,a_verifier,Cheikhou Diop,2026-11-22
+sl_redirigee,Réorientée vers l’organisme compétent,Yónnee nañu ko ci beneen kurum,,52,a_verifier,Cheikhou Diop,2026-11-22
+sl_rejetee,Demande rejetée,Nanguwuñu ko,,21,a_verifier,Cheikhou Diop,2026-11-22
+sl_cloturee,Dossier clôturé,Denc nañu dosiye bi,,21,a_verifier,Cheikhou Diop,2026-11-22
+sx_nouvelle,La mairie a bien reçu votre demande.,Mairie bi jot na sa laaj.,,51,a_verifier,Cheikhou Diop,2026-11-22
+sx_orientee,Votre demande a été confiée au service qui s’en occupe.,Yónnee nañu sa laaj ci serwiis bi ko topptoo.,,77,a_verifier,Cheikhou Diop,2026-11-22
+sx_en_cours,Un agent de la mairie traite votre demande.,Liggéeykat bu mairie bi ngi saytu sa laaj.,,61,a_verifier,Cheikhou Diop,2026-11-22
+sx_a_valider,Votre dossier est relu avant la décision.,Maa ngiñu seetaat sa dosiye bala ñuy dogal.,,58,a_verifier,Cheikhou Diop,2026-11-22
+sx_en_attente_pieces,Il manque des informations ou des pièces. Envoyez-les ci-dessous.,Am na ay xibaar walla kayit yu ci des. Yónnee leen fii ci suuf.,,91,a_verifier,Cheikhou Diop,2026-11-22
+sx_acceptee,Votre demande est acceptée. La mairie prépare la suite.,Nangu nañu sa laaj. Mairie bi ngi waajal li ci topp.,,77,a_verifier,Cheikhou Diop,2026-11-22
+sx_pret_a_retirer,Votre document est prêt. Il se retire en mairie.,Sa dokimaa bi pare na. Mën nga jël ko ci mairie bi.,,68,a_verifier,Cheikhou Diop,2026-11-22
+sx_traitee,Votre demande est terminée. Lisez la réponse de la mairie.,Sa laaj jeex na. Jàng tontu bi mairie bi la yonnee.,,82,a_verifier,Cheikhou Diop,2026-11-22
+sx_redirigee,Cette demande relève d’un autre organisme. Lisez l’explication ci-dessous.,Mairie bi moomul sa laaj. Jàng leeral bi ci suuf.,,104,a_verifier,Cheikhou Diop,2026-11-22
+sx_rejetee,Votre demande n’a pas pu être acceptée. Le motif est indiqué ci-dessous.,Mënulñu nangu sa laaj. Li tax ñu bañ nekk na ci suuf.,,101,a_verifier,Cheikhou Diop,2026-11-22
+sx_cloturee,Ce dossier est fermé.,Dosiye bii tëj na.,,30,a_verifier,Cheikhou Diop,2026-11-22
+sv_secretariat,Secrétariat,Sekretarya,,16,a_verifier,Cheikhou Diop,2026-11-22
+sv_etat_civil,Service de l’état civil,Serwiis état civil,,33,a_verifier,Cheikhou Diop,2026-11-22
+sv_technique,Service technique,Serwiis teknig,,24,a_verifier,Cheikhou Diop,2026-11-22
+sv_finances,Finances,Finaas,,12,a_verifier,Cheikhou Diop,2026-11-22
+sv_rh,Ressources humaines,Nit ñi ak liggéey,,27,a_verifier,Cheikhou Diop,2026-11-22
+sv_maire,Cabinet du Maire,Biro Maire,,23,a_verifier,Cheikhou Diop,2026-11-22
+sv_adjoint,Adjoint au Maire,Ndawtum Maire,,23,a_verifier,Cheikhou Diop,2026-11-22
+sv_externe,Organisme compétent,Kurum bu am sañ-sañ,,27,a_verifier,Cheikhou Diop,2026-11-22
+rvs_demandee,En attente de confirmation,Mi ngi xaar nangu,,37,a_verifier,Cheikhou Diop,2026-11-22
+rvs_confirmee,Rendez-vous confirmé,Nangu nañu rendez-vous bi,,28,a_verifier,Cheikhou Diop,2026-11-22
+rvs_refusee,Créneau non disponible,Waxtu wi amul,,31,a_verifier,Cheikhou Diop,2026-11-22
+rvs_annulee,Annulé,Far nañu ko,,9,a_verifier,Cheikhou Diop,2026-11-22
+rvx_demandee,Le service a reçu votre demande. Vous serez prévenu dès qu’il confirme une date.,Serwiis bi jot na sa laaj. Dinañu la yëgal bu ñu tëralée bés bi.,,112,a_verifier,Cheikhou Diop,2026-11-22
+rvx_confirmee,Présentez-vous à la date et à l’heure indiquées.,Ñëwal bés bi ci waxtu wi ñu la wax.,,68,a_verifier,Cheikhou Diop,2026-11-22
+rvx_refusee,Le service ne peut pas vous recevoir à cette date. Lisez sa réponse.,Serwiis bi mënul la jot bés boobu. Jàng tontu bi.,,96,a_verifier,Cheikhou Diop,2026-11-22
+rvx_annulee,Ce rendez-vous est annulé.,Far nañu rendez-vous bi.,,37,a_verifier,Cheikhou Diop,2026-11-22
+pcl_actualite,Actualité,Xibaar,,13,a_verifier,Cheikhou Diop,2026-11-22
+pcl_communique,Communiqué,Yëgle,,14,a_verifier,Cheikhou Diop,2026-11-22
+pcl_avis,Avis,Yëgle,,6,a_verifier,Cheikhou Diop,2026-11-22
+pcl_evenement,Événement,Mbir mi,,13,a_verifier,Cheikhou Diop,2026-11-22
+pjl_programme,Programmé,Tëral nañu ko,,13,a_verifier,Cheikhou Diop,2026-11-22
+pjl_en_cours,En cours,Mi ngi ci dox,,12,a_verifier,Cheikhou Diop,2026-11-22
+pjl_en_attente,En attente,Mi ngi xaar,,14,a_verifier,Cheikhou Diop,2026-11-22
+pjl_en_retard,En retard,Yàgg na,,13,a_verifier,Cheikhou Diop,2026-11-22
+pjl_termine,Terminé,Jeex na,,10,a_verifier,Cheikhou Diop,2026-11-22
+st_0,Envoyée,Yónnee nañu,,10,a_verifier,Cheikhou Diop,2026-11-22
+st_1,Transmise,Yónnee nañu ko,,13,a_verifier,Cheikhou Diop,2026-11-22
+st_2,Traitement,Mi ngi ci liggéey,,14,a_verifier,Cheikhou Diop,2026-11-22
+st_3,Vérification,Mi ngi ci seet,,17,a_verifier,Cheikhou Diop,2026-11-22
+st_4,Réponse,Tontu,,10,a_verifier,Cheikhou Diop,2026-11-22
+v_conservez_le_votre_dossier,"Conservez-le. Votre dossier est aussi dans votre espace, rubrique « Mes demandes », et vous serez notifié à chaque étape.","Dencal ko. Sa dosiye nekk na itam ci sa espace, ci « Mes demandes ». Dinañu la yëgal bu dara soppee.",,170,a_verifier,Cheikhou Diop,2026-11-22
+v_conservez_le_il_vous,Conservez-le : il vous permet de suivre votre dossier. Il est aussi enregistré dans « Mes demandes » sur cet appareil.,Dencal ko: moo lay may nga topp sa dosiye. Denc nañu ko itam ci « Mes demandes » ci telefon bii.,,166,a_verifier,Cheikhou Diop,2026-11-22
+v_votre_mairie_a_votre,Votre mairie à votre service,Sa mairie ngi fi ngir la dimbali,,40,a_verifier,Cheikhou Diop,2026-11-22
+v_en_cours_d_orientation,En cours d’orientation,Mi ngi ci yónnee,,31,a_verifier,Cheikhou Diop,2026-11-22
+v_retrait_lieu_et_modalites,Retrait : lieu et modalités,Foo xamne ngay jël ko ak naka,,38,a_verifier,Cheikhou Diop,2026-11-22
+v_reponse_de_la_mairie,Réponse de la mairie,Tontu mairie bi,,28,a_verifier,Cheikhou Diop,2026-11-22
+v_je_connais_le_numero,Je connais le numéro et l’année de l’acte,Xam naa limu ak atum acte bi,,58,a_verifier,Cheikhou Diop,2026-11-22
+v_j_ai_un_ancien,J’ai un ancien extrait ou une photocopie,Am naa benn extrait bu yàgg walla photocopie,,56,a_verifier,Cheikhou Diop,2026-11-22
+v_personne_concernee,Personne concernée,Nit ki lañu wax,,26,a_verifier,Cheikhou Diop,2026-11-22
+v_annee,Année,At,,7,a_verifier,Cheikhou Diop,2026-11-22
+v_pieces_jointes,Pièces jointes,Kayit yi ñu yokk,,20,a_verifier,Cheikhou Diop,2026-11-22
+v_telephone,Téléphone,Telefon,,13,a_verifier,Cheikhou Diop,2026-11-22
+v_vous_serez_prevenu_dans,Vous serez prévenu dans votre espace.,Dinañu la yëgal ci sa espace.,,52,a_verifier,Cheikhou Diop,2026-11-22
+v_gardez_le_numero_de,Gardez le numéro de suivi qui vous sera donné.,Dencal limu suivi bi ñu lay jox.,,65,a_verifier,Cheikhou Diop,2026-11-22
+v_cette_heure_n_est,Cette heure n’est plus disponible. Choisissez une autre heure.,Waxtu wii jotul. Tànnal beneen waxtu.,,87,a_verifier,Cheikhou Diop,2026-11-22
+v_date_refusee_choisissez_un,Date refusée : choisissez un jour dans les 90 prochains jours.,Bés bi baaxul. Tànnal beneen bés ci 90i fan yii.,,87,a_verifier,Cheikhou Diop,2026-11-22
+v_vous_avez_deja_3,Vous avez déjà 3 demandes en attente.,Am nga ba pare 3 laaj yu xaar.,,52,a_verifier,Cheikhou Diop,2026-11-22
+v_envoi_impossible_verifiez_les,Envoi impossible. Vérifiez les champs et réessayez.,Yónnee mënul. Seetal li nga bind te jéemaat.,,72,a_verifier,Cheikhou Diop,2026-11-22
+v_notifications_non_autorisees_vous,Notifications non autorisées : vous pouvez les activer dans les réglages du navigateur.,Danga tëj notifications. Mën nga leen ubbi ci réglages yu navigateur bi.,,122,a_verifier,Cheikhou Diop,2026-11-22
+v_notifications_activees_sur_cet,Notifications activées sur cet appareil.,Notifications yi ubbeeku nañu ci appareil bii.,,56,a_verifier,Cheikhou Diop,2026-11-22
+v_notifications_desactivees_sur_cet,Notifications désactivées sur cet appareil.,Notifications yi tëju nañu ci appareil bii.,,61,a_verifier,Cheikhou Diop,2026-11-22
+v_aucune_demande_deposee_sur,Aucune demande déposée sur cet appareil.,Amul laaj bu ñu yónnee ci appareil bii.,,56,a_verifier,Cheikhou Diop,2026-11-22
+v_numero_invalide_exemple_77,Numéro invalide. Exemple : 77 123 45 67,Limu bi jubul. Misaal: 77 123 45 67,,55,a_verifier,Cheikhou Diop,2026-11-22
+v_la_connexion_par_sms,La connexion par SMS n’est pas encore disponible. Vous pouvez quand même déposer une demande sans compte.,Connexion SMS bi jotagul. Waaye mën nga yónnee sa laaj te amul compte.,,147,a_verifier,Cheikhou Diop,2026-11-22
+v_envoi_du_sms_impossible,Envoi du SMS impossible. Réessayez plus tard.,Yónnee SMS bi mënul. Jéemaat gannaaw.,,63,a_verifier,Cheikhou Diop,2026-11-22
+v_connexion_reussie,Connexion réussie.,Dugg nañu ci compte bi.,,26,a_verifier,Cheikhou Diop,2026-11-22
+v_compte_cree_completez_votre,Compte créé. Complétez votre profil ci-dessous : vous ne le ressaisirez plus.,Sos nañu compte bi. mottalal sa profil fii ci suuf: doo ko bindaat.,,108,a_verifier,Cheikhou Diop,2026-11-22
+v_profil_enregistre,Profil enregistré.,Denc nañu sa profil.,,26,a_verifier,Cheikhou Diop,2026-11-22
+v_se_connecter_ou_creer,Se connecter ou créer un compte,Dugg ci compte walla sos beneen,,44,a_verifier,Cheikhou Diop,2026-11-22
+v_format_non_accepte_photo,Format non accepté : photo ou PDF uniquement.,Formaa bii nanguwuñu ko: photo walla PDF rekk.,,63,a_verifier,Cheikhou Diop,2026-11-22
+v_une_piece_depasse_3,Une pièce dépasse 3 Mo.,Benn kayit ëpp na 3 Mo.,,33,a_verifier,Cheikhou Diop,2026-11-22
+v_piece_illisible_utilisez_une,Pièce illisible. Utilisez une photo JPEG/PNG ou un PDF.,Kayit bi leerul. Jëfandikool photo JPEG/PNG walla PDF.,,77,a_verifier,Cheikhou Diop,2026-11-22
+v_envoi_d_une_piece,Envoi d’une pièce impossible. Utilisez une photo ou un PDF.,Yónnee kayit bi mënul. Jëfandikool photo walla PDF.,,83,a_verifier,Cheikhou Diop,2026-11-22
+v_piece_illisible,Pièce illisible.,Kayit bi leerul.,,23,a_verifier,Cheikhou Diop,2026-11-22
+v_envoi_d_une_piece2,Envoi d’une pièce impossible.,Yónnee kayit bi mënul.,,41,a_verifier,Cheikhou Diop,2026-11-22
+v_envoi_impossible_le_dossier,Envoi impossible : le dossier n’attend plus de pièces.,Yónnee mënul: dosiye bi soxlawulati kayit.,,76,a_verifier,Cheikhou Diop,2026-11-22
+v_copie,Copié,Kopiye nañu ko,,7,a_verifier,Cheikhou Diop,2026-11-22
+v_envoi_en_cours,Envoi en cours…,Mi ngi yónnee…,,21,a_verifier,Cheikhou Diop,2026-11-22
+v_annuler_ce_rendez_vous,Annuler ce rendez-vous ?,Far rendez-vous bii?,,34,a_verifier,Cheikhou Diop,2026-11-22
+v_rendez_vous_annule_le,Rendez-vous annulé. Le service est prévenu.,Far nañu rendez-vous bi. Serwiis bi xam na ko.,,61,a_verifier,Cheikhou Diop,2026-11-22

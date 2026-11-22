@@ -1,124 +1,967 @@
 /* Administration SaaS : réservé aux comptes plateforme (MFA obligatoire, contrôlé côté serveur) */
-const $=s=>document.querySelector(s),esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const sb=supabase.createClient("https://aiqegpijisspankpkwfj.supabase.co","sb_publishable__Zc0adl_eD_PyMkaR5ACzA_-_yjwmbI",{auth:{storageKey:"mc-saas"}}),TS_KEY="0x4AAAAAAF7OVwUkBsAvSANV";
-const fmt=n=>Number(n||0).toLocaleString("fr-FR"),fd=x=>x?new Date(x).toLocaleDateString("fr-FR"):"—",fdt=x=>x?new Date(x).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"—";
-const TG={actif:["Active","ok"],essai:["Essai","or"],suspendu:["Suspendue","rd"],resilie:["Résiliée","rd"]},AB={essai:"Essai",actif:"Actif",impaye:"Impayé",suspendu:"Suspendu",resilie:"Résilié"};
-const AL={commune_creer:"Mairie créée",commune_modifier:"Informations de la mairie modifiées",admin_mairie_preparer:"Rôle admin_mairie attribué",admin_mairie_affecter:"Administrateur affecté",commune_statut:"Statut modifié",acces_ouvert:"Accès technique ouvert",acces_ferme:"Accès technique clos",admin_mdp_reinit:"Mot de passe admin réinitialisé",plan_maj:"Offre modifiée",abo_maj:"Abonnement modifié",facture_creer:"Facture émise",facture_annuler:"Facture annulée",paiement:"Paiement enregistré",relances:"Impayés mis à jour",modules_maj:"Modules modifiés"};
-const NAV=[["dash","Tableau de bord","dash","Tableau","Vue d’ensemble de la plateforme"],["mairies","Gestion des mairies","mairies","Mairies","Créer, rechercher et suspendre les mairies"],["abos","Abonnements et facturation","abos","Facturation","Offres, abonnements et encaissements"],["modules","Gestion des modules","modules","Modules","Activer ou désactiver les modules d’une mairie"],["audit","Journal d’audit","audit","Audit","Les 100 dernières actions de la plateforme"]],PG=10;
-const IP={dash:'<rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/>',mairies:'<path d="M3 21h18M5 21V10l7-5 7 5v11M9.5 21v-5.5h5V21M9 12h.01M15 12h.01"/>',abos:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 10h18M7 15h4"/>',modules:'<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>',audit:'<path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6l8-3z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',out:'<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>',ref:'<path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/>',menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.5 3.2-5.5 6.5-5.5s5.9 2 6.5 5.5M16 4.8a3.5 3.5 0 010 6.4M18 14.8c2 .7 3.2 2.4 3.5 5.2"/>',inbox:'<path d="M4 13l2.5-8h11L20 13v6H4v-6z"/><path d="M4 13h4.5l1 2.5h5l1-2.5H20"/>',cardok:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M8 12l2.5 2.5L16 9.5"/>',alert:'<path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18h.01"/>',chev:'<path d="M9 6l6 6-6 6"/>',ok:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/>',plus:'<path d="M12 5v14M5 12h14"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',pause:'<circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/>'};
-const ic=n=>`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${IP[n]||""}</svg>`;
-const LOGO='<svg class="sx-logo" viewBox="0 0 48 48" aria-hidden="true"><rect x="1.5" y="1.5" width="45" height="45" rx="13" fill="#0B5A2E" stroke="#E4C56B" stroke-width="1.5"/><path d="M12 19L24 11l12 8z" fill="none" stroke="#E4C56B" stroke-width="2" stroke-linejoin="round"/><path d="M15 22v11M21 22v11M27 22v11M33 22v11M11 36h26" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>';
-const em=t=>`<div class="sx-e0">${t}</div>`,ini=n=>String(n||"?").trim().split(/\s+/).slice(0,2).map(w=>w.charAt(0)).join("").toUpperCase(),mlab=m=>{const[a,b]=String(m).split("-"),d=new Date(+a,(+b||1)-1,1);return isNaN(d)?esc(m):d.toLocaleDateString("fr-FR",{month:"short",year:"numeric"})};
-const ev=(a,x="")=>`<li class="sx-ev"><span class="sx-dot"></span><div class="sx-evb"><b>${esc(AL[a.action]||a.action)}</b><div class="sub">${esc(a.email||"")}${x}</div></div><time class="sx-tm">${fdt(a.created_at)}</time></li>`;
-const nw=b=>`<details id="nwd" class="sx-nw"${S.nwo?" open":""}><summary><span class="sx-pl">${ic("plus")}</span>Nouvelle mairie</summary><div class="pb">${b}</div></details>`;
-const FS={emise:["Émise","or"],impayee:["Impayée","rd"],payee:["Payée","ok"],annulee:["Annulée",""]},MD=[["wave","Wave"],["orange_money","Orange Money"],["virement","Virement"],["especes","Espèces"],["autre","Autre"]],MK=[["cabinet","Cabinet du Maire"],["adjoints","Adjoints au Maire"],["administration","Administration"],["developpement","Développement"],["conseil","Conseil municipal"],["citoyens","Citoyens et communication"],["pilotage","Pilotage"],["finances","Finances"],["portail_adjoint","Portail des adjoints"],["portail_secretariat","Portail du secrétariat"]];
-let S={ar:{},arp:null,dlp:null,am:[],em:null,ado:false,st:"login",v:"dash",err:"",ok:"",tok:"",d:{},m:[],pl:[],au:[],q:"",fs:"",sk:"nom",sd:1,pg:0,mfa:null,menu:false,res:null,f:{},me:"",tb:"abos",ab:[],fa:[],pa:[],ea:null,pf:null,ep:null,mc:"",mm:{},sp:null,nwo:false};
-const pn=(t,b,r="")=>`<section class="pn"><header class="ph"><h2>${t}</h2>${r}</header><div class="pb">${b}</div></section>`,kp=(i,l,v,w)=>`<div class="sx-tile${w?" warn":""}"><div class="sx-ti">${ic(i)}</div><div><div class="sx-tv">${v}</div><div class="sx-tl">${l}</div></div></div>`;
-const rw=(a,b)=>`<div class="rw"><div class="rl">${a}</div><div>${b}</div></div>`,tg=(t,c,a="",x="")=>a?`<button class="tg ${c}" data-a="${a}" ${x}>${esc(t)}</button>`:`<span class="tg ${c}" style="cursor:default">${esc(t)}</span>`;
-const inp=(id,l,v="",ty="text",x="")=>`<div><label for="${id}">${l}</label><input id="${id}" type="${ty}" value="${esc(v)}" ${x}></div>`;
-const slugify=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
-const g=id=>(($("#"+id)||{}).value||"").trim(),L1=s=>S.m.find(x=>x.slug==s),L1id=i=>S.m.find(x=>x.id==i);
-const rpc=async(f,a)=>{const r=await sb.rpc(f,a);if(r.error)throw new Error(r.error.message);return r.data};
-const edgeSa=async b=>{const r=await sb.functions.invoke("sa-admin",{body:b});if(r.error){let m="Action impossible.";try{m=(await r.error.context.json()).error||m}catch(e){}throw new Error(m)}return r.data};
-const edge=async b=>{const r=await sb.functions.invoke("saas-admin",{body:b});if(r.error){let m="Action impossible.";try{m=(await r.error.context.json()).error||m}catch(e){}throw new Error(m)}return r.data};
-async function loadAll(){const[a,b,c,d,e,f,h]=await Promise.all([rpc("saas_stats"),rpc("saas_liste_communes"),sb.from("plans").select("*").order("ordre"),sb.from("platform_audit").select("*").order("created_at",{ascending:false}).limit(100),rpc("saas_liste_abos"),sb.from("factures").select("*").order("created_at",{ascending:false}).limit(200),sb.from("paiements").select("facture_id,montant").limit(3000)]);try{S.am=await rpc("saas_admins_mairie")}catch(e){S.am=[]}try{S.ar={};(await rpc("saas_archives")||[]).forEach(a=>{S.ar[a.id]=a.archive_le})}catch(e){S.ar={}}S.d=a;S.m=b;S.pl=c.data||[];S.au=d.data||[];S.ab=e;S.fa=f.data||[];S.pa=h.data||[]}
-async function after(){const a=(await sb.auth.mfa.getAuthenticatorAssuranceLevel()).data;if(a&&a.currentLevel=="aal2")return boot();
-const f=(((await sb.auth.mfa.listFactors()).data||{}).all||[]).filter(x=>x.factor_type=="totp"),v=f.find(x=>x.status=="verified");
-if(v){S.mfa={id:v.id};S.st="mfa";return}
-for(const x of f)await sb.auth.mfa.unenroll({factorId:x.id});
-const e=await sb.auth.mfa.enroll({factorType:"totp"});if(e.error)throw e.error;S.mfa={id:e.data.id,qr:e.data.totp.qr_code,sec:e.data.totp.secret};S.st="enroll"}
-async function boot(){try{try{await rpc("saas_relances")}catch(e){}await loadAll()}catch(e){S.err="Ce compte n’a pas accès à la plateforme.";await sb.auth.signOut();S.st="login";return}
-S.me=((await sb.auth.getUser()).data.user||{}).email||"";S.v=hv()||S.v;S.st="app"}
-const gate=()=>`<div class="lg"><main class="lc"><div class="lh">${LOGO}<p class="sx-kick">Mairie Connectée</p><h1>Administration SaaS</h1></div><div class="lb">${S.err?`<div class="al" role="alert" style="margin:0">${esc(S.err)}</div>`:""}`+
-(S.st=="login"?inp("em","E-mail","","email",'autocomplete="username"')+inp("pw","Mot de passe","","password",'autocomplete="current-password"')+`<div id="ts"></div><button class="bt" data-a="login">Se connecter</button>`:
-(S.st=="enroll"?`<p>Activez l’authentification à deux facteurs : scannez ce code avec Google Authenticator ou équivalent.</p><img src="${esc(S.mfa.qr)}" alt="QR code" style="width:180px;margin:0 auto"><p class="mut" style="font-size:12px;word-break:break-all">Clé : ${esc(S.mfa.sec)}</p>`:`<p>Saisissez le code à 6 chiffres de votre application d’authentification.</p>`)+inp("cd","Code","","text",'inputmode="numeric" autocomplete="one-time-code" maxlength="6"')+`<button class="bt" data-a="verify">Valider</button>`)+(S.st!="login"?`<button class="bo" data-a="out">Annuler</button>`:"")+`</div></main></div>`;
-const lst=()=>{const q=S.q.toLowerCase();let L=S.m.filter(x=>(!q||(x.nom+" "+x.slug).toLowerCase().includes(q))&&(S.fs=="archivee"?!!S.ar[x.id]:(!S.ar[x.id]&&(!S.fs||x.statut==S.fs))));
-L.sort((a,b)=>{const A=a[S.sk]??"",B=b[S.sk]??"";return(typeof A=="number"?A-B:String(A).localeCompare(String(B),"fr"))*S.sd});
-const np=Math.max(1,Math.ceil(L.length/PG));S.pg=Math.min(S.pg,np-1);
-return (L.slice(S.pg*PG,S.pg*PG+PG).map(x=>{const t=S.ar[x.id]?["Archivée",""]:(TG[x.statut]||[x.statut,""]);return rw(`<div class="sx-m"><span class="sx-mo" aria-hidden="true">${esc(ini(x.nom))}</span><div><b>${esc(x.nom)}</b> <span class="mut">/${esc(x.slug)}</span><div class="sub">Offre : ${esc(x.plan||"aucune")}${x.abo_statut?" ("+AB[x.abo_statut]+")":""} · échéance ${fd(x.echeance)}</div><div class="sub">${x.users} utilisateur(s) · ${x.demandes} demande(s) · créée le ${fd(x.created_at)}</div></div></div>`,
-`<div class="ra">${tg(t[0],t[1])}<div class="sa-ac">${tg("Liens","","links",`data-s="${esc(x.slug)}"`)}${tg("Modifier","","edm",`data-id="${x.id}"`)}${S.ar[x.id]?tg("Restaurer","ok","rest",`data-id="${x.id}"`)+tg("Supprimer","rd","delm",`data-id="${x.id}"`):(x.statut=="suspendu"||x.statut=="resilie"?tg("Réactiver","ok","react",`data-id="${x.id}"`):tg("Suspendre","rd","susp",`data-id="${x.id}"`))+tg("Archiver","","arm",`data-id="${x.id}"`)}</div></div>`)}).join("")||em("Aucune mairie."))+`<div class="sa-ac" style="justify-content:center;margin-top:10px">${tg("Précédent","","pg",'data-n="-1"')}<span class="mut">Page ${S.pg+1} / ${np} · ${L.length} résultat(s)</span>${tg("Suivant","","pg",'data-n="1"')}</div>`};
-const V={
-dash:()=>{const s=S.d,p=s.par_statut||{},ins=s.inscriptions||[],mx=Math.max(1,...ins.map(x=>x.n)),td=new Date().toISOString().slice(0,10),n=k=>+p[k]||0,
-SG=[["actif","active","actives","#7FE0A0"],["essai","en essai","en essai","#E4C56B"],["suspendu","suspendue","suspendues","#F2948C"],["resilie","résiliée","résiliées","#9DB3A4"]].filter(x=>x[0]!="resilie"||n("resilie")),lb=x=>n(x[0])>1?x[2]:x[1],
-exp=S.ab.filter(x=>x.statut=="essai"&&x.fin_essai&&x.fin_essai<td).length,fi=S.fa.filter(x=>x.statut=="impayee").length,inc=+s.incidents_ouverts||0,imp=+s.impayes||0,T=[];
-if(inc)T.push(["alert",inc+" incident"+(inc>1?"s ouverts":" ouvert"),"audit",""]);
-if(imp||fi)T.push(["clock",[imp?fmt(imp)+" FCFA en attente":"",fi?fi+" facture"+(fi>1?"s impayées":" impayée"):""].filter(Boolean).join(" · "),"abos","fac"]);
-if(exp)T.push(["clock",exp+" essai"+(exp>1?"s expirés":" expiré"),"abos","abos"]);
-if(n("suspendu"))T.push(["pause",n("suspendu")+" mairie"+(n("suspendu")>1?"s suspendues":" suspendue"),"mairies",""]);
-return `<section class="sx-hero" aria-label="Situation de la plateforme"><div><div class="sx-date">${new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div><div class="sx-big">${fmt(s.mairies)}</div><div class="sx-bl">Mairies inscrites</div><div class="sx-seg" role="img" aria-label="${SG.map(x=>n(x[0])+" "+lb(x)).join(", ")}">${SG.filter(x=>n(x[0])).map(x=>`<i style="flex:${n(x[0])};background:${x[3]}"></i>`).join("")}</div><div class="sx-lg">${SG.map(x=>`<span><i style="background:${x[3]}"></i><b>${n(x[0])}</b> ${lb(x)}</span>`).join("")}</div></div><div class="sx-led"><div class="sx-ml">Revenu mensuel récurrent</div><div class="sx-mrr">${fmt(s.mrr)} <small>FCFA</small></div><div class="sx-ln"><span>Encaissé ce mois</span><b>${fmt(s.revenu_mois)} FCFA</b></div><div class="sx-ln"><span>Encaissé cette année</span><b>${fmt(s.revenu_annuel)} FCFA</b></div><div class="sx-ln${imp?" due":""}"><span>Paiements en attente</span><b>${fmt(imp)} FCFA</b></div></div></section><div class="sx-tiles">${kp("users","Utilisateurs municipaux",fmt(s.utilisateurs))}${kp("inbox","Demandes citoyennes",fmt(s.demandes))}${kp("cardok","Abonnements actifs",fmt(s.abonnements_actifs))}${kp("alert","Incidents ouverts",fmt(inc),inc>0)}</div><div class="sx-g">`+
-pn("À traiter",T.length?T.map(x=>`<button class="sx-td" data-a="go" data-v="${x[2]}"${x[3]?` data-t="${x[3]}"`:""}>${ic(x[0])}<span>${x[1]}</span>${ic("chev")}</button>`).join(""):`<div class="sx-ok">${ic("ok")}<span>Rien à traiter pour le moment.</span></div>`)+
-pn("Inscriptions (12 mois)",ins.map(x=>`<div class="sa-bar"><span>${mlab(x.m)}</span><div><i style="width:${Math.round(x.n/mx*100)}%"></i></div><b>${x.n}</b></div>`).join("")||em("Aucune donnée."))+
-pn("Activité récente",S.au.length?`<ul class="sx-evl">${S.au.slice(0,8).map(a=>ev(a)).join("")}</ul>`:em("Aucune activité."),tg("Tout voir","","go",'data-v="audit"'))+`</div>`},
-mairies:()=>{const f=S.f,res=S.res;
-return (res?pn("Mairie créée",`<p><b>Portail citoyen :</b><br>${esc(res.portail_citoyen)}</p><p><b>Portail mairie :</b><br>${esc(res.portail_mairie)}</p><p class="mut">Invitation envoyée à l’administrateur. Son compte reste inactif jusqu’à l’acceptation et à la confirmation de son adresse e-mail.</p>`,tg("Fermer","","cres")):"")+
-(S.arp&&L1id(S.arp)?pn("Archiver "+esc(L1id(S.arp).nom),`<p class="mut">La mairie est résiliée (accès bloqué) et masquée de la liste. Aucune donnée n’est supprimée ; elle peut être restaurée.</p><div class="fr">${inp("ar_mo","Motif (obligatoire, 5 caractères min.)","")}</div><div class="sa-ac">${tg("Annuler","","arno")}<button class="bt" data-a="arok">Confirmer l’archivage</button></div>`):"")+
-(S.dlp&&L1id(S.dlp)?pn("Supprimer "+esc(L1id(S.dlp).nom),`<p class="mut">Suppression définitive, réservée aux mairies archivées et totalement vides (aucune demande, aucun agent, aucune facture). Le compte administrateur est conservé et redevient citoyen. Irréversible.</p><div class="fr">${inp("dl_sl","Saisissez l’identifiant « "+esc(L1id(S.dlp).slug)+" » pour confirmer","")}</div><div class="sa-ac">${tg("Annuler","","dlno")}<button class="bt" style="background:#B91C1C" data-a="dlok">Supprimer définitivement</button></div>`):"")+
-(S.em&&L1id(S.em)?pn("Modifier "+esc(L1id(S.em).nom),`<div class="fr">${inp("e_nom","Nom de la mairie",L1id(S.em).nom)}${inp("e_dom","Domaine personnalisé (facultatif)",L1id(S.em).domaine_perso||"","text",'placeholder="mairie.exemple.sn"')}</div><p class="mut">Identifiant du lien : /${esc(L1id(S.em).slug)} (non modifiable, il protège les liens existants).</p><div class="sa-ac">${tg("Annuler","","edno")}<button class="bt" data-a="edok">Enregistrer</button></div>`):"")+
-(S.sp&&L1id(S.sp)?pn("Suspendre "+esc(L1id(S.sp).nom),`<div class="fr">${inp("s_mo","Motif (obligatoire, 10 caractères min.)","")}</div><div class="sa-ac">${tg("Annuler","","spno")}<button class="bt" style="background:#B91C1C" data-a="spok">Confirmer la suspension</button></div>`):"")+
-nw(`<div class="fr">${inp("n_nom","Nom de la commune",f.nom)}${inp("n_slug","Identifiant du lien",f.slug,"text",'placeholder="ex. fimela"')}<div><label for="n_pl">Offre</label><select id="n_pl">${S.pl.filter(p=>p.actif).map(p=>`<option value="${p.code}"${p.code==f.plan?" selected":""}>${esc(p.nom)} · ${fmt(p.prix_mensuel)} FCFA/mois</option>`).join("")}</select></div>${inp("n_es","Essai gratuit (jours)",f.es||"0","number",'min="0" max="90"')}${inp("n_an","Nom du maire (administrateur)",f.an)}${inp("n_ae","E-mail du maire",f.ae,"email")}</div><div class="sa-ac"><button class="bt" data-a="create">Créer la mairie et envoyer l’invitation</button></div>`)+
-`<details class="sx-nw"${S.ado?" open":""}><summary><span class="sx-pl">${ic("plus")}</span>Affecter un administrateur à une mairie existante</summary><div class="pb"><p class="mut">Le compte doit déjà exister. Étapes : rôle « admin_mairie » attribué, rôle vérifié, puis affectation. Aucun mot de passe ni e-mail n’est modifié ; le compte reste inactif jusqu’à son activation.</p><div class="fr"><div><label for="ad_c">Mairie</label><select id="ad_c">${S.m.map(x=>`<option value="${esc(x.slug)}">${esc(x.nom)} (/${esc(x.slug)})</option>`).join("")}</select></div>${inp("ad_e","E-mail de l’administrateur","","email")}${inp("ad_n","Nom (facultatif)","")}</div><div class="sa-ac"><button class="bt" data-a="adm">Attribuer le rôle, vérifier, puis affecter</button></div></div></details>`+
-pn("Administrateurs municipaux",(S.am||[]).map((a,i)=>rw(`<b>${esc(a.email)}</b><div class="sub">${esc(a.commune_nom||"Sans mairie")}${a.commune_slug?" /"+esc(a.commune_slug):""}</div>`,`${tg(a.statut=="actif"?"Actif":"Inactif",a.statut=="actif"?"ok":"or")} ${tg(a.statut=="actif"?"Désactiver":"Activer",a.statut=="actif"?"rd":"ok","amtog",`data-i="${i}"`)}`)).join("")||em("Aucun administrateur municipal."))+
-pn("Mairies",`<div class="fr sx-fl">${inp("q","Rechercher",S.q,"search",'placeholder="Nom ou identifiant"')}<div><label for="fs">Statut</label><select id="fs"><option value="">Tous</option>${Object.keys(TG).map(k=>`<option value="${k}"${S.fs==k?" selected":""}>${TG[k][0]}</option>`).join("")+`<option value="archivee"${S.fs=="archivee"?" selected":""}>Archivées</option>`}</select></div><div><label for="sk">Trier par</label><select id="sk">${[["nom","Nom"],["created_at","Date"],["users","Utilisateurs"],["demandes","Demandes"]].map(o=>`<option value="${o[0]}"${S.sk==o[0]?" selected":""}>${o[1]}</option>`).join("")}</select></div>${tg("Inverser l’ordre","","dir")}${tg("Exporter (CSV)","","csv")}</div><div id="lst">${lst()}</div>`)},
-abos:()=>{const t=S.tb,rest=f=>f.montant-S.pa.filter(p=>p.facture_id==f.id).reduce((a,p)=>a+p.montant,0),nm=id=>(S.m.find(x=>x.id==id)||{}).nom||"—";
-const tabs=`<div class="tabs">${[["abos","Abonnements"],["fac","Factures"],["off","Offres"]].map(x=>`<button class="tb2${t==x[0]?" on":""}" data-a="tab" data-v="${x[0]}">${x[1]}</button>`).join("")}</div>`;let b="";
-if(t=="abos"){const e=S.ab.find(x=>x.id==S.ea);
-b=(e?pn("Abonnement : "+esc(e.nom),`<div class="fr"><div><label for="a_pl">Offre</label><select id="a_pl">${S.pl.map(p=>`<option value="${p.code}"${p.code==(e.plan||"essentiel")?" selected":""}>${esc(p.nom)} · ${fmt(p.prix_mensuel)}</option>`).join("")}</select></div><div><label for="a_st">Statut</label><select id="a_st">${Object.keys(AB).map(k=>`<option value="${k}"${k==(e.statut||"essai")?" selected":""}>${AB[k]}</option>`).join("")}</select></div>${inp("a_pp","Tarif personnalisé (FCFA/mois, vide = offre)",e.prix_perso??"","number",'min="0"')}${inp("a_fe","Fin d’essai",e.fin_essai||"","date")}${inp("a_ec","Prochaine échéance",e.echeance||"","date")}</div><label for="a_op">Options (une par ligne : Nom;Prix mensuel)</label><textarea id="a_op" rows="3">${esc((e.options||[]).map(o=>o.nom+";"+o.prix).join("\n"))}</textarea><div class="sa-ac">${tg("Annuler","","cea")}<button class="bt" data-a="absave">Enregistrer</button></div>`):"")+
-pn("Abonnements",S.ab.map(x=>{const ex=x.statut=="essai"&&x.fin_essai&&x.fin_essai<new Date().toISOString().slice(0,10);return rw(`<b>${esc(x.nom)}</b><div class="sub">${x.plan?esc(x.plan)+" · "+fmt(x.mensuel)+" FCFA/mois":"Aucun abonnement"} · échéance ${fd(x.echeance)}${x.fin_essai?" · essai jusqu’au "+fd(x.fin_essai):""}</div>${(x.options||[]).length?`<div class="sub">Options : ${x.options.map(o=>esc(o.nom)+" ("+fmt(o.prix)+")").join(", ")}</div>`:""}`,`<div class="ra">${x.statut?tg(ex?"Essai expiré":AB[x.statut],ex||x.statut=="impaye"||x.statut=="suspendu"||x.statut=="resilie"?"rd":x.statut=="essai"?"or":"ok"):""}<div class="sa-ac">${tg(x.plan?"Modifier":"Créer","","eab",`data-id="${x.id}"`)}${x.plan?tg("Facturer","or","fact",`data-id="${x.id}"`):""}</div></div>`)}).join("")||em("Aucune mairie."))}
-else if(t=="fac"){const f=S.fa.find(x=>x.id==S.pf);
-b=(f?pn("Encaisser "+esc(f.numero),`<div class="fr">${inp("p_mt","Montant (FCFA)",rest(f),"number",'min="1"')}<div><label for="p_md">Mode</label><select id="p_md">${MD.map(m=>`<option value="${m[0]}">${m[1]}</option>`).join("")}</select></div>${inp("p_rf","Référence (n° de transaction)")}${inp("p_dt","Date",new Date().toISOString().slice(0,10),"date")}</div><div class="sa-ac">${tg("Annuler","","cea")}<button class="bt" data-a="paysave">Enregistrer le paiement</button></div>`):"")+
-pn("Factures",`<div class="sa-ac" style="margin:0 0 10px">${tg("Mettre à jour les impayés","","rel")}</div>`+S.fa.map(x=>{const r=rest(x),z=FS[x.statut]||[x.statut,""];return rw(`<b>${esc(x.numero)}</b> · ${esc(nm(x.commune_id))}<div class="sub">Période ${esc(x.periode||"—")} · ${fmt(x.montant)} FCFA${x.statut!="annulee"&&x.statut!="payee"?" · reste "+fmt(r):""} · échéance ${fd(x.echeance)}</div>`,`<div class="ra">${tg(z[0],z[1])}${x.statut=="emise"||x.statut=="impayee"?`<div class="sa-ac">${tg("Encaisser","ok","epay",`data-id="${x.id}"`)}${r==x.montant?tg("Annuler","rd","fann",`data-id="${x.id}"`):""}</div>`:""}</div>`)}).join("")||em("Aucune facture."))}
-else{const e=S.ep=="new"?{}:S.pl.find(x=>x.code==S.ep);
-b=(S.ep?pn(S.ep=="new"?"Nouvelle offre":"Modifier l’offre",`<div class="fr">${inp("o_cd","Code",e.code||"","text",e.code?"readonly":'placeholder="ex. premium_plus"')}${inp("o_nm","Nom",e.nom||"")}${inp("o_px","Prix mensuel (FCFA)",e.prix_mensuel??"","number",'min="0"')}${inp("o_or","Ordre",e.ordre??0,"number")}<div><label for="o_ac">Active</label><select id="o_ac"><option value="1"${e.actif!==false?" selected":""}>Oui</option><option value="0"${e.actif===false?" selected":""}>Non</option></select></div></div><div class="sa-ac">${tg("Annuler","","cea")}<button class="bt" data-a="ofsave">Enregistrer</button></div>`):"")+
-pn("Offres",S.pl.map(p=>rw(`<b>${esc(p.nom)}</b> <span class="mut">${esc(p.code)}</span><div class="sub">${fmt(p.prix_mensuel)} FCFA/mois · ${S.ab.filter(x=>x.plan==p.code).length} mairie(s)</div>`,`<div class="sa-ac">${tg(p.actif?"Active":"Inactive",p.actif?"ok":"rd")}${tg("Modifier","","eof",`data-c="${p.code}"`)}</div>`)).join(""),tg("Nouvelle offre","","eof",'data-c="new"'))}
-return tabs+b},
-modules:()=>pn("Modules d’une mairie",`<div class="fr"><div><label for="m_c">Mairie</label><select id="m_c"><option value="">Choisir…</option>${S.m.map(x=>`<option value="${x.id}"${S.mc==x.id?" selected":""}>${esc(x.nom)}</option>`).join("")}</select></div></div>`+(S.mc?MK.map(k=>rw(`<b>${k[1]}</b>`,`<label class="sx-sw"><input type="checkbox" id="md_${k[0]}"${S.mm[k[0]]!==false?" checked":""}><span>Activé</span></label>`)).join("")+`<div class="sa-ac"><button class="bt" data-a="msave">Enregistrer les modules</button></div><p class="mut">Un module désactivé disparaît de l’espace mairie pour tous ses utilisateurs.</p>`:em("Choisissez une mairie."))),
-audit:()=>pn("Journal d’audit plateforme (100 derniers)",S.au.length?`<ul class="sx-evl">${S.au.map(a=>{const m=a.commune_id&&S.m.find(x=>x.id==a.commune_id);return ev(a,(m?" · "+esc(m.nom):"")+(a.detail&&a.detail.motif?" · "+esc(a.detail.motif):""))}).join("")}</ul>`:em("Aucun événement."))};
-const hv=()=>{const h=(location.hash||"").slice(1);return NAV.some(n=>n[0]==h)?h:null};
-const nvb=(n,k)=>`<button class="sx-nv" data-a="go" data-v="${n[0]}" data-k="${k}"${S.v==n[0]?' aria-current="page"':""}>${ic(n[2])}<span class="sx-nl">${n[1]}</span><span class="sx-ns">${n[3]}</span></button>`;
-const shell=()=>{const c=NAV.find(n=>n[0]==S.v)||NAV[0];return `<div class="sx"><aside class="sx-side${S.menu?" open":""}" aria-label="Navigation principale"><div class="sx-brand">${LOGO}<div><div class="sx-bn">Mairie Connectée</div><div class="sx-bs">Administration plateforme</div></div></div><nav class="sx-nav">${NAV.map(n=>nvb(n,"s")).join("")}</nav><div class="sx-acc"><div class="sx-me"><span class="sx-av" aria-hidden="true">${esc((S.me||"?").charAt(0))}</span><div class="sx-em">${esc(S.me)}</div></div><button class="sx-nv" data-a="out">${ic("out")}<span class="sx-nl">Déconnexion</span><span class="sx-ns">Sortir</span></button></div></aside><div class="sx-ov${S.menu?" on":""}" data-a="menu"></div><div class="sx-main"><header class="sx-top"><button class="sx-mb" data-a="menu" aria-label="Menu" aria-expanded="${!!S.menu}">${ic("menu")}</button><div class="sx-tt"><h1>${c[1]}</h1><p class="sx-sub">${c[4]}</p></div><button class="sx-rf" data-a="refresh" aria-label="Actualiser">${ic("ref")}<span>Actualiser</span></button></header><main class="sx-ct">${S.err?`<div class="al sx-toast" role="alert">${esc(S.err)}</div>`:""}${S.ok?`<div class="al sx-toast ok" role="status">${esc(S.ok)}</div>`:""}${V[S.v]()}</main></div><nav class="sx-bar" aria-label="Navigation">${NAV.map(n=>`<button class="sx-bt" data-a="go" data-v="${n[0]}" data-k="b"${S.v==n[0]?' aria-current="page"':""}>${ic(n[2])}<span>${n[3]}</span></button>`).join("")}</nav></div>`};
-const applyMenu=()=>{const sd=$(".sx-side"),ov=$(".sx-ov"),mb=$(".sx-mb");if(!sd)return;sd.classList[S.menu?"add":"remove"]("open");if(ov)ov.classList[S.menu?"add":"remove"]("on");if(mb)mb.setAttribute("aria-expanded",String(!!S.menu));document.body.classList[S.menu?"add":"remove"]("sx-lock");const f=S.menu?sd.querySelector(".sx-nv"):mb;if(f&&f.focus)try{f.focus({preventScroll:true})}catch(e){}};
-function render(){$("#app").innerHTML=S.st=="app"?shell():gate();document.body.classList[S.menu&&S.st=="app"?"add":"remove"]("sx-lock");S.tok="";if($("#ts")&&window.turnstile)try{turnstile.render("#ts",{sitekey:TS_KEY,language:"fr",callback:x=>{S.tok=x}})}catch(e){}}
-window.tsReady=()=>{if(S.st=="login")render()};
-const A={
-async login(){if(!S.tok)throw new Error("Validez la vérification anti-robot.");const r=await sb.auth.signInWithPassword({email:g("em"),password:($("#pw")||{}).value||"",options:{captchaToken:S.tok}});if(r.error)throw new Error(r.error.message);await after()},
-async verify(){const c=await sb.auth.mfa.challengeAndVerify({factorId:S.mfa.id,code:g("cd")});if(c.error)throw new Error("Code invalide.");await boot()},
-async out(){await sb.auth.signOut();S.st="login";S.d={};S.m=[];S.au=[];S.err=""},
-async go(t){S.v=t.dataset.v;S.menu=false;if(t.dataset.t)S.tb=t.dataset.t;if(hv()!=S.v)location.hash=S.v},async menu(){S.menu=!S.menu},async refresh(){await loadAll();S.ok="Données actualisées."},
-async cres(){S.res=null},
-async create(){S.f=fv();const f=S.f;if(!f.nom||!f.slug||!f.ae||!f.an)throw new Error("Nom, identifiant, nom et e-mail du maire sont obligatoires.");S.res=await edge({action:"creer_mairie",nom:f.nom,slug:f.slug,plan:f.plan,essai_jours:+f.es||0,admin_nom:f.an,admin_email:f.ae});S.f={};S.nwo=false;await loadAll();S.ok="Mairie créée. Invitation envoyée ; compte inactif jusqu’à confirmation de l’adresse e-mail."},
-async adm(){const slug=g("ad_c"),email=g("ad_e").toLowerCase(),nom=g("ad_n");if(!slug||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))throw new Error("Choisissez une mairie et saisissez un e-mail valide.");const uid=await rpc("saas_preparer_admin_mairie",{p_email:email,p_nom:nom||null});const ls=await rpc("saas_admins_mairie");const me=(ls||[]).find(x=>x.user_id==uid);if(!me)throw new Error("Rôle admin_mairie non vérifié : affectation interrompue.");await rpc("saas_affecter_admin_mairie",{p_email:email,p_slug:slug,p_nom:nom||null});S.ado=false;await loadAll();S.ok="Rôle admin_mairie vérifié et "+email+" affecté à "+slug+" (compte inactif jusqu’à activation)."},
-async arm(t){S.arp=t.dataset.id;S.em=null;S.sp=null;S.dlp=null},async arno(){S.arp=null},
-async arok(){const m=L1id(S.arp),mo=g("ar_mo");if(mo.length<5)throw new Error("Motif obligatoire (5 caractères minimum).");await rpc("saas_archiver_commune",{p_commune:m.id,p_motif:mo});S.arp=null;await loadAll();S.ok=m.nom+" archivée."},
-async rest(t){const m=L1id(t.dataset.id);await rpc("saas_restaurer_commune",{p_commune:m.id});await loadAll();S.ok=m.nom+" restaurée."},
-async delm(t){S.dlp=t.dataset.id;S.arp=null;S.em=null;S.sp=null},async dlno(){S.dlp=null},
-async dlok(){const m=L1id(S.dlp);await rpc("saas_supprimer_commune",{p_commune:m.id,p_slug:g("dl_sl")});S.dlp=null;await loadAll();S.ok=m.nom+" supprimée définitivement."},
-async edm(t){S.em=t.dataset.id;S.sp=null},async edno(){S.em=null},
-async edok(){const m=L1id(S.em),n=g("e_nom");if(!m)return;if(!n)throw new Error("Le nom de la mairie est obligatoire.");await rpc("saas_modifier_commune",{p_commune:m.id,p_nom:n,p_domaine:g("e_dom")||null});S.em=null;await loadAll();S.ok="Informations de "+n+" enregistrées."},
-async amtog(t){const a=(S.am||[])[+t.dataset.i];if(!a)throw new Error("Compte introuvable.");const on=a.statut!="actif";if(!on&&!confirm("Désactiver "+a.email+" ? Il ne pourra plus se connecter."))return;await edgeSa({action:"activer",id:a.user_id,actif:on});await loadAll();S.ok=on?a.email+" activé.":a.email+" désactivé."},
-async susp(t){S.sp=t.dataset.id},async spno(){S.sp=null},
-async spok(){const m=L1id(S.sp),mo=g("s_mo");if(mo.length<10)throw new Error("Motif obligatoire (10 caractères minimum).");await rpc("saas_set_statut",{p_commune:m.id,p_statut:"suspendu",p_motif:mo});S.sp=null;await loadAll();S.ok=m.nom+" suspendue."},
-async react(t){const m=L1id(t.dataset.id);await rpc("saas_set_statut",{p_commune:m.id,p_statut:"actif"});await loadAll();S.ok=m.nom+" réactivée."},
-async links(t){const s=t.dataset.s,c=location.origin+"/?c="+s,m=location.origin+"/mairie";try{await navigator.clipboard.writeText("Portail citoyen : "+c+"\nPortail mairie : "+m);S.ok="Liens copiés."}catch(e){S.ok="Citoyen : "+c+" · Mairie : "+m}},
-async tab(t){S.tb=t.dataset.v;S.ea=S.pf=S.ep=null},async eab(t){S.ea=t.dataset.id},async epay(t){S.pf=t.dataset.id},async eof(t){S.ep=t.dataset.c},async cea(){S.ea=S.pf=S.ep=null},
-async absave(){const o=g("a_op").split("\n").map(l=>l.trim()).filter(Boolean).map(l=>{const i=l.lastIndexOf(";"),n=l.slice(0,i).trim(),p=l.slice(i+1).trim();if(i<1||!/^\d{1,9}$/.test(p))throw new Error("Option invalide : « "+l+" » (format Nom;Prix)");return{nom:n,prix:+p}});await rpc("saas_abo_maj",{p_commune:S.ea,p_plan:g("a_pl"),p_statut:g("a_st"),p_prix_perso:g("a_pp")===""?null:+g("a_pp"),p_fin_essai:g("a_fe")||null,p_echeance:g("a_ec")||null,p_options:o});S.ea=null;await loadAll();S.ok="Abonnement enregistré."},
-async fact(t){const x=S.ab.find(y=>y.id==t.dataset.id),p=new Date().toISOString().slice(0,7);if(!confirm("Facturer "+x.nom+" pour "+p+" : "+fmt(x.mensuel)+" FCFA ?"))return;const n=await rpc("saas_facture_creer",{p_commune:x.id,p_periode:p,p_montant:null,p_echeance:null});await loadAll();S.tb="fac";S.ok="Facture "+n+" émise."},
-async paysave(){await rpc("saas_paiement_enreg",{p_facture:S.pf,p_montant:+g("p_mt"),p_mode:g("p_md"),p_reference:g("p_rf"),p_date:g("p_dt")||null});S.pf=null;await loadAll();S.ok="Paiement enregistré."},
-async fann(t){if(!confirm("Annuler cette facture ?"))return;await rpc("saas_facture_annuler",{p_id:t.dataset.id});await loadAll();S.ok="Facture annulée."},
-async rel(){const r=await rpc("saas_relances");await loadAll();S.ok=r.factures_impayees+" facture(s) et "+r.abonnements_impayes+" abonnement(s) passés en impayé ; "+r.essais_expires+" essai(s) expiré(s)."},
-async ofsave(){await rpc("saas_plan_maj",{p_code:g("o_cd"),p_nom:g("o_nm"),p_prix:+g("o_px"),p_actif:g("o_ac")=="1",p_ordre:+g("o_or")||0});S.ep=null;await loadAll();S.ok="Offre enregistrée."},
-async msave(){const o={};MK.forEach(k=>{o[k[0]]=$("#md_"+k[0]).checked});await rpc("saas_modules_set",{p_commune:S.mc,p_modules:o});S.mm=o;S.ok="Modules enregistrés."},
-async dir(){S.sd=-S.sd},async pg(t){S.pg=Math.max(0,S.pg+ +t.dataset.n)},
-async csv(){const q=v=>{v=v==null?"":String(v);if(/^[=+\-@\t\r]/.test(v))v="'"+v;return'"'+v.replace(/"/g,'""')+'"'},R=[["Nom","Identifiant","Statut","Offre","Échéance","Utilisateurs","Demandes","Créée le"]].concat(S.m.map(x=>[x.nom,x.slug,x.statut,x.plan||"",x.echeance||"",x.users,x.demandes,fd(x.created_at)])),a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+R.map(r=>r.map(q).join(";")).join("\r\n")],{type:"text/csv"}));a.download="mairies-"+new Date().toISOString().slice(0,10)+".csv";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}};
-const fv=()=>({nom:g("n_nom"),slug:g("n_slug"),plan:g("n_pl"),es:g("n_es"),an:g("n_an"),ae:g("n_ae")});
-const KEEP=new Set(["dir","pg","csv","links"]);
-document.addEventListener("click",async e=>{const t=e.target.closest("[data-a]");if(!t||!A[t.dataset.a])return;S.err="";S.ok="";const a=t.dataset.a;
-try{await A[a](t)}catch(x){S.err=(x&&x.message)||"Action impossible.";if(a=="create")S.f=fv()}
-if(a=="menu"&&$(".sx-side")){applyMenu();return}
-if(["dir","pg"].includes(a)&&!S.err){$("#lst").innerHTML=lst();return}
-render();if(!KEEP.has(a)&&a!="menu")window.scrollTo(0,0)});
-document.addEventListener("input",e=>{const i=e.target.id;if(i=="q"){S.q=e.target.value;S.pg=0;$("#lst").innerHTML=lst()}else if(i=="n_nom"){const s=$("#n_slug");if(s&&!s.dataset.d)s.value=slugify(e.target.value)}else if(i=="n_slug")e.target.dataset.d=1});
-document.addEventListener("change",async e=>{const i=e.target.id;if(i=="m_c"){S.mc=e.target.value;S.err="";try{S.mm=S.mc?await rpc("saas_modules_get",{p_commune:S.mc}):{}}catch(x){S.err=x.message}render();return}if(i=="fs"||i=="sk"){S[i]=e.target.value;S.pg=0;$("#lst").innerHTML=lst()}});
-addEventListener("hashchange",()=>{const h=hv();if(h&&S.st=="app"&&h!=S.v){S.v=h;S.menu=false;S.err=S.ok="";render();window.scrollTo(0,0)}});
-document.addEventListener("keydown",e=>{if(e.key=="Escape"&&S.menu&&S.st=="app"){S.menu=false;applyMenu()}});
-document.addEventListener("toggle",e=>{if(e.target&&e.target.id=="nwd")S.nwo=e.target.open},true);
-(async()=>{try{const s=(await sb.auth.getSession()).data.session;if(s)await after()}catch(e){S.err="Session invalide. Reconnectez-vous.";S.st="login"}render()})();
+const $ = s => document.querySelector(s),
+  esc = s =>
+    String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const sb = supabase.createClient("https://aiqegpijisspankpkwfj.supabase.co", "sb_publishable__Zc0adl_eD_PyMkaR5ACzA_-_yjwmbI", {
+    auth: { storageKey: "mc-saas" }
+  }),
+  TS_KEY = "0x4AAAAAAF7OVwUkBsAvSANV";
+const fmt = n => Number(n || 0).toLocaleString("fr-FR"),
+  fd = x => (x ? new Date(x).toLocaleDateString("fr-FR") : "—"),
+  fdt = x => (x ? new Date(x).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—");
+const TG = { actif: ["Active", "ok"], essai: ["Essai", "or"], suspendu: ["Suspendue", "rd"], resilie: ["Résiliée", "rd"] },
+  AB = { essai: "Essai", actif: "Actif", impaye: "Impayé", suspendu: "Suspendu", resilie: "Résilié" };
+const AL = {
+  commune_creer: "Mairie créée",
+  commune_modifier: "Informations de la mairie modifiées",
+  admin_mairie_preparer: "Rôle admin_mairie attribué",
+  admin_mairie_affecter: "Administrateur affecté",
+  commune_statut: "Statut modifié",
+  acces_ouvert: "Accès technique ouvert",
+  acces_ferme: "Accès technique clos",
+  admin_mdp_reinit: "Mot de passe admin réinitialisé",
+  plan_maj: "Offre modifiée",
+  abo_maj: "Abonnement modifié",
+  facture_creer: "Facture émise",
+  facture_annuler: "Facture annulée",
+  paiement: "Paiement enregistré",
+  relances: "Impayés mis à jour",
+  modules_maj: "Modules modifiés"
+};
+const NAV = [
+    ["dash", "Tableau de bord", "dash", "Tableau", "Vue d’ensemble de la plateforme"],
+    ["mairies", "Gestion des mairies", "mairies", "Mairies", "Créer, rechercher et suspendre les mairies"],
+    ["abos", "Abonnements et facturation", "abos", "Facturation", "Offres, abonnements et encaissements"],
+    ["modules", "Gestion des modules", "modules", "Modules", "Activer ou désactiver les modules d’une mairie"],
+    ["audit", "Journal d’audit", "audit", "Audit", "Les 100 dernières actions de la plateforme"]
+  ],
+  PG = 10;
+const IP = {
+  dash: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/>',
+  mairies: '<path d="M3 21h18M5 21V10l7-5 7 5v11M9.5 21v-5.5h5V21M9 12h.01M15 12h.01"/>',
+  abos: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 10h18M7 15h4"/>',
+  modules: '<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>',
+  audit: '<path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6l8-3z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
+  out: '<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>',
+  ref: '<path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  users:
+    '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.5 3.2-5.5 6.5-5.5s5.9 2 6.5 5.5M16 4.8a3.5 3.5 0 010 6.4M18 14.8c2 .7 3.2 2.4 3.5 5.2"/>',
+  inbox: '<path d="M4 13l2.5-8h11L20 13v6H4v-6z"/><path d="M4 13h4.5l1 2.5h5l1-2.5H20"/>',
+  cardok: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M8 12l2.5 2.5L16 9.5"/>',
+  alert: '<path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18h.01"/>',
+  chev: '<path d="M9 6l6 6-6 6"/>',
+  ok: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  pause: '<circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/>'
+};
+const ic = n => `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${IP[n] || ""}</svg>`;
+const LOGO =
+  '<svg class="sx-logo" viewBox="0 0 48 48" aria-hidden="true"><rect x="1.5" y="1.5" width="45" height="45" rx="13" fill="#0B5A2E" stroke="#E4C56B" stroke-width="1.5"/><path d="M12 19L24 11l12 8z" fill="none" stroke="#E4C56B" stroke-width="2" stroke-linejoin="round"/><path d="M15 22v11M21 22v11M27 22v11M33 22v11M11 36h26" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>';
+const em = t => `<div class="sx-e0">${t}</div>`,
+  ini = n =>
+    String(n || "?")
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map(w => w.charAt(0))
+      .join("")
+      .toUpperCase(),
+  mlab = m => {
+    const [a, b] = String(m).split("-"),
+      d = new Date(+a, (+b || 1) - 1, 1);
+    return isNaN(d) ? esc(m) : d.toLocaleDateString("fr-FR", { month: "short", year: "numeric" });
+  };
+const ev = (a, x = "") =>
+  `<li class="sx-ev"><span class="sx-dot"></span><div class="sx-evb"><b>${esc(AL[a.action] || a.action)}</b><div class="sub">${esc(a.email || "")}${x}</div></div><time class="sx-tm">${fdt(a.created_at)}</time></li>`;
+const nw = b =>
+  `<details id="nwd" class="sx-nw"${S.nwo ? " open" : ""}><summary><span class="sx-pl">${ic("plus")}</span>Nouvelle mairie</summary><div class="pb">${b}</div></details>`;
+const FS = { emise: ["Émise", "or"], impayee: ["Impayée", "rd"], payee: ["Payée", "ok"], annulee: ["Annulée", ""] },
+  MD = [
+    ["wave", "Wave"],
+    ["orange_money", "Orange Money"],
+    ["virement", "Virement"],
+    ["especes", "Espèces"],
+    ["autre", "Autre"]
+  ],
+  MK = [
+    ["cabinet", "Cabinet du Maire"],
+    ["adjoints", "Adjoints au Maire"],
+    ["administration", "Administration"],
+    ["developpement", "Développement"],
+    ["conseil", "Conseil municipal"],
+    ["citoyens", "Citoyens et communication"],
+    ["pilotage", "Pilotage"],
+    ["finances", "Finances"],
+    ["portail_adjoint", "Portail des adjoints"],
+    ["portail_secretariat", "Portail du secrétariat"]
+  ];
+let S = {
+  ar: {},
+  arp: null,
+  dlp: null,
+  am: [],
+  em: null,
+  ado: false,
+  st: "login",
+  v: "dash",
+  err: "",
+  ok: "",
+  tok: "",
+  d: {},
+  m: [],
+  pl: [],
+  au: [],
+  q: "",
+  fs: "",
+  sk: "nom",
+  sd: 1,
+  pg: 0,
+  mfa: null,
+  menu: false,
+  res: null,
+  f: {},
+  me: "",
+  tb: "abos",
+  ab: [],
+  fa: [],
+  pa: [],
+  ea: null,
+  pf: null,
+  ep: null,
+  mc: "",
+  mm: {},
+  sp: null,
+  nwo: false
+};
+const pn = (t, b, r = "") => `<section class="pn"><header class="ph"><h2>${t}</h2>${r}</header><div class="pb">${b}</div></section>`,
+  kp = (i, l, v, w) =>
+    `<div class="sx-tile${w ? " warn" : ""}"><div class="sx-ti">${ic(i)}</div><div><div class="sx-tv">${v}</div><div class="sx-tl">${l}</div></div></div>`;
+const rw = (a, b) => `<div class="rw"><div class="rl">${a}</div><div>${b}</div></div>`,
+  tg = (t, c, a = "", x = "") =>
+    a ? `<button class="tg ${c}" data-a="${a}" ${x}>${esc(t)}</button>` : `<span class="tg ${c}" data-sty="cursor:default">${esc(t)}</span>`;
+const inp = (id, l, v = "", ty = "text", x = "") =>
+  `<div><label for="${id}">${l}</label><input id="${id}" type="${ty}" value="${esc(v)}" ${x}></div>`;
+const slugify = s =>
+  s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 40);
+const g = id => (($("#" + id) || {}).value || "").trim(),
+  L1 = s => S.m.find(x => x.slug == s),
+  L1id = i => S.m.find(x => x.id == i);
+const rpc = async (f, a) => {
+  const r = await sb.rpc(f, a);
+  if (r.error) throw new Error(r.error.message);
+  return r.data;
+};
+const edgeSa = async b => {
+  const r = await sb.functions.invoke("sa-admin", { body: b });
+  if (r.error) {
+    let m = "Action impossible.";
+    try {
+      m = (await r.error.context.json()).error || m;
+    } catch (e) {}
+    throw new Error(m);
+  }
+  return r.data;
+};
+const edge = async b => {
+  const r = await sb.functions.invoke("saas-admin", { body: b });
+  if (r.error) {
+    let m = "Action impossible.";
+    try {
+      m = (await r.error.context.json()).error || m;
+    } catch (e) {}
+    throw new Error(m);
+  }
+  return r.data;
+};
+async function loadAll() {
+  const [a, b, c, d, e, f, h] = await Promise.all([
+    rpc("saas_stats"),
+    rpc("saas_liste_communes"),
+    sb.from("plans").select("*").order("ordre"),
+    sb.from("platform_audit").select("*").order("created_at", { ascending: false }).limit(100),
+    rpc("saas_liste_abos"),
+    sb.from("factures").select("*").order("created_at", { ascending: false }).limit(200),
+    sb.from("paiements").select("facture_id,montant").limit(3000)
+  ]);
+  try {
+    S.am = await rpc("saas_admins_mairie");
+  } catch (e) {
+    S.am = [];
+  }
+  try {
+    S.ar = {};
+    ((await rpc("saas_archives")) || []).forEach(a => {
+      S.ar[a.id] = a.archive_le;
+    });
+  } catch (e) {
+    S.ar = {};
+  }
+  S.d = a;
+  S.m = b;
+  S.pl = c.data || [];
+  S.au = d.data || [];
+  S.ab = e;
+  S.fa = f.data || [];
+  S.pa = h.data || [];
+}
+async function after() {
+  const a = (await sb.auth.mfa.getAuthenticatorAssuranceLevel()).data;
+  if (a && a.currentLevel == "aal2") return boot();
+  const f = (((await sb.auth.mfa.listFactors()).data || {}).all || []).filter(x => x.factor_type == "totp"),
+    v = f.find(x => x.status == "verified");
+  if (v) {
+    S.mfa = { id: v.id };
+    S.st = "mfa";
+    return;
+  }
+  for (const x of f) await sb.auth.mfa.unenroll({ factorId: x.id });
+  const e = await sb.auth.mfa.enroll({ factorType: "totp" });
+  if (e.error) throw e.error;
+  S.mfa = { id: e.data.id, qr: e.data.totp.qr_code, sec: e.data.totp.secret };
+  S.st = "enroll";
+}
+async function boot() {
+  try {
+    try {
+      await rpc("saas_relances");
+    } catch (e) {}
+    await loadAll();
+  } catch (e) {
+    S.err = "Ce compte n’a pas accès à la plateforme.";
+    await sb.auth.signOut();
+    S.st = "login";
+    return;
+  }
+  S.me = ((await sb.auth.getUser()).data.user || {}).email || "";
+  S.v = hv() || S.v;
+  S.st = "app";
+}
+const gate = () =>
+  `<div class="lg"><main class="lc"><div class="lh">${LOGO}<p class="sx-kick">Mairie Connectée</p><h1>Administration SaaS</h1></div><div class="lb">${S.err ? `<div class="al" role="alert" data-sty="margin:0">${esc(S.err)}</div>` : ""}` +
+  (S.st == "login"
+    ? inp("em", "E-mail", "", "email", 'autocomplete="username"') +
+      inp("pw", "Mot de passe", "", "password", 'autocomplete="current-password"') +
+      `<div id="ts"></div><button class="bt" data-a="login">Se connecter</button>`
+    : (S.st == "enroll"
+        ? `<p>Activez l’authentification à deux facteurs : scannez ce code avec Google Authenticator ou équivalent.</p><img src="${esc(S.mfa.qr)}" alt="QR code" data-sty="width:180px;margin:0 auto"><p class="mut" data-sty="font-size:12px;word-break:break-all">Clé : ${esc(S.mfa.sec)}</p>`
+        : `<p>Saisissez le code à 6 chiffres de votre application d’authentification.</p>`) +
+      inp("cd", "Code", "", "text", 'inputmode="numeric" autocomplete="one-time-code" maxlength="6"') +
+      `<button class="bt" data-a="verify">Valider</button>`) +
+  (S.st != "login" ? `<button class="bo" data-a="out">Annuler</button>` : "") +
+  `</div></main></div>`;
+const lst = () => {
+  const q = S.q.toLowerCase();
+  let L = S.m.filter(
+    x =>
+      (!q || (x.nom + " " + x.slug).toLowerCase().includes(q)) &&
+      (S.fs == "archivee" ? !!S.ar[x.id] : !S.ar[x.id] && (!S.fs || x.statut == S.fs))
+  );
+  L.sort((a, b) => {
+    const A = a[S.sk] ?? "",
+      B = b[S.sk] ?? "";
+    return (typeof A == "number" ? A - B : String(A).localeCompare(String(B), "fr")) * S.sd;
+  });
+  const np = Math.max(1, Math.ceil(L.length / PG));
+  S.pg = Math.min(S.pg, np - 1);
+  return (
+    (L.slice(S.pg * PG, S.pg * PG + PG)
+      .map(x => {
+        const t = S.ar[x.id] ? ["Archivée", ""] : TG[x.statut] || [x.statut, ""];
+        return rw(
+          `<div class="sx-m"><span class="sx-mo" aria-hidden="true">${esc(ini(x.nom))}</span><div><b>${esc(x.nom)}</b> <span class="mut">/${esc(x.slug)}</span><div class="sub">Offre : ${esc(x.plan || "aucune")}${x.abo_statut ? " (" + AB[x.abo_statut] + ")" : ""} · échéance ${fd(x.echeance)}</div><div class="sub">${x.users} utilisateur(s) · ${x.demandes} demande(s) · créée le ${fd(x.created_at)}</div></div></div>`,
+          `<div class="ra">${tg(t[0], t[1])}<div class="sa-ac">${tg("Liens", "", "links", `data-s="${esc(x.slug)}"`)}${tg("Modifier", "", "edm", `data-id="${x.id}"`)}${S.ar[x.id] ? tg("Restaurer", "ok", "rest", `data-id="${x.id}"`) + tg("Supprimer", "rd", "delm", `data-id="${x.id}"`) : (x.statut == "suspendu" || x.statut == "resilie" ? tg("Réactiver", "ok", "react", `data-id="${x.id}"`) : tg("Suspendre", "rd", "susp", `data-id="${x.id}"`)) + tg("Archiver", "", "arm", `data-id="${x.id}"`)}</div></div>`
+        );
+      })
+      .join("") || em("Aucune mairie.")) +
+    `<div class="sa-ac" data-sty="justify-content:center;margin-top:10px">${tg("Précédent", "", "pg", 'data-n="-1"')}<span class="mut">Page ${S.pg + 1} / ${np} · ${L.length} résultat(s)</span>${tg("Suivant", "", "pg", 'data-n="1"')}</div>`
+  );
+};
+const V = {
+  dash: () => {
+    const s = S.d,
+      p = s.par_statut || {},
+      ins = s.inscriptions || [],
+      mx = Math.max(1, ...ins.map(x => x.n)),
+      td = new Date().toISOString().slice(0, 10),
+      n = k => +p[k] || 0,
+      SG = [
+        ["actif", "active", "actives", "#7FE0A0"],
+        ["essai", "en essai", "en essai", "#E4C56B"],
+        ["suspendu", "suspendue", "suspendues", "#F2948C"],
+        ["resilie", "résiliée", "résiliées", "#9DB3A4"]
+      ].filter(x => x[0] != "resilie" || n("resilie")),
+      lb = x => (n(x[0]) > 1 ? x[2] : x[1]),
+      exp = S.ab.filter(x => x.statut == "essai" && x.fin_essai && x.fin_essai < td).length,
+      fi = S.fa.filter(x => x.statut == "impayee").length,
+      inc = +s.incidents_ouverts || 0,
+      imp = +s.impayes || 0,
+      T = [];
+    if (inc) T.push(["alert", inc + " incident" + (inc > 1 ? "s ouverts" : " ouvert"), "audit", ""]);
+    if (imp || fi)
+      T.push([
+        "clock",
+        [imp ? fmt(imp) + " FCFA en attente" : "", fi ? fi + " facture" + (fi > 1 ? "s impayées" : " impayée") : ""]
+          .filter(Boolean)
+          .join(" · "),
+        "abos",
+        "fac"
+      ]);
+    if (exp) T.push(["clock", exp + " essai" + (exp > 1 ? "s expirés" : " expiré"), "abos", "abos"]);
+    if (n("suspendu")) T.push(["pause", n("suspendu") + " mairie" + (n("suspendu") > 1 ? "s suspendues" : " suspendue"), "mairies", ""]);
+    return (
+      `<section class="sx-hero" aria-label="Situation de la plateforme"><div><div class="sx-date">${new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</div><div class="sx-big">${fmt(s.mairies)}</div><div class="sx-bl">Mairies inscrites</div><div class="sx-seg" role="img" aria-label="${SG.map(x => n(x[0]) + " " + lb(x)).join(", ")}">${SG.filter(
+        x => n(x[0])
+      )
+        .map(x => `<i data-sty="flex:${n(x[0])};background:${x[3]}"></i>`)
+        .join(
+          ""
+        )}</div><div class="sx-lg">${SG.map(x => `<span><i data-sty="background:${x[3]}"></i><b>${n(x[0])}</b> ${lb(x)}</span>`).join("")}</div></div><div class="sx-led"><div class="sx-ml">Revenu mensuel récurrent</div><div class="sx-mrr">${fmt(s.mrr)} <small>FCFA</small></div><div class="sx-ln"><span>Encaissé ce mois</span><b>${fmt(s.revenu_mois)} FCFA</b></div><div class="sx-ln"><span>Encaissé cette année</span><b>${fmt(s.revenu_annuel)} FCFA</b></div><div class="sx-ln${imp ? " due" : ""}"><span>Paiements en attente</span><b>${fmt(imp)} FCFA</b></div></div></section><div class="sx-tiles">${kp("users", "Utilisateurs municipaux", fmt(s.utilisateurs))}${kp("inbox", "Demandes citoyennes", fmt(s.demandes))}${kp("cardok", "Abonnements actifs", fmt(s.abonnements_actifs))}${kp("alert", "Incidents ouverts", fmt(inc), inc > 0)}</div><div class="sx-g">` +
+      pn(
+        "À traiter",
+        T.length
+          ? T.map(
+              x =>
+                `<button class="sx-td" data-a="go" data-v="${x[2]}"${x[3] ? ` data-t="${x[3]}"` : ""}>${ic(x[0])}<span>${x[1]}</span>${ic("chev")}</button>`
+            ).join("")
+          : `<div class="sx-ok">${ic("ok")}<span>Rien à traiter pour le moment.</span></div>`
+      ) +
+      pn(
+        "Inscriptions (12 mois)",
+        ins
+          .map(
+            x =>
+              `<div class="sa-bar"><span>${mlab(x.m)}</span><div><i data-sty="width:${Math.round((x.n / mx) * 100)}%"></i></div><b>${x.n}</b></div>`
+          )
+          .join("") || em("Aucune donnée.")
+      ) +
+      pn(
+        "Activité récente",
+        S.au.length
+          ? `<ul class="sx-evl">${S.au
+              .slice(0, 8)
+              .map(a => ev(a))
+              .join("")}</ul>`
+          : em("Aucune activité."),
+        tg("Tout voir", "", "go", 'data-v="audit"')
+      ) +
+      `</div>`
+    );
+  },
+  mairies: () => {
+    const f = S.f,
+      res = S.res;
+    return (
+      (res
+        ? pn(
+            "Mairie créée",
+            `<p><b>Portail citoyen :</b><br>${esc(res.portail_citoyen)}</p><p><b>Portail mairie :</b><br>${esc(res.portail_mairie)}</p><p class="mut">Invitation envoyée à l’administrateur. Son compte reste inactif jusqu’à l’acceptation et à la confirmation de son adresse e-mail.</p>`,
+            tg("Fermer", "", "cres")
+          )
+        : "") +
+      (S.arp && L1id(S.arp)
+        ? pn(
+            "Archiver " + esc(L1id(S.arp).nom),
+            `<p class="mut">La mairie est résiliée (accès bloqué) et masquée de la liste. Aucune donnée n’est supprimée ; elle peut être restaurée.</p><div class="fr">${inp("ar_mo", "Motif (obligatoire, 5 caractères min.)", "")}</div><div class="sa-ac">${tg("Annuler", "", "arno")}<button class="bt" data-a="arok">Confirmer l’archivage</button></div>`
+          )
+        : "") +
+      (S.dlp && L1id(S.dlp)
+        ? pn(
+            "Supprimer " + esc(L1id(S.dlp).nom),
+            `<p class="mut">Suppression définitive, réservée aux mairies archivées et totalement vides (aucune demande, aucun agent, aucune facture). Le compte administrateur est conservé et redevient citoyen. Irréversible.</p><div class="fr">${inp("dl_sl", "Saisissez l’identifiant « " + esc(L1id(S.dlp).slug) + " » pour confirmer", "")}</div><div class="sa-ac">${tg("Annuler", "", "dlno")}<button class="bt" data-sty="background:#B91C1C" data-a="dlok">Supprimer définitivement</button></div>`
+          )
+        : "") +
+      (S.em && L1id(S.em)
+        ? pn(
+            "Modifier " + esc(L1id(S.em).nom),
+            `<div class="fr">${inp("e_nom", "Nom de la mairie", L1id(S.em).nom)}${inp("e_dom", "Domaine personnalisé (facultatif)", L1id(S.em).domaine_perso || "", "text", 'placeholder="mairie.exemple.sn"')}</div><p class="mut">Identifiant du lien : /${esc(L1id(S.em).slug)} (non modifiable, il protège les liens existants).</p><div class="sa-ac">${tg("Annuler", "", "edno")}<button class="bt" data-a="edok">Enregistrer</button></div>`
+          )
+        : "") +
+      (S.sp && L1id(S.sp)
+        ? pn(
+            "Suspendre " + esc(L1id(S.sp).nom),
+            `<div class="fr">${inp("s_mo", "Motif (obligatoire, 10 caractères min.)", "")}</div><div class="sa-ac">${tg("Annuler", "", "spno")}<button class="bt" data-sty="background:#B91C1C" data-a="spok">Confirmer la suspension</button></div>`
+          )
+        : "") +
+      nw(
+        `<div class="fr">${inp("n_nom", "Nom de la commune", f.nom)}${inp("n_slug", "Identifiant du lien", f.slug, "text", 'placeholder="ex. fimela"')}<div><label for="n_pl">Offre</label><select id="n_pl">${S.pl
+          .filter(p => p.actif)
+          .map(
+            p => `<option value="${p.code}"${p.code == f.plan ? " selected" : ""}>${esc(p.nom)} · ${fmt(p.prix_mensuel)} FCFA/mois</option>`
+          )
+          .join(
+            ""
+          )}</select></div>${inp("n_es", "Essai gratuit (jours)", f.es || "0", "number", 'min="0" max="90"')}${inp("n_an", "Nom du maire (administrateur)", f.an)}${inp("n_ae", "E-mail du maire", f.ae, "email")}</div><div class="sa-ac"><button class="bt" data-a="create">Créer la mairie et envoyer l’invitation</button></div>`
+      ) +
+      `<details class="sx-nw"${S.ado ? " open" : ""}><summary><span class="sx-pl">${ic("plus")}</span>Affecter un administrateur à une mairie existante</summary><div class="pb"><p class="mut">Le compte doit déjà exister. Étapes : rôle « admin_mairie » attribué, rôle vérifié, puis affectation. Aucun mot de passe ni e-mail n’est modifié ; le compte reste inactif jusqu’à son activation.</p><div class="fr"><div><label for="ad_c">Mairie</label><select id="ad_c">${S.m.map(x => `<option value="${esc(x.slug)}">${esc(x.nom)} (/${esc(x.slug)})</option>`).join("")}</select></div>${inp("ad_e", "E-mail de l’administrateur", "", "email")}${inp("ad_n", "Nom (facultatif)", "")}</div><div class="sa-ac"><button class="bt" data-a="adm">Attribuer le rôle, vérifier, puis affecter</button></div></div></details>` +
+      pn(
+        "Administrateurs municipaux",
+        (S.am || [])
+          .map((a, i) =>
+            rw(
+              `<b>${esc(a.email)}</b><div class="sub">${esc(a.commune_nom || "Sans mairie")}${a.commune_slug ? " /" + esc(a.commune_slug) : ""}</div>`,
+              `${tg(a.statut == "actif" ? "Actif" : "Inactif", a.statut == "actif" ? "ok" : "or")} ${tg(a.statut == "actif" ? "Désactiver" : "Activer", a.statut == "actif" ? "rd" : "ok", "amtog", `data-i="${i}"`)}`
+            )
+          )
+          .join("") || em("Aucun administrateur municipal.")
+      ) +
+      pn(
+        "Mairies",
+        `<div class="fr sx-fl">${inp("q", "Rechercher", S.q, "search", 'placeholder="Nom ou identifiant"')}<div><label for="fs">Statut</label><select id="fs"><option value="">Tous</option>${
+          Object.keys(TG)
+            .map(k => `<option value="${k}"${S.fs == k ? " selected" : ""}>${TG[k][0]}</option>`)
+            .join("") + `<option value="archivee"${S.fs == "archivee" ? " selected" : ""}>Archivées</option>`
+        }</select></div><div><label for="sk">Trier par</label><select id="sk">${[
+          ["nom", "Nom"],
+          ["created_at", "Date"],
+          ["users", "Utilisateurs"],
+          ["demandes", "Demandes"]
+        ]
+          .map(o => `<option value="${o[0]}"${S.sk == o[0] ? " selected" : ""}>${o[1]}</option>`)
+          .join("")}</select></div>${tg("Inverser l’ordre", "", "dir")}${tg("Exporter (CSV)", "", "csv")}</div><div id="lst">${lst()}</div>`
+      )
+    );
+  },
+  abos: () => {
+    const t = S.tb,
+      rest = f => f.montant - S.pa.filter(p => p.facture_id == f.id).reduce((a, p) => a + p.montant, 0),
+      nm = id => (S.m.find(x => x.id == id) || {}).nom || "—";
+    const tabs = `<div class="tabs">${[
+      ["abos", "Abonnements"],
+      ["fac", "Factures"],
+      ["off", "Offres"]
+    ]
+      .map(x => `<button class="tb2${t == x[0] ? " on" : ""}" data-a="tab" data-v="${x[0]}">${x[1]}</button>`)
+      .join("")}</div>`;
+    let b = "";
+    if (t == "abos") {
+      const e = S.ab.find(x => x.id == S.ea);
+      b =
+        (e
+          ? pn(
+              "Abonnement : " + esc(e.nom),
+              `<div class="fr"><div><label for="a_pl">Offre</label><select id="a_pl">${S.pl.map(p => `<option value="${p.code}"${p.code == (e.plan || "essentiel") ? " selected" : ""}>${esc(p.nom)} · ${fmt(p.prix_mensuel)}</option>`).join("")}</select></div><div><label for="a_st">Statut</label><select id="a_st">${Object.keys(
+                AB
+              )
+                .map(k => `<option value="${k}"${k == (e.statut || "essai") ? " selected" : ""}>${AB[k]}</option>`)
+                .join(
+                  ""
+                )}</select></div>${inp("a_pp", "Tarif personnalisé (FCFA/mois, vide = offre)", e.prix_perso ?? "", "number", 'min="0"')}${inp("a_fe", "Fin d’essai", e.fin_essai || "", "date")}${inp("a_ec", "Prochaine échéance", e.echeance || "", "date")}</div><label for="a_op">Options (une par ligne : Nom;Prix mensuel)</label><textarea id="a_op" rows="3">${esc((e.options || []).map(o => o.nom + ";" + o.prix).join("\n"))}</textarea><div class="sa-ac">${tg("Annuler", "", "cea")}<button class="bt" data-a="absave">Enregistrer</button></div>`
+            )
+          : "") +
+        pn(
+          "Abonnements",
+          S.ab
+            .map(x => {
+              const ex = x.statut == "essai" && x.fin_essai && x.fin_essai < new Date().toISOString().slice(0, 10);
+              return rw(
+                `<b>${esc(x.nom)}</b><div class="sub">${x.plan ? esc(x.plan) + " · " + fmt(x.mensuel) + " FCFA/mois" : "Aucun abonnement"} · échéance ${fd(x.echeance)}${x.fin_essai ? " · essai jusqu’au " + fd(x.fin_essai) : ""}</div>${(x.options || []).length ? `<div class="sub">Options : ${x.options.map(o => esc(o.nom) + " (" + fmt(o.prix) + ")").join(", ")}</div>` : ""}`,
+                `<div class="ra">${x.statut ? tg(ex ? "Essai expiré" : AB[x.statut], ex || x.statut == "impaye" || x.statut == "suspendu" || x.statut == "resilie" ? "rd" : x.statut == "essai" ? "or" : "ok") : ""}<div class="sa-ac">${tg(x.plan ? "Modifier" : "Créer", "", "eab", `data-id="${x.id}"`)}${x.plan ? tg("Facturer", "or", "fact", `data-id="${x.id}"`) : ""}</div></div>`
+              );
+            })
+            .join("") || em("Aucune mairie.")
+        );
+    } else if (t == "fac") {
+      const f = S.fa.find(x => x.id == S.pf);
+      b =
+        (f
+          ? pn(
+              "Encaisser " + esc(f.numero),
+              `<div class="fr">${inp("p_mt", "Montant (FCFA)", rest(f), "number", 'min="1"')}<div><label for="p_md">Mode</label><select id="p_md">${MD.map(m => `<option value="${m[0]}">${m[1]}</option>`).join("")}</select></div>${inp("p_rf", "Référence (n° de transaction)")}${inp("p_dt", "Date", new Date().toISOString().slice(0, 10), "date")}</div><div class="sa-ac">${tg("Annuler", "", "cea")}<button class="bt" data-a="paysave">Enregistrer le paiement</button></div>`
+            )
+          : "") +
+        pn(
+          "Factures",
+          `<div class="sa-ac" data-sty="margin:0 0 10px">${tg("Mettre à jour les impayés", "", "rel")}</div>` +
+            S.fa
+              .map(x => {
+                const r = rest(x),
+                  z = FS[x.statut] || [x.statut, ""];
+                return rw(
+                  `<b>${esc(x.numero)}</b> · ${esc(nm(x.commune_id))}<div class="sub">Période ${esc(x.periode || "—")} · ${fmt(x.montant)} FCFA${x.statut != "annulee" && x.statut != "payee" ? " · reste " + fmt(r) : ""} · échéance ${fd(x.echeance)}</div>`,
+                  `<div class="ra">${tg(z[0], z[1])}${x.statut == "emise" || x.statut == "impayee" ? `<div class="sa-ac">${tg("Encaisser", "ok", "epay", `data-id="${x.id}"`)}${r == x.montant ? tg("Annuler", "rd", "fann", `data-id="${x.id}"`) : ""}</div>` : ""}</div>`
+                );
+              })
+              .join("") || em("Aucune facture.")
+        );
+    } else {
+      const e = S.ep == "new" ? {} : S.pl.find(x => x.code == S.ep);
+      b =
+        (S.ep
+          ? pn(
+              S.ep == "new" ? "Nouvelle offre" : "Modifier l’offre",
+              `<div class="fr">${inp("o_cd", "Code", e.code || "", "text", e.code ? "readonly" : 'placeholder="ex. premium_plus"')}${inp("o_nm", "Nom", e.nom || "")}${inp("o_px", "Prix mensuel (FCFA)", e.prix_mensuel ?? "", "number", 'min="0"')}${inp("o_or", "Ordre", e.ordre ?? 0, "number")}<div><label for="o_ac">Active</label><select id="o_ac"><option value="1"${e.actif !== false ? " selected" : ""}>Oui</option><option value="0"${e.actif === false ? " selected" : ""}>Non</option></select></div></div><div class="sa-ac">${tg("Annuler", "", "cea")}<button class="bt" data-a="ofsave">Enregistrer</button></div>`
+            )
+          : "") +
+        pn(
+          "Offres",
+          S.pl
+            .map(p =>
+              rw(
+                `<b>${esc(p.nom)}</b> <span class="mut">${esc(p.code)}</span><div class="sub">${fmt(p.prix_mensuel)} FCFA/mois · ${S.ab.filter(x => x.plan == p.code).length} mairie(s)</div>`,
+                `<div class="sa-ac">${tg(p.actif ? "Active" : "Inactive", p.actif ? "ok" : "rd")}${tg("Modifier", "", "eof", `data-c="${p.code}"`)}</div>`
+              )
+            )
+            .join(""),
+          tg("Nouvelle offre", "", "eof", 'data-c="new"')
+        );
+    }
+    return tabs + b;
+  },
+  modules: () =>
+    pn(
+      "Modules d’une mairie",
+      `<div class="fr"><div><label for="m_c">Mairie</label><select id="m_c"><option value="">Choisir…</option>${S.m.map(x => `<option value="${x.id}"${S.mc == x.id ? " selected" : ""}>${esc(x.nom)}</option>`).join("")}</select></div></div>` +
+        (S.mc
+          ? MK.map(k =>
+              rw(
+                `<b>${k[1]}</b>`,
+                `<label class="sx-sw"><input type="checkbox" id="md_${k[0]}"${S.mm[k[0]] !== false ? " checked" : ""}><span>Activé</span></label>`
+              )
+            ).join("") +
+            `<div class="sa-ac"><button class="bt" data-a="msave">Enregistrer les modules</button></div><p class="mut">Un module désactivé disparaît de l’espace mairie pour tous ses utilisateurs.</p>`
+          : em("Choisissez une mairie."))
+    ),
+  audit: () =>
+    pn(
+      "Journal d’audit plateforme (100 derniers)",
+      S.au.length
+        ? `<ul class="sx-evl">${S.au
+            .map(a => {
+              const m = a.commune_id && S.m.find(x => x.id == a.commune_id);
+              return ev(a, (m ? " · " + esc(m.nom) : "") + (a.detail && a.detail.motif ? " · " + esc(a.detail.motif) : ""));
+            })
+            .join("")}</ul>`
+        : em("Aucun événement.")
+    )
+};
+const hv = () => {
+  const h = (location.hash || "").slice(1);
+  return NAV.some(n => n[0] == h) ? h : null;
+};
+const nvb = (n, k) =>
+  `<button class="sx-nv" data-a="go" data-v="${n[0]}" data-k="${k}"${S.v == n[0] ? ' aria-current="page"' : ""}>${ic(n[2])}<span class="sx-nl">${n[1]}</span><span class="sx-ns">${n[3]}</span></button>`;
+const shell = () => {
+  const c = NAV.find(n => n[0] == S.v) || NAV[0];
+  return `<div class="sx"><aside class="sx-side${S.menu ? " open" : ""}" aria-label="Navigation principale"><div class="sx-brand">${LOGO}<div><div class="sx-bn">Mairie Connectée</div><div class="sx-bs">Administration plateforme</div></div></div><nav class="sx-nav">${NAV.map(n => nvb(n, "s")).join("")}</nav><div class="sx-acc"><div class="sx-me"><span class="sx-av" aria-hidden="true">${esc((S.me || "?").charAt(0))}</span><div class="sx-em">${esc(S.me)}</div></div><button class="sx-nv" data-a="out">${ic("out")}<span class="sx-nl">Déconnexion</span><span class="sx-ns">Sortir</span></button></div></aside><div class="sx-ov${S.menu ? " on" : ""}" data-a="menu"></div><div class="sx-main"><header class="sx-top"><button class="sx-mb" data-a="menu" aria-label="Menu" aria-expanded="${!!S.menu}">${ic("menu")}</button><div class="sx-tt"><h1>${c[1]}</h1><p class="sx-sub">${c[4]}</p></div><button class="sx-rf" data-a="refresh" aria-label="Actualiser">${ic("ref")}<span>Actualiser</span></button></header><main class="sx-ct">${S.err ? `<div class="al sx-toast" role="alert">${esc(S.err)}</div>` : ""}${S.ok ? `<div class="al sx-toast ok" role="status">${esc(S.ok)}</div>` : ""}${V[S.v]()}</main></div><nav class="sx-bar" aria-label="Navigation">${NAV.map(n => `<button class="sx-bt" data-a="go" data-v="${n[0]}" data-k="b"${S.v == n[0] ? ' aria-current="page"' : ""}>${ic(n[2])}<span>${n[3]}</span></button>`).join("")}</nav></div>`;
+};
+const applyMenu = () => {
+  const sd = $(".sx-side"),
+    ov = $(".sx-ov"),
+    mb = $(".sx-mb");
+  if (!sd) return;
+  sd.classList[S.menu ? "add" : "remove"]("open");
+  if (ov) ov.classList[S.menu ? "add" : "remove"]("on");
+  if (mb) mb.setAttribute("aria-expanded", String(!!S.menu));
+  document.body.classList[S.menu ? "add" : "remove"]("sx-lock");
+  const f = S.menu ? sd.querySelector(".sx-nv") : mb;
+  if (f && f.focus)
+    try {
+      f.focus({ preventScroll: true });
+    } catch (e) {}
+};
+function render() {
+  $("#app").innerHTML = S.st == "app" ? shell() : gate();
+  document.body.classList[S.menu && S.st == "app" ? "add" : "remove"]("sx-lock");
+  S.tok = "";
+  if ($("#ts") && window.turnstile)
+    try {
+      turnstile.render("#ts", {
+        sitekey: TS_KEY,
+        language: "fr",
+        callback: x => {
+          S.tok = x;
+        }
+      });
+    } catch (e) {}
+}
+window.tsReady = () => {
+  if (S.st == "login") render();
+};
+const A = {
+  async login() {
+    if (!S.tok) throw new Error("Validez la vérification anti-robot.");
+    const r = await sb.auth.signInWithPassword({
+      email: g("em"),
+      password: ($("#pw") || {}).value || "",
+      options: { captchaToken: S.tok }
+    });
+    if (r.error) throw new Error(r.error.message);
+    await after();
+  },
+  async verify() {
+    const c = await sb.auth.mfa.challengeAndVerify({ factorId: S.mfa.id, code: g("cd") });
+    if (c.error) throw new Error("Code invalide.");
+    await boot();
+  },
+  async out() {
+    await sb.auth.signOut();
+    S.st = "login";
+    S.d = {};
+    S.m = [];
+    S.au = [];
+    S.err = "";
+  },
+  async go(t) {
+    S.v = t.dataset.v;
+    S.menu = false;
+    if (t.dataset.t) S.tb = t.dataset.t;
+    if (hv() != S.v) location.hash = S.v;
+  },
+  async menu() {
+    S.menu = !S.menu;
+  },
+  async refresh() {
+    await loadAll();
+    S.ok = "Données actualisées.";
+  },
+  async cres() {
+    S.res = null;
+  },
+  async create() {
+    S.f = fv();
+    const f = S.f;
+    if (!f.nom || !f.slug || !f.ae || !f.an) throw new Error("Nom, identifiant, nom et e-mail du maire sont obligatoires.");
+    S.res = await edge({
+      action: "creer_mairie",
+      nom: f.nom,
+      slug: f.slug,
+      plan: f.plan,
+      essai_jours: +f.es || 0,
+      admin_nom: f.an,
+      admin_email: f.ae
+    });
+    S.f = {};
+    S.nwo = false;
+    await loadAll();
+    S.ok = "Mairie créée. Invitation envoyée ; compte inactif jusqu’à confirmation de l’adresse e-mail.";
+  },
+  async adm() {
+    const slug = g("ad_c"),
+      email = g("ad_e").toLowerCase(),
+      nom = g("ad_n");
+    if (!slug || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error("Choisissez une mairie et saisissez un e-mail valide.");
+    const uid = await rpc("saas_preparer_admin_mairie", { p_email: email, p_nom: nom || null });
+    const ls = await rpc("saas_admins_mairie");
+    const me = (ls || []).find(x => x.user_id == uid);
+    if (!me) throw new Error("Rôle admin_mairie non vérifié : affectation interrompue.");
+    await rpc("saas_affecter_admin_mairie", { p_email: email, p_slug: slug, p_nom: nom || null });
+    S.ado = false;
+    await loadAll();
+    S.ok = "Rôle admin_mairie vérifié et " + email + " affecté à " + slug + " (compte inactif jusqu’à activation).";
+  },
+  async arm(t) {
+    S.arp = t.dataset.id;
+    S.em = null;
+    S.sp = null;
+    S.dlp = null;
+  },
+  async arno() {
+    S.arp = null;
+  },
+  async arok() {
+    const m = L1id(S.arp),
+      mo = g("ar_mo");
+    if (mo.length < 5) throw new Error("Motif obligatoire (5 caractères minimum).");
+    await rpc("saas_archiver_commune", { p_commune: m.id, p_motif: mo });
+    S.arp = null;
+    await loadAll();
+    S.ok = m.nom + " archivée.";
+  },
+  async rest(t) {
+    const m = L1id(t.dataset.id);
+    await rpc("saas_restaurer_commune", { p_commune: m.id });
+    await loadAll();
+    S.ok = m.nom + " restaurée.";
+  },
+  async delm(t) {
+    S.dlp = t.dataset.id;
+    S.arp = null;
+    S.em = null;
+    S.sp = null;
+  },
+  async dlno() {
+    S.dlp = null;
+  },
+  async dlok() {
+    const m = L1id(S.dlp);
+    await rpc("saas_supprimer_commune", { p_commune: m.id, p_slug: g("dl_sl") });
+    S.dlp = null;
+    await loadAll();
+    S.ok = m.nom + " supprimée définitivement.";
+  },
+  async edm(t) {
+    S.em = t.dataset.id;
+    S.sp = null;
+  },
+  async edno() {
+    S.em = null;
+  },
+  async edok() {
+    const m = L1id(S.em),
+      n = g("e_nom");
+    if (!m) return;
+    if (!n) throw new Error("Le nom de la mairie est obligatoire.");
+    await rpc("saas_modifier_commune", { p_commune: m.id, p_nom: n, p_domaine: g("e_dom") || null });
+    S.em = null;
+    await loadAll();
+    S.ok = "Informations de " + n + " enregistrées.";
+  },
+  async amtog(t) {
+    const a = (S.am || [])[+t.dataset.i];
+    if (!a) throw new Error("Compte introuvable.");
+    const on = a.statut != "actif";
+    if (!on && !confirm("Désactiver " + a.email + " ? Il ne pourra plus se connecter.")) return;
+    await edgeSa({ action: "activer", id: a.user_id, actif: on });
+    await loadAll();
+    S.ok = on ? a.email + " activé." : a.email + " désactivé.";
+  },
+  async susp(t) {
+    S.sp = t.dataset.id;
+  },
+  async spno() {
+    S.sp = null;
+  },
+  async spok() {
+    const m = L1id(S.sp),
+      mo = g("s_mo");
+    if (mo.length < 10) throw new Error("Motif obligatoire (10 caractères minimum).");
+    await rpc("saas_set_statut", { p_commune: m.id, p_statut: "suspendu", p_motif: mo });
+    S.sp = null;
+    await loadAll();
+    S.ok = m.nom + " suspendue.";
+  },
+  async react(t) {
+    const m = L1id(t.dataset.id);
+    await rpc("saas_set_statut", { p_commune: m.id, p_statut: "actif" });
+    await loadAll();
+    S.ok = m.nom + " réactivée.";
+  },
+  async links(t) {
+    const s = t.dataset.s,
+      c = location.origin + "/?c=" + s,
+      m = location.origin + "/mairie";
+    try {
+      await navigator.clipboard.writeText("Portail citoyen : " + c + "\nPortail mairie : " + m);
+      S.ok = "Liens copiés.";
+    } catch (e) {
+      S.ok = "Citoyen : " + c + " · Mairie : " + m;
+    }
+  },
+  async tab(t) {
+    S.tb = t.dataset.v;
+    S.ea = S.pf = S.ep = null;
+  },
+  async eab(t) {
+    S.ea = t.dataset.id;
+  },
+  async epay(t) {
+    S.pf = t.dataset.id;
+  },
+  async eof(t) {
+    S.ep = t.dataset.c;
+  },
+  async cea() {
+    S.ea = S.pf = S.ep = null;
+  },
+  async absave() {
+    const o = g("a_op")
+      .split("\n")
+      .map(l => l.trim())
+      .filter(Boolean)
+      .map(l => {
+        const i = l.lastIndexOf(";"),
+          n = l.slice(0, i).trim(),
+          p = l.slice(i + 1).trim();
+        if (i < 1 || !/^\d{1,9}$/.test(p)) throw new Error("Option invalide : « " + l + " » (format Nom;Prix)");
+        return { nom: n, prix: +p };
+      });
+    await rpc("saas_abo_maj", {
+      p_commune: S.ea,
+      p_plan: g("a_pl"),
+      p_statut: g("a_st"),
+      p_prix_perso: g("a_pp") === "" ? null : +g("a_pp"),
+      p_fin_essai: g("a_fe") || null,
+      p_echeance: g("a_ec") || null,
+      p_options: o
+    });
+    S.ea = null;
+    await loadAll();
+    S.ok = "Abonnement enregistré.";
+  },
+  async fact(t) {
+    const x = S.ab.find(y => y.id == t.dataset.id),
+      p = new Date().toISOString().slice(0, 7);
+    if (!confirm("Facturer " + x.nom + " pour " + p + " : " + fmt(x.mensuel) + " FCFA ?")) return;
+    const n = await rpc("saas_facture_creer", { p_commune: x.id, p_periode: p, p_montant: null, p_echeance: null });
+    await loadAll();
+    S.tb = "fac";
+    S.ok = "Facture " + n + " émise.";
+  },
+  async paysave() {
+    await rpc("saas_paiement_enreg", {
+      p_facture: S.pf,
+      p_montant: +g("p_mt"),
+      p_mode: g("p_md"),
+      p_reference: g("p_rf"),
+      p_date: g("p_dt") || null
+    });
+    S.pf = null;
+    await loadAll();
+    S.ok = "Paiement enregistré.";
+  },
+  async fann(t) {
+    if (!confirm("Annuler cette facture ?")) return;
+    await rpc("saas_facture_annuler", { p_id: t.dataset.id });
+    await loadAll();
+    S.ok = "Facture annulée.";
+  },
+  async rel() {
+    const r = await rpc("saas_relances");
+    await loadAll();
+    S.ok =
+      r.factures_impayees +
+      " facture(s) et " +
+      r.abonnements_impayes +
+      " abonnement(s) passés en impayé ; " +
+      r.essais_expires +
+      " essai(s) expiré(s).";
+  },
+  async ofsave() {
+    await rpc("saas_plan_maj", {
+      p_code: g("o_cd"),
+      p_nom: g("o_nm"),
+      p_prix: +g("o_px"),
+      p_actif: g("o_ac") == "1",
+      p_ordre: +g("o_or") || 0
+    });
+    S.ep = null;
+    await loadAll();
+    S.ok = "Offre enregistrée.";
+  },
+  async msave() {
+    const o = {};
+    MK.forEach(k => {
+      o[k[0]] = $("#md_" + k[0]).checked;
+    });
+    await rpc("saas_modules_set", { p_commune: S.mc, p_modules: o });
+    S.mm = o;
+    S.ok = "Modules enregistrés.";
+  },
+  async dir() {
+    S.sd = -S.sd;
+  },
+  async pg(t) {
+    S.pg = Math.max(0, S.pg + +t.dataset.n);
+  },
+  async csv() {
+    const q = v => {
+        v = v == null ? "" : String(v);
+        if (/^[=+\-@\t\r]/.test(v)) v = "'" + v;
+        return '"' + v.replace(/"/g, '""') + '"';
+      },
+      R = [["Nom", "Identifiant", "Statut", "Offre", "Échéance", "Utilisateurs", "Demandes", "Créée le"]].concat(
+        S.m.map(x => [x.nom, x.slug, x.statut, x.plan || "", x.echeance || "", x.users, x.demandes, fd(x.created_at)])
+      ),
+      a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob(["\ufeff" + R.map(r => r.map(q).join(";")).join("\r\n")], { type: "text/csv" }));
+    a.download = "mairies-" + new Date().toISOString().slice(0, 10) + ".csv";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+};
+const fv = () => ({ nom: g("n_nom"), slug: g("n_slug"), plan: g("n_pl"), es: g("n_es"), an: g("n_an"), ae: g("n_ae") });
+const KEEP = new Set(["dir", "pg", "csv", "links"]);
+document.addEventListener("click", async e => {
+  const t = e.target.closest("[data-a]");
+  if (!t || !A[t.dataset.a]) return;
+  S.err = "";
+  S.ok = "";
+  const a = t.dataset.a;
+  try {
+    await A[a](t);
+  } catch (x) {
+    S.err = (x && x.message) || "Action impossible.";
+    if (a == "create") S.f = fv();
+  }
+  if (a == "menu" && $(".sx-side")) {
+    applyMenu();
+    return;
+  }
+  if (["dir", "pg"].includes(a) && !S.err) {
+    $("#lst").innerHTML = lst();
+    return;
+  }
+  render();
+  if (!KEEP.has(a) && a != "menu") window.scrollTo(0, 0);
+});
+document.addEventListener("input", e => {
+  const i = e.target.id;
+  if (i == "q") {
+    S.q = e.target.value;
+    S.pg = 0;
+    $("#lst").innerHTML = lst();
+  } else if (i == "n_nom") {
+    const s = $("#n_slug");
+    if (s && !s.dataset.d) s.value = slugify(e.target.value);
+  } else if (i == "n_slug") e.target.dataset.d = 1;
+});
+document.addEventListener("change", async e => {
+  const i = e.target.id;
+  if (i == "m_c") {
+    S.mc = e.target.value;
+    S.err = "";
+    try {
+      S.mm = S.mc ? await rpc("saas_modules_get", { p_commune: S.mc }) : {};
+    } catch (x) {
+      S.err = x.message;
+    }
+    render();
+    return;
+  }
+  if (i == "fs" || i == "sk") {
+    S[i] = e.target.value;
+    S.pg = 0;
+    $("#lst").innerHTML = lst();
+  }
+});
+addEventListener("hashchange", () => {
+  const h = hv();
+  if (h && S.st == "app" && h != S.v) {
+    S.v = h;
+    S.menu = false;
+    S.err = S.ok = "";
+    render();
+    window.scrollTo(0, 0);
+  }
+});
+document.addEventListener("keydown", e => {
+  if (e.key == "Escape" && S.menu && S.st == "app") {
+    S.menu = false;
+    applyMenu();
+  }
+});
+document.addEventListener(
+  "toggle",
+  e => {
+    if (e.target && e.target.id == "nwd") S.nwo = e.target.open;
+  },
+  true
+);
+(async () => {
+  try {
+    const s = (await sb.auth.getSession()).data.session;
+    if (s) await after();
+  } catch (e) {
+    S.err = "Session invalide. Reconnectez-vous.";
+    S.st = "login";
+  }
+  render();
+})();

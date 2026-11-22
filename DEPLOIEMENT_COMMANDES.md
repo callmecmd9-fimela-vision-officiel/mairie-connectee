@@ -1,3 +1,5 @@
+> **2026-11-22 : les migrations et Edge Functions listées ci-dessous sont déjà appliquées/déployées en production** (voir `supabase/PRODUCTION_VERSION_MAP.md`). Seul reste le déploiement du front (`wrangler deploy`).
+
 # Déploiement — commandes exactes (À NE LANCER QU'AVEC L'AUTORISATION DU PROPRIÉTAIRE)
 Pré-requis : `npm i -g wrangler supabase` ; `supabase login` ; `wrangler login` ; projet `aiqegpijisspankpkwfj`. `bright-worker` est conservé tel quel (ne pas supprimer).
 

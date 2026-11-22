@@ -1,0 +1,7 @@
+Session 2026-11-21 — tests REELLEMENT executes (node v22, sandbox sans reseau)
+REEL  : 28 fichiers Node PASS (tests/*.test.js, js/*.test.js, js/smoke.js)
+REEL  : tests/assets-ignore.test.js etendu (test-results/, docs/, .env.example, database-private/) PASS
+ECHEC : tests/enhance.test.js -> module 'jsdom' absent (preexistant, passe en CI qui l'installe)
+NON EXECUTES ici (pas de PostgreSQL, pas de navigateur, pas de reseau) :
+  tests/postgres/*.sh, tests/browser/run.sh : derniers resultats connus = 59/59 et 53/53 (session precedente, schema simule)
+SIMULATIONS : tests citoyen-*/org-*/smoke = DOM et Supabase simules (vm Node), pas de vraie base.

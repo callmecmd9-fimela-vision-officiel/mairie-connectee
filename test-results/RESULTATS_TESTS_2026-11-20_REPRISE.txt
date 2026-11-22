@@ -1,0 +1,47 @@
+# Résultats — reprise 2026-11-20 (Node v22.23.5, PostgreSQL 16.15 jetable en socket Unix, Chromium/Playwright)
+## Tests Node statiques
+PASS  tests/assets-ignore.test.js
+PASS  tests/catalogue.test.js
+PASS  tests/citoyen-compte.test.js
+PASS  tests/citoyen-etatcivil.test.js
+PASS  tests/citoyen-info.test.js
+PASS  tests/citoyen-nav.test.js
+PASS  tests/citoyen-rdv-creneaux.test.js
+PASS  tests/citoyen-rdv.test.js
+PASS  tests/citoyen.test.js
+PASS  tests/edge-function-config.test.js
+PASS  tests/enhance.test.js
+PASS  tests/ia-texte-auth.test.js
+PASS  tests/ia-texte-quota.test.js
+PASS  tests/lien-citoyen.test.js
+PASS  tests/mairie-mfa.test.js
+PASS  tests/mairie-rdv-planning.test.js
+PASS  tests/migration-history-integrity.test.js
+PASS  tests/org-d.test.js
+PASS  tests/org-e.test.js
+PASS  tests/org-f.test.js
+PASS  tests/org-permissions-loader.test.js
+PASS  tests/org.test.js
+PASS  tests/roles-admin-mairie.test.js
+PASS  tests/saas-invitation.test.js
+PASS  tests/security-null-guards.test.js
+PASS  tests/superadmin-edge-contract.test.js
+PASS  tests/sw-csp.test.js
+PASS  js/bandeau.test.js
+PASS  js/smoke.js
+
+## PostgreSQL jetable + navigateur (bash tests/browser/run.sh)
+rc=0
+assertions SQL OK : 59  (échecs : 0)
+PASS: roles-admin-mairie-integration
+BILAN UI : 53/53 OK, 0 échec(s)
+
+## Autres scripts PostgreSQL (bases fraîches)
+PASS  tests/postgres/security-guards-integration.sh
+PASS  tests/postgres/ia-usage-concurrency.sh
+
+## NON EXÉCUTÉ
+- Docker postgres:17 (registre Docker bloqué par le proxy) : remplacé par PostgreSQL 16.15 local
+- Rejeu des 85 migrations depuis zéro (socle de tables absent de l'historique) : tenté, 20 OK / 64 échecs attendus
+- Edge Functions réelles (Deno absent) : émulées dans le test navigateur
+- Production Supabase : aucune connexion, aucune écriture, aucun déploiement

@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const root = path.join(__dirname, "..");
-const ui = fs.readFileSync(path.join(root, "js/superadmin.js"), "utf8");
+const ui = require("./_compact.js").compact(fs.readFileSync(path.join(root, "js/superadmin.js"), "utf8"));
 const edge = fs.readFileSync(path.join(root, "supabase/functions/sa-admin/index.ts"), "utf8");
 const html = fs.readFileSync(path.join(root, "mairie.html"), "utf8");
 
@@ -35,7 +35,7 @@ assert.match(edge, /inviteUserByEmail\(email/);
 assert.match(edge, /if\(action==="reinit_mdp"\)/);
 assert.match(edge, /captchaToken/);
 assert.match(edge, /resetPasswordForEmail/);
-assert.match(html, /\/js\/superadmin\.js\?v=20261119\.1/);
+assert.match(html, /\/js\/superadmin\.js\?v=20261120\.1/);
 
 console.log("OK  création de compte alignée sur l’action serveur inviter");
 console.log("OK  réinitialisation alignée sur reset e-mail + Turnstile");

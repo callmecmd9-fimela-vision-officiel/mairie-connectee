@@ -94,3 +94,22 @@
 - **Projets visibles aux citoyens seulement si la mairie les publie** (`projets.public`, défaut false).
 - **Catégories d'info** = colonne `publications.categorie`, pas de nouvelles tables.
 - **Navigation** : 5 entrées de la spécification ; « Travaux et projets » est une section de l'accueil, pas un lien de menu.
+
+- D-A1 (2026-11-22) : publication Cloudflare par **liste blanche** (`/*` exclu puis `!` pour pages, `css/`, `js/`, icônes, manifestes, `sw.js`, `_headers`) plutôt que déplacement dans `public/` : même garantie (un nouveau fichier n'est pas publié par défaut), sans réécrire les chemins de 33 tests. Vérifié avec la bibliothèque `ignore` utilisée par wrangler : 47 fichiers publiés sur 257.
+- D-A2 : CSP `style-src 'self' fonts.googleapis.com` (plus de `<style>` ni de style injecté) ; `style-src-attr 'unsafe-inline'` conservé car ~190 attributs `style="…"` existent dans le JS. Un `<style>` injecté par XSS est désormais bloqué.
+- D-A3 : formatage Prettier non appliqué : 6 tests dépendent de la forme compacte du code. Lot dédié à prévoir (tests d'abord).
+- D-A4 : sauvegarde = `pg_dump` (schémas `public` et `auth`) chiffré gpg, en artefact GitHub 30 jours ; Storage non inclus.
+- D-A5 : `purge-pieces` garde `verify_jwt=false` : l'accès est contrôlé par le secret du coffre vérifié dans la RPC `pieces_orphelines` (403 sinon).
+
+- D-A3 (révisé 2026-11-22) : formatage Prettier appliqué (`arrowParens: avoid`, `trailingComma: none`, largeur 140). Les tests qui lisent le code par expressions régulières passent par `tests/_compact.js` (forme compacte stable) ; ceux qui exécutent le code (vm, jsdom) lisent le source brut. Bibliothèques embarquées et `sw.js` exclues.
+- D-A6 : `bright-worker` conservé (aucun outil de suppression de fonction Edge disponible ; inerte). Suppression à faire par l'utilisateur dans le tableau de bord.
+- D-A7 : performance en production limitée aux correctifs sans effet fonctionnel (index FK, `(select auth.jwt())`). Les 56 politiques permissives multiples ne sont pas fusionnées (risque d'accès > gain).
+
+## MAJ19 — 2026-11-22
+- D-B1 : page de confidentialité statique (aucune modification de `citoyen.js`) ; texte général, chaque commune complète responsable, durées, référence CDP.
+- D-B2 : aucune écriture en production (rien de nécessaire) ; faux positifs initplan documentés, pas de migration.
+- D-B3 : déploiement du front par workflow manuel avec tests préalables ; le déploiement lui-même exige les secrets Cloudflare (action utilisateur).
+- D-B4 (2026-11-22) : mise en service Français + Wolof à la demande du propriétaire ; le CSV source porte le statut `a_verifier` : une relecture par un second locuteur wolof reste recommandée. Sérère : en attente d’un traducteur.
+
+- **Styles inline (MAJ19)** : on convertit le portail citoyen d'abord (classes `c-*`) ; `style-src-attr 'unsafe-inline'` n'est retiré qu'une fois l'espace mairie et le SaaS convertis. Le style dynamique (couleur de commune) passe par `documentElement.style.setProperty` (CSSOM, autorisé).
+- **Styles dynamiques/statiques mairie+SaaS : `data-sty` + CSSOM** (`js/dstyle.js`) plutôt que des centaines de classes : aucun risque de spécificité CSS, rendu strictement identique.

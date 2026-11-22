@@ -29,7 +29,7 @@ Lot 1-8 faits : accueil/identité, navigation, espace citoyen (SMS indisponible 
 Super Admin (plateforme) > `admin_mairie` (admin technique de sa commune) ; `maire` = décisions/validations/signatures sans administration technique. Statuts admin : en_attente → affecte → actif ↔ suspendu. Détail, procédures, retour arrière : `docs/ROLES_ET_PERMISSIONS.md`. Migration `20261120100000` **proposée, non appliquée**. Reprise : `REPRISE_SESSION.md`.
 
 ## Tests
-`node tests/<nom>.test.js` pour chaque fichier ; `node tests/smoke.js` ; `enhance.test.js` exige `npm i jsdom` ; `tests/isolation_test.sql` à lancer dans Supabase.
+`npm i` puis `npm test` (tous les tests JS) ; ou `node tests/<nom>.test.js` ; `enhance` et `a11y` exigent jsdom ; sauvegarde : `docs/SAUVEGARDE.md` ; `tests/isolation_test.sql` à lancer dans Supabase.
 
 ## Documents liés
 CHANGELOG.md, DECISIONS.md, TASKS.md, SETUP.md
@@ -41,3 +41,9 @@ CHANGELOG.md, DECISIONS.md, TASKS.md, SETUP.md
 
 ## Reprise (MAJ7)
 État : tout le code est prêt ; production inchangée. Reste, sur autorisation : appliquer `supabase/production-ready/` (01→05), déployer les Edge Functions, `wrangler deploy` — voir `DEPLOIEMENT_COMMANDES.md`. Externe : fournisseur SMS, clés VAPID.
+
+## Session 2026-11-22 (MAJ17)
+- Dépôt durci (liste blanche des assets, CSP sans `<style>` en ligne, `index.ts` obsolète archivé), CI navigateur, sauvegarde chiffrée. Production et SMS non touchés. ZIP de référence : SAAS_MUNICIPAL_MAJ17_COMPLET.zip.
+
+## Session 2026-11-22 (MAJ18)
+- Production = toutes migrations appliquées (+ perf 20261122081303), Edge sa-admin v16 / saas-admin v4. JS formaté (Prettier, contrôlé en CI). ZIP de référence : SAAS_MUNICIPAL_MAJ18_COMPLET.zip.

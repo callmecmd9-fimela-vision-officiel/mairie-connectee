@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const root = path.join(__dirname, "..");
-const saas = fs.readFileSync(path.join(root, "js/saas.js"), "utf8");
+const saas = require("./_compact.js").compact(fs.readFileSync(path.join(root, "js/saas.js"), "utf8"));
 const saasHtml = fs.readFileSync(path.join(root, "saas.html"), "utf8");
 const mairieHtml = fs.readFileSync(path.join(root, "mairie.html"), "utf8");
 const edge = fs.readFileSync(path.join(root, "supabase/functions/saas-admin/index.ts"), "utf8");
@@ -23,9 +23,9 @@ assert.match(edge, /inviteUserByEmail\(email/);
 assert.match(edge, /profiles"\)\.update\(\{actif:false\}\)/);
 assert.match(edge, /compte_actif:false/);
 
-assert.match(saasHtml, /\/js\/saas\.js\?v=20261119\.1/);
-for (const module of ["core.js", "secretariat.js", "actions.js"]) {
-  assert.match(mairieHtml, new RegExp("/js/" + module.replace(".", "\\.") + "\\?v=20261119\\.1"));
+assert.match(saasHtml, /\/js\/saas\.js\?v=20261121\.4/);
+for (const [module, version] of [["core.js", "20261121.1"], ["secretariat.js", "20261119.1"], ["actions.js", "20261119.1"]]) {
+  assert.match(mairieHtml, new RegExp("/js/" + module.replace(".", "\\.") + "\\?v=" + version.replace(".", "\\.")));
 }
 
 console.log("OK  création mairie alignée sur l'invitation e-mail côté Edge Function");

@@ -1,0 +1,14 @@
+{
+  "name": "fimela-vision",
+  "private": true,
+  "description": "Mairie Connectée — PWA multi-communes (JS sans build). Ce fichier ne sert qu'aux outils de développement ; il n'est pas publié (.assetsignore).",
+  "scripts": {
+    "test": "node scripts/run-js-tests.js",
+    "format:check": "prettier --check \"js/*.js\"",
+    "format": "prettier --write \"js/*.js\""
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0",
+    "prettier": "3.10.1"
+  }
+}

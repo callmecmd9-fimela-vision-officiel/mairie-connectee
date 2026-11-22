@@ -1,0 +1,1 @@
+{ "private": true, "name": "fimela-tests-browser", "description": "Dépendances de développement des tests navigateur (hors déploiement)", "devDependencies": { "pg": "^8.13.0", "playwright": "^1.48.0" } }

@@ -24,14 +24,23 @@ Deno.serve(async(req)=>{
    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return J({error:"E-mail invalide"},400);
    if(!nom||!communeNom||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))return J({error:"Nom ou identifiant invalide"},400);
    if(!plan)return J({error:"Offre obligatoire"},400);
-   const invite=await admin.auth.admin.inviteUserByEmail(email,{data:{nom,invite_pending:true},redirectTo});
-   if(invite.error||!invite.data.user)return J({error:invite.error?.message??"Invitation impossible"},400);
-   const created=await caller.rpc("saas_creer_commune",{p_nom:communeNom,p_slug:slug,p_plan:plan,p_essai_jours:Math.max(0,Math.min(90,Number(b.essai_jours)||0)),p_admin:invite.data.user.id,p_admin_nom:nom});
-   if(created.error){await admin.auth.admin.deleteUser(invite.data.user.id);return J({error:created.error.message},400)}
-   const inactive=await admin.from("profiles").update({actif:false}).eq("id",invite.data.user.id);
-   if(inactive.error){await admin.auth.admin.updateUserById(invite.data.user.id,{ban_duration:"876000h"});return J({error:"Commune créée, compte bloqué par sécurité : "+inactive.error.message},500)}
+   const existing=await caller.rpc("saas_compte_par_email",{p_email:email});
+   if(existing.error)return J({error:existing.error.message},400);
+   let adminId:string,invited=false;
+   if(existing.data?.id){
+    if(existing.data.plateforme||!["citoyen","admin_mairie"].includes(existing.data.role)||existing.data.commune_id)return J({error:"Ce compte possède déjà un rôle ou une affectation : utilisez un autre e-mail"},409);
+    adminId=String(existing.data.id);
+   }else{
+    const invite=await admin.auth.admin.inviteUserByEmail(email,{data:{nom,invite_pending:true},redirectTo});
+    if(invite.error||!invite.data.user)return J({error:invite.error?.message??"Invitation impossible"},400);
+    adminId=invite.data.user.id;invited=true;
+   }
+   const created=await caller.rpc("saas_creer_commune",{p_nom:communeNom,p_slug:slug,p_plan:plan,p_essai_jours:Math.max(0,Math.min(90,Number(b.essai_jours)||0)),p_admin:adminId,p_admin_nom:nom});
+   if(created.error){if(invited)await admin.auth.admin.deleteUser(adminId);return J({error:created.error.message},400)}
+   const inactive=await admin.from("profiles").update({actif:false}).eq("id",adminId);
+   if(inactive.error){await admin.auth.admin.updateUserById(adminId,{ban_duration:"876000h"});return J({error:"Commune créée, compte bloqué par sécurité : "+inactive.error.message},500)}
    let base=SITE;while(base.endsWith("/"))base=base.slice(0,-1);
-   return J({id:created.data,portail_citoyen:base+"/?c="+slug,portail_mairie:redirectTo,invitation:"envoyee",compte_actif:false});
+   return J({id:created.data,portail_citoyen:base+"/?c="+slug,portail_mairie:redirectTo,invitation:invited?"envoyee":"compte_existant",role_admin:"admin_mairie",compte_actif:false});
   }
   if(b.action==="reinit_mdp_admin"){
    const communeId=clean(b.commune,60),{data:commune,error:communeError}=await admin.from("communes").select("admin_principal").eq("id",communeId).single();
