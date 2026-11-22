@@ -26,7 +26,7 @@ Voir `docs/ROLES_ET_PERMISSIONS.md`. Interface Super Admin → Gestion des utili
 Espace `/saas` > Gestion des mairies > Nouvelle mairie. Puis, dans `/mairie` : Paramètres (identité, images), Citoyens > Démarches, Rendez-vous (jours/heures), Administration > Lien citoyen (couleur, blason, bannière, affiche QR).
 
 ## Contrôles après déploiement
-- Lancer `tests/isolation_test.sql` → « ISOLATION OK ».
+- Lancer `tests/isolation/isolation_test.sql` → « ISOLATION OK ».
 - `_headers` : `manifest-src 'self' blob:`, `img-src` avec le domaine Supabase.
 - Ouvrir `/?c=slug` sur mobile : bannière, services, rendez-vous, suivi.
 - Catalogue configurable : migration 20261124_catalogue.sql (ordre : après lot7).

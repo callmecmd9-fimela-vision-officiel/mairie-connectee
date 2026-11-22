@@ -19,7 +19,7 @@ Front statique (HTML/JS sans étape de build) servi par Cloudflare Workers (asse
 | `supabase/migrations/` | Migrations SQL de référence (voir `PRODUCTION_VERSION_MAP.md` pour l'état en production) |
 | `supabase/functions/` | Edge Functions (`sa-admin`, `saas-admin`, `ia-texte`, `sms-dispatch`, …) |
 | `tests/` | Tests de non-régression (`npm test`) |
-| `docs/` | Documentation technique (rôles, sauvegarde, SMS, push, mots de passe, …) |
+| `docs/` | Documentation technique (rôles, sauvegarde, SMS, push, mots de passe, …) ; `docs/rapports/` : audits et rapports datés |
 | `scripts/` | Outils de déploiement et d'export |
 | `archive_legacy/` | Anciens fichiers conservés pour mémoire (non publiés) |
 

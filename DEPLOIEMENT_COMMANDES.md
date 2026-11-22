@@ -29,7 +29,7 @@ Secrets (valeurs jamais dans le dépôt) :
 Puis : vider le cache / réinstaller la PWA une fois (SW `mc-v9`).
 
 ## 4. Vérifications
-    # SQL Editor : tests/isolation_test.sql → « ISOLATION OK »
+    # SQL Editor : tests/isolation/isolation_test.sql → « ISOLATION OK »
     # /saas : créer/affecter un admin_mairie ; /mairie : indicateurs Organisation (valeurs « — » pour admin_mairie)
 Webhook push (Dashboard > Database > Webhooks) : table `citoyen_notifications`, INSERT, POST …/functions/v1/push-send, en-tête `x-push-secret`.
 Planification SMS (après `dryrun` validé) : pg_cron + pg_net, appel `sms-dispatch` chaque minute avec `x-sms-secret`.

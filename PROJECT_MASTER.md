@@ -26,10 +26,10 @@ Lot 1-8 faits : accueil/identité, navigation, espace citoyen (SMS indisponible 
 20261116_audit3 → 20261117_demarches_statuts → 20261119_citoyen_prenom → 20261120_lot5_statuts_retrait → 20261121_lot6_rdv → 20261122_lot6bis_creneaux → 20261123_lot7_infos → 20261124_catalogue
 
 ## Rôles et permissions
-Super Admin (plateforme) > `admin_mairie` (admin technique de sa commune) ; `maire` = décisions/validations/signatures sans administration technique. Statuts admin : en_attente → affecte → actif ↔ suspendu. Détail, procédures, retour arrière : `docs/ROLES_ET_PERMISSIONS.md`. Migration `20261120100000` **proposée, non appliquée**. Reprise : `REPRISE_SESSION.md`.
+Super Admin (plateforme) > `admin_mairie` (admin technique de sa commune) ; `maire` = décisions/validations/signatures sans administration technique. Statuts admin : en_attente → affecte → actif ↔ suspendu. Détail, procédures, retour arrière : `docs/ROLES_ET_PERMISSIONS.md`. Migration `20261120100000` **proposée, non appliquée**. Reprise : `docs/REPRISE_SESSION.md`.
 
 ## Tests
-`npm i` puis `npm test` (tous les tests JS) ; ou `node tests/<nom>.test.js` ; `enhance` et `a11y` exigent jsdom ; sauvegarde : `docs/SAUVEGARDE.md` ; `tests/isolation_test.sql` à lancer dans Supabase.
+`npm i` puis `npm test` (tous les tests JS) ; ou `node tests/<nom>.test.js` ; `enhance` et `a11y` exigent jsdom ; sauvegarde : `docs/SAUVEGARDE.md` ; `tests/isolation/isolation_test.sql` à lancer dans Supabase.
 
 ## Documents liés
 CHANGELOG.md, DECISIONS.md, TASKS.md, SETUP.md
