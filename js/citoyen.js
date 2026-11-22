@@ -414,7 +414,7 @@ const KM = () => "mc_d_" + S.slug,
   };
 /* --- Identité de la commune : thème, manifest PWA propre à la commune, cache hors-ligne --- */
 const SHIELD =
-  '<svg width="56" height="56" viewBox="0 0 24 24" fill="#0B5A2E" aria-hidden="true"><path d="M12 2l9 3v6c0 5-4 9-9 11C7 20 3 16 3 11V5z"/></svg>';
+  '<svg width="56" height="56" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l9 3v6c0 5-4 9-9 11C7 20 3 16 3 11V5z"/></svg>';
 const cnm = () => String(S.co || "").replace(/^Commune de\s+/i, "");
 /* Le bucket « identite » est privé : blason et bannière sont lus par liens signés (lecture anonyme limitée par la politique identite_published_assets_read) ; repli sur l'URL publique si la signature échoue. */
 const pubI = n => URLS + "/storage/v1/object/public/identite/" + S.cid + "/" + n;

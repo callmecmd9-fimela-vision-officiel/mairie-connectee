@@ -8,7 +8,7 @@ input,select,textarea{width:100%;min-height:46px;padding:10px 12px;border:1px so
 label{display:block;font:700 13px 'Nunito Sans',system-ui,sans-serif;color:var(--mut);margin:12px 0 4px}
 .bt,.bo,.bg{min-height:48px;padding:0 20px;border-radius:12px;font-weight:800;cursor:pointer;border:0}
 .bt{background:var(--g);color:#fff}.bg{background:var(--gold);color:var(--tx)}.bo{background:#fff;border:2px solid var(--g);color:var(--g)}
-.hd{background:linear-gradient(160deg,#0E5A2F,#073A1E);color:#fff;padding:26px 20px 64px}
+.hd{background:linear-gradient(160deg,color-mix(in srgb,var(--g) 55%,#000),color-mix(in srgb,var(--g) 55%,#000));color:#fff;padding:26px 20px 64px}
 .in{max-width:1100px;margin:0 auto}
 .pill{background:#DCFCE7;color:#166534;border-radius:99px;padding:4px 12px;font-weight:800;font-size:13px}
 .lk{background:none;border:0;color:#CFE6D5;text-decoration:underline;cursor:pointer;font-size:14px;min-height:44px}
@@ -40,7 +40,7 @@ label{display:block;font:700 13px 'Nunito Sans',system-ui,sans-serif;color:var(-
 @media(min-width:1000px){.nv{display:flex}.mb,.mnv{display:none}.hn{flex:0 1 auto}}
 @media(max-width:480px){.ts{display:none}.tn{font-size:16px;white-space:normal;line-height:1.1}.tm{padding:0 12px;font-size:14px}.hdr{gap:8px}.hdr .bz,.hdr>svg{width:44px!important;height:44px!important}}
 /* ---- Bannière ---- */
-.hero{position:relative;background:linear-gradient(120deg,#0B5A2E 0%,#0D6B35 55%,#073A1E 100%);color:#fff;overflow:hidden}
+.hero{position:relative;background:linear-gradient(120deg,var(--g) 0%,color-mix(in srgb,var(--g) 85%,#fff) 55%,color-mix(in srgb,var(--g) 55%,#000) 100%);color:#fff;overflow:hidden}
 .hph{position:absolute;top:0;right:0;bottom:0;width:60%;display:block}
 .hph img{width:100%;height:100%;object-fit:cover;object-position:center 45%;display:block;-webkit-mask-image:linear-gradient(to right,transparent 0,rgba(0,0,0,.92) 48%);mask-image:linear-gradient(to right,transparent 0,rgba(0,0,0,.92) 48%)}
 .hc{position:relative;padding:44px 20px 84px}
@@ -53,7 +53,7 @@ label{display:block;font:700 13px 'Nunito Sans',system-ui,sans-serif;color:var(-
 @media(max-width:720px){.hph{position:relative;width:100%;height:170px}.hph img{-webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent);mask-image:linear-gradient(to bottom,#000 55%,transparent)}.hc{padding:4px 16px 70px}.hero:not(.ph) .hc{padding-top:28px}.sr2 .bt{padding:0 14px}}
 /* ---- 3 grandes cartes ---- */
 .c3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:-44px;position:relative;padding:0 16px}
-.a3{display:flex;align-items:center;gap:14px;text-align:left;min-height:92px;padding:14px 16px;border:0;border-radius:18px;cursor:pointer;color:#fff;background:linear-gradient(135deg,#0B5A2E,#14803F);box-shadow:0 8px 22px rgba(11,79,42,.28);transition:transform .2s,box-shadow .2s}
+.a3{display:flex;align-items:center;gap:14px;text-align:left;min-height:92px;padding:14px 16px;border:0;border-radius:18px;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--g),color-mix(in srgb,var(--g) 85%,#fff));box-shadow:0 8px 22px rgba(11,79,42,.28);transition:transform .2s,box-shadow .2s}
 .a3.y{background:linear-gradient(135deg,#F2B705,#FFD34E);color:var(--tx)}
 .a3:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(11,79,42,.32)}
 .a3 .at{flex:1;min-width:0}.a3 b{display:block;font:800 19px/1.2 'Nunito Sans',system-ui,sans-serif}.a3 small{display:block;font-size:14px;line-height:1.3}
@@ -72,7 +72,7 @@ label{display:block;font:700 13px 'Nunito Sans',system-ui,sans-serif;color:var(-
 .ac{text-align:center;background:linear-gradient(#F4FAF1,#E4F1E0)}
 .lk2{background:none;border:0;color:var(--g);text-decoration:underline;font-weight:700;min-height:44px;cursor:pointer}
 /* ---- Suivi, infos, contact, actualités ---- */
-.sv{display:flex;flex-wrap:wrap;gap:12px;align-items:center;background:linear-gradient(90deg,#0B5A2E,#14803F);color:#fff;border-radius:var(--r);padding:18px;margin-bottom:16px}.sv>div{flex:1 1 220px}.sv input{flex:2 1 220px;color:var(--tx);caret-color:var(--tx)}.sv input::placeholder{color:var(--mut);opacity:1}.sv .sm{color:#D6E8DA}
+.sv{display:flex;flex-wrap:wrap;gap:12px;align-items:center;background:linear-gradient(90deg,var(--g),color-mix(in srgb,var(--g) 85%,#fff));color:#fff;border-radius:var(--r);padding:18px;margin-bottom:16px}.sv>div{flex:1 1 220px}.sv input{flex:2 1 220px;color:var(--tx);caret-color:var(--tx)}.sv input::placeholder{color:var(--mut);opacity:1}.sv .sm{color:#D6E8DA}
 .g2c{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
 .ih{display:inline-grid;vertical-align:middle;color:var(--g)}
 .ctb{display:grid;gap:10px}.cl{display:flex;align-items:center;justify-content:center;text-decoration:none;min-height:52px}
@@ -145,12 +145,12 @@ label{display:block;font:700 13px 'Nunito Sans',system-ui,sans-serif;color:var(-
 .tn small{display:block;font:800 15px/1.2 'Nunito Sans',system-ui,sans-serif;color:var(--tx);letter-spacing:0}
 .ts{font-style:italic;color:var(--g)}
 .nl{display:inline-flex;align-items:center;border-radius:99px;padding:0 14px;font-size:14px}
-.nl:first-child{background:var(--g);color:#fff}.nl:first-child:hover{background:#0E6B35;color:#fff}
+.nl:first-child{background:var(--g);color:#fff}.nl:first-child:hover{background:color-mix(in srgb,var(--g) 85%,#fff);color:#fff}
 .tm{border-radius:99px;box-shadow:0 3px 10px rgba(11,79,42,.25)}
 @media(min-width:1000px){.hn{padding-left:14px;border-left:2px solid var(--ln)}}
 @media(max-width:480px){.tn{font-size:19px}.tn small{font-size:12px}.hdr .bz,.hdr>svg{width:46px!important;height:46px!important}}
 /* Bannière : photo pleine largeur, voile vert courbe à gauche, accroche manuscrite dorée */
-.hero{background:linear-gradient(120deg,#0B5A2E,#0D6B35 55%,#073A1E)}
+.hero{background:linear-gradient(120deg,var(--g),color-mix(in srgb,var(--g) 85%,#fff) 55%,color-mix(in srgb,var(--g) 55%,#000))}
 .hero h1{border-left:4px solid var(--gold);padding-left:12px;font-weight:700;text-shadow:0 2px 10px rgba(0,0,0,.3)}
 .hero h1 .gl{font-weight:800}
 .sg{font-family:'Dancing Script','Nunito Sans',cursive;font-style:normal;font-weight:700;font-size:clamp(34px,5vw,54px);line-height:1.05;margin:10px 0 8px;text-shadow:0 2px 8px rgba(0,0,0,.25)}
@@ -158,16 +158,16 @@ label{display:block;font:700 13px 'Nunito Sans',system-ui,sans-serif;color:var(-
 @media(min-width:721px){
 .hph{width:100%;left:0}
 .hph img{-webkit-mask-image:none;mask-image:none;object-position:center 40%}
-.hero.ph::before{content:"";position:absolute;inset:0;z-index:1;background:radial-gradient(135% 150% at 0% 35%,#0B5A2E 0,rgba(11,90,46,.96) 38%,rgba(11,90,46,.55) 52%,rgba(11,90,46,0) 66%)}
+.hero.ph::before{content:"";position:absolute;inset:0;z-index:1;background:radial-gradient(135% 150% at 0% 35%,var(--g) 0,color-mix(in srgb,var(--g) 96%,transparent) 38%,color-mix(in srgb,var(--g) 55%,transparent) 52%,color-mix(in srgb,var(--g) 0%,transparent) 66%)}
 .hero.ph .hc{z-index:2}
 .hero::after{content:"";position:absolute;z-index:2;left:-8%;bottom:-46px;width:62%;height:96px;border-top:5px solid var(--gold);border-radius:50%/100% 100% 0 0;opacity:.85}
 .hc{padding:56px 20px 96px}
 }
-@media(max-width:720px){.hero.ph{background:#0B5A2E}.hph{height:190px}.hero h1{font-size:26px}}
+@media(max-width:720px){.hero.ph{background:var(--g)}.hph{height:190px}.hero h1{font-size:26px}}
 /* Grandes cartes d'action */
 .a3{border-radius:20px}
 .a3 .ai{flex:none;display:grid;place-items:center;width:58px;height:58px;border-radius:16px;background:rgba(255,255,255,.18)}
-.a3.y .ai{background:rgba(11,90,46,.12);color:var(--g)}
+.a3.y .ai{background:color-mix(in srgb,var(--g) 12%,transparent);color:var(--g)}
 /* Services municipaux : tuiles claires */
 .sh{border-left-color:var(--g);font-size:22px}
 .tl{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
@@ -178,7 +178,7 @@ label{display:block;font:700 13px 'Nunito Sans',system-ui,sans-serif;color:var(-
 .ac{border-radius:22px;background:linear-gradient(#F4FAF1,#E2F0DE);border:1px solid #D5E3D3}
 .ac .bt{width:100%;border-radius:99px}
 /* Infos pratiques (panneau vert), actualités, pied de page */
-#infos{background:linear-gradient(135deg,#0B5A2E,#0E6B35);color:#fff;border-radius:44px 18px 18px 44px;padding:22px 24px 22px 30px}
+#infos{background:linear-gradient(135deg,var(--g),color-mix(in srgb,var(--g) 85%,#fff));color:#fff;border-radius:44px 18px 18px 44px;padding:22px 24px 22px 30px}
 #infos h2,#infos a,#infos .ih{color:#fff}#infos .mu{color:#D6E8DA}
 #actus{border-radius:20px}#actus .ih{color:var(--gold)}
 .cd{border-radius:20px}
@@ -190,7 +190,7 @@ label{display:block;font:700 13px 'Nunito Sans',system-ui,sans-serif;color:var(-
 .hero.ph{min-height:0}
 .hph{position:absolute;inset:0;width:100%;height:100%}
 .hph img{-webkit-mask-image:none;mask-image:none;object-position:62% 40%}
-.hero.ph::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(11,90,46,.78) 0,rgba(11,90,46,.72) 45%,rgba(7,58,30,.94) 100%)}
+.hero.ph::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,color-mix(in srgb,var(--g) 78%,transparent) 0,color-mix(in srgb,var(--g) 72%,transparent) 45%,rgba(7,58,30,.94) 100%)}
 .hero.ph .hc{position:relative;z-index:2;padding:30px 16px 74px}
 .hero::after{display:none}
 .hero h1{font-size:24px}
@@ -217,3 +217,5 @@ label{display:block;font:700 13px 'Nunito Sans',system-ui,sans-serif;color:var(-
 .hc{padding-top:64px}
 }
 @media(min-width:1400px){.in,.mn,.pf{max-width:1240px}}
+
+.hdr svg{fill:var(--g)}
