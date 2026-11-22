@@ -183,3 +183,37 @@ label{display:block;font:700 13px 'Nunito Sans',system-ui,sans-serif;color:var(-
 #actus{border-radius:20px}#actus .ih{color:var(--gold)}
 .cd{border-radius:20px}
 .ft{border-radius:36px 36px 0 0;box-shadow:0 -4px 0 var(--gold);padding:26px 18px;margin-top:8px}
+
+/* ===== Responsive fidèle à la maquette ===== */
+/* Mobile (≤720 px) : photo pleine largeur sous un voile vert, texte par-dessus, cartes empilées, services en 2 colonnes */
+@media(max-width:720px){
+.hero.ph{min-height:0}
+.hph{position:absolute;inset:0;width:100%;height:100%}
+.hph img{-webkit-mask-image:none;mask-image:none;object-position:62% 40%}
+.hero.ph::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(11,90,46,.78) 0,rgba(11,90,46,.72) 45%,rgba(7,58,30,.94) 100%)}
+.hero.ph .hc{position:relative;z-index:2;padding:30px 16px 74px}
+.hero::after{display:none}
+.hero h1{font-size:24px}
+.sg{font-size:34px}
+.hsub{font-size:14px}
+.sr2{max-width:none}
+.tl{grid-template-columns:repeat(2,1fr);gap:8px}
+.tt{flex-direction:column;justify-content:center;text-align:center;min-height:112px;padding:10px 8px;gap:6px}
+.tt .tx{align-items:center}.tt .tx b{font-size:14px}.tt .tx span{display:none}
+.ico{width:46px;height:46px}
+#infos{border-radius:28px 14px 14px 28px;padding:18px 18px 18px 22px}
+.ft{font-size:18px;border-radius:28px 28px 0 0}
+}
+/* Tablette (721–999 px) : cartes d'action en ligne, services sur 3 colonnes */
+@media(min-width:721px) and (max-width:999px){
+.c3{grid-template-columns:1fr;max-width:640px;margin-left:auto;margin-right:auto}
+.tl{grid-template-columns:repeat(3,1fr)}
+}
+@media(min-width:861px) and (max-width:999px){.c3{grid-template-columns:repeat(3,1fr);max-width:none}.a3 small{display:none}}
+/* Ordinateur (≥1000 px) : 5 colonnes de services, bannière haute, cartes sur la photo */
+@media(min-width:1000px){
+.tl{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+.hero{min-height:360px}
+.hc{padding-top:64px}
+}
+@media(min-width:1400px){.in,.mn,.pf{max-width:1240px}}
