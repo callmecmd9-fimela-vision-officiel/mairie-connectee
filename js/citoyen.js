@@ -421,12 +421,14 @@ const pubI = n => URLS + "/storage/v1/object/public/identite/" + S.cid + "/" + n
 async function signIdt() {
   const w = [];
   if (S.idt && S.idt.blason) w.push("blason.webp");
-  if (S.pt && S.pt.bandeau) w.push("bandeau.webp", "bandeau-m.webp");
+  w.push("bandeau.webp", "bandeau-m.webp");
   S.u = {};
-  w.forEach(n => {
-    S.u[n] = pubI(n);
-  });
-  if (!w.length || !S.cid || !sb.storage || !sb.storage.from) return;
+  if (S.idt && S.idt.blason) S.u["blason.webp"] = pubI("blason.webp");
+  if (S.pt && S.pt.bandeau) {
+    S.u["bandeau.webp"] = pubI("bandeau.webp");
+    S.u["bandeau-m.webp"] = pubI("bandeau-m.webp");
+  }
+  if (!S.cid || !sb.storage || !sb.storage.from) return;
   try {
     const r = await sb.storage.from("identite").createSignedUrls(
       w.map(n => S.cid + "/" + n),
@@ -439,7 +441,7 @@ async function signIdt() {
 }
 const blUrl = () => (S.idt && S.idt.blason && S.cid ? (S.u || {})["blason.webp"] || pubI("blason.webp") : "");
 /* photo de bannière : deux fichiers WebP publiés par la commune (bandeau.webp ordinateur, bandeau-m.webp mobile) */
-const bnUrl = () => (S.pt && S.pt.bandeau && S.cid ? (S.u || {})["bandeau.webp"] || pubI("bandeau.webp") : "");
+const bnUrl = () => (S.cid && (S.u || {})["bandeau.webp"]) || "";
 const bnM = () => (S.u || {})["bandeau-m.webp"] || bnUrl();
 const okCol = c => {
   if (!/^#[0-9a-f]{6}$/i.test(c || "")) return false;
