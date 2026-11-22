@@ -246,7 +246,7 @@ const RP = {
   personnel: ["maire", "rh"],
   params: ["maire"],
   projets: ["maire", "adjoint", "technique", "cabinet"],
-  territoire: ["maire", "adjoint", "technique", "cabinet"],
+  territoire: ["maire", "adjoint", "technique"],
   conseil: ["maire", "adjoint", "cabinet", "secretariat"],
   citoyens: ["maire", "adjoint", "cabinet", "secretariat", "agent", "etat_civil", "technique", "finances", "rh"],
   pub: ["maire", "cabinet", "secretariat"],
@@ -1167,6 +1167,16 @@ const brand = () =>
   `<div class="br">${url("blason") ? `<img src="${esc(url("blason"))}" alt="Blason">` : ic("shield", 86)}<div class="bn">MAIRIE DE ${esc((S.co || "").toUpperCase())}</div><div class="bs">${esc(S.ind.slogan || "")}</div></div>`;
 const palms =
   '<svg class="pm" viewBox="0 0 1000 110" preserveAspectRatio="xMidYMin slice" aria-hidden="true"><defs><g id="p"><path d="M30 110c2-30 0-55-4-80" stroke="#6B4A2B" stroke-width="4" fill="none"/><path d="M26 30C14 20 6 26 0 38c10-6 18-6 26-8zM26 30c4-14 18-18 32-10-12 0-20 4-30 10zM26 30c-6-12-4-22 4-26-2 10 0 18 0 26z" fill="#2F8F3E"/></g></defs><g opacity=".85"><use href="#p" x="20"/><use href="#p" x="150" y="10"/><use href="#p" x="300"/><use href="#p" x="430" y="14"/><use href="#p" x="580"/><use href="#p" x="720" y="8"/><use href="#p" x="860"/><use href="#p" x="940" y="14"/></g></svg>';
+/* Accueil adapté au poste : phrase d'accroche et module prioritaire (l'interface reste unique, chacun ne voit que ses droits) */
+const RSUB = {
+    cabinet: "Agenda, courrier et relations avec les citoyens",
+    finances: "Budget, march\u00e9s et suivi financier",
+    rh: "Personnel, cong\u00e9s et paie",
+    etat_civil: "Actes et demandes d\u2019\u00e9tat civil",
+    technique: "Projets, travaux et patrimoine",
+    agent: "Demandes \u00e0 traiter et \u00e9tat civil"
+  },
+  RPRI = { finances: "s_finances", rh: "s_admin", etat_civil: "s_admin", agent: "s_admin", technique: "s_dev", cabinet: "s_citoyens" };
 const dash = () => {
   const s = stat(),
     I = s.I,
@@ -1184,7 +1194,8 @@ const dash = () => {
     cards = (
       can("cabinet") && S.pr != "maire" ? [{ v: "cabinet", n: "Cabinet du Maire", i: "user", c: "k6", d: "Agenda et courrier" }] : []
     ).concat(espV());
-  return `<div class="hero" ${bg}>${url("bandeau") ? "" : palms}${tb("")}<div class="gr">${ph}<div><h1>Bonjour, ${esc(who)}</h1><i>Voici la situation g\u00e9n\u00e9rale de votre commune</i></div></div></div><div class="ct">${S.err ? `<div class="al" role="alert">${esc(S.err)}</div>` : ""}
+  if (RPRI[S.pr]) cards.sort((a, b) => (b.v == RPRI[S.pr]) - (a.v == RPRI[S.pr]));
+  return `<div class="hero" ${bg}>${url("bandeau") ? "" : palms}${tb("")}<div class="gr">${ph}<div><h1>Bonjour, ${esc(who)}</h1><i>${esc(!S.sa && RSUB[S.pr] ? RSUB[S.pr] : "Voici la situation g\u00e9n\u00e9rale de votre commune")}</i></div></div></div><div class="ct">${S.err ? `<div class="al" role="alert">${esc(S.err)}</div>` : ""}
 ${
   al.length
     ? `<div class="as" role="region" aria-label="Alertes importantes">${al

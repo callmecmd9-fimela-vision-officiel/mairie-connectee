@@ -24,7 +24,7 @@ assert.match(edge, /profiles"\)\.update\(\{actif:false\}\)/);
 assert.match(edge, /compte_actif:false/);
 
 assert.match(saasHtml, /\/js\/saas\.js\?v=20261121\.4/);
-for (const [module, version] of [["core.js", "20261121.1"], ["secretariat.js", "20261119.1"], ["actions.js", "20261122.2"]]) {
+for (const [module, version] of [["core.js", "20261121.2"], ["secretariat.js", "20261119.1"], ["actions.js", "20261122.2"]]) {
   assert.match(mairieHtml, new RegExp("/js/" + module.replace(".", "\\.") + "\\?v=" + version.replace(".", "\\.")));
 }
 
