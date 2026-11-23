@@ -73,20 +73,14 @@
     return n + " jour" + (n > 1 ? "s" : "");
   }
 
-  function bouton() {
-    if (document.getElementById("mdp-btn")) return;
-    var b = el(
-      "button",
-      "Mon mot de passe",
-      "position:fixed;left:10px;bottom:10px;z-index:2147482000;padding:6px 10px;font-size:12px;border-radius:8px;border:1px solid rgba(0,0,0,.25);background:#fff;color:#073a1e;opacity:.8;cursor:pointer"
-    );
-    b.id = "mdp-btn";
-    b.type = "button";
-    b.addEventListener("click", function () {
+  /* Le bouton « Mon mot de passe » est dans le menu, à côté de « Déconnexion » (data-mdp) */
+  document.addEventListener("click", function (ev) {
+    var t = ev.target && ev.target.closest ? ev.target.closest("[data-mdp]") : null;
+    if (t) {
+      ev.preventDefault();
       ouvrir(false);
-    });
-    document.body.appendChild(b);
-  }
+    }
+  });
 
   function bandeau(restants) {
     if (document.getElementById("mdp-alerte")) return;
@@ -214,7 +208,6 @@
   function nettoyer() {
     retirer("mdp-ov");
     retirer("mdp-alerte");
-    retirer("mdp-btn");
   }
 
   function verifier(force) {
@@ -231,7 +224,6 @@
       })
       .then(function (r) {
         if (!r || r.error || !r.data) return; /* migration absente ou non connecté : ne rien changer */
-        bouton();
         if (r.data.expire) ouvrir(true);
         else if (r.data.alerte && !masquee()) bandeau(r.data.jours_restants);
         else retirer("mdp-alerte");

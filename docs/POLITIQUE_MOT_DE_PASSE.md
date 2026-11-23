@@ -4,7 +4,7 @@
 - Renouvellement obligatoire **tous les 30 jours** (espaces mairie et SaaS ; le portail citoyen se connecte par code SMS, sans mot de passe).
 - **Alerte à J-7** : bandeau « votre mot de passe expire dans N jours », avec « Modifier maintenant » / « Plus tard » (masqué pour la session).
 - **Après 30 jours** : à la connexion suivante, un écran bloquant impose le changement (ou la déconnexion).
-- **À tout moment** : bouton « Mon mot de passe » (en bas à gauche) ouvre le formulaire de changement.
+- **À tout moment** : bouton « Mon mot de passe » (menu, à côté de « Déconnexion ») ouvre le formulaire de changement.
 - Saisie : 10 caractères minimum, au moins une lettre et un chiffre, double saisie identique ; le nouveau mot de passe doit différer de l'ancien (contrôlé par Supabase Auth).
 - Comptes protégés par MFA : la vérification n'a lieu qu'une fois le code MFA validé.
 

@@ -1150,7 +1150,7 @@ const cab = () => {
     .map(n => `<button class="nvb${S.view == n[0] ? " on" : ""}" data-a="go" data-v="${n[0]}">${ic(n[2], 22)}<span>${n[1]}</span></button>`)
     .join(
       ""
-    )}</nav><div class="sp"></div><hr><button class="nvb" data-a="out">${ic("out", 22)}<span>D\u00e9connexion</span></button><div class="dv">${esc(S.ind.devise || "")}</div></aside><div class="ov${S.menu ? " on" : ""}" data-a="menu"></div><div class="mn">${V0()}</div>`;
+    )}</nav><div class="sp"></div><hr><button class="nvb" data-mdp="1">${ic("shield", 22)}<span>Mon mot de passe</span></button><button class="nvb" data-a="out">${ic("out", 22)}<span>D\u00e9connexion</span></button><div class="dv">${esc(S.ind.devise || "")}</div></aside><div class="ov${S.menu ? " on" : ""}" data-a="menu"></div><div class="mn">${V0()}</div>`;
 };
 const mfaLogin = () => {
   const m = S.mfa || {};
