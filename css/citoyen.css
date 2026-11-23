@@ -219,3 +219,11 @@ label{display:block;font:700 13px 'Nunito Sans',system-ui,sans-serif;color:var(-
 @media(min-width:1400px){.in,.mn,.pf{max-width:1240px}}
 
 .hdr svg{fill:var(--g)}
+#map-signalement {
+  z-index: 1;
+}
+#btn-envoyer-signalement:disabled {
+  background: #9e9e9e;
+  cursor: not-allowed;
+}
+

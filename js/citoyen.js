@@ -2205,3 +2205,110 @@ setInterval(async () => {
     } catch (e) {}
   }
 }, 60000);
+
+// ==========================================
+// MODULE : SIGNALEMENT CITOYEN
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('modal-signalement');
+  const btnOuvrir = document.getElementById('btn-ouvrir-signalement');
+  const btnFermer = document.getElementById('btn-fermer-signalement');
+  const form = document.getElementById('form-signalement');
+  const btnEnvoyer = document.getElementById('btn-envoyer-signalement');
+  
+  let map = null;
+  let marker = null;
+  let latSelectionnee = null;
+  let lngSelectionnee = null;
+
+  if (!btnOuvrir) return; // Sécurité si le HTML n'est pas encore là
+
+  btnOuvrir.addEventListener('click', () => {
+    modal.style.display = 'flex';
+    if (!map) {
+      map = L.map('map-signalement').setView([14.4974, -14.4524], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          map.setView([lat, lng], 16);
+          placerMarqueur(lat, lng);
+        });
+      }
+      map.on('click', (e) => { placerMarqueur(e.latlng.lat, e.latlng.lng); });
+    } else {
+      setTimeout(() => { map.invalidateSize(); }, 200);
+    }
+  });
+
+  function placerMarqueur(lat, lng) {
+    latSelectionnee = lat;
+    lngSelectionnee = lng;
+    if (marker) {
+      marker.setLatLng([lat, lng]);
+    } else {
+      marker = L.marker([lat, lng]).addTo(map);
+    }
+  }
+
+  btnFermer.addEventListener('click', () => { modal.style.display = 'none'; });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!latSelectionnee || !lngSelectionnee) {
+      alert("Veuillez sélectionner un emplacement sur la carte.");
+      return;
+    }
+
+    btnEnvoyer.disabled = true;
+    btnEnvoyer.textContent = "Envoi en cours...";
+
+    try {
+      const categorie = document.getElementById('signalement-categorie').value;
+      const description = document.getElementById('signalement-description').value;
+      const photoFile = document.getElementById('signalement-photo').files[0];
+
+      // ⚠️ TODO : REMPLACEZ PAR VOTRE LOGIQUE DE RÉCUPÉRATION D'ID
+      const communeId = window.currentCommuneId || "98002283-4fc0-4eff-8182-af1eec9a321d"; 
+      const citoyenId = window.currentUserId || "98002283-4fc0-4eff-8182-af1eec9a321d"; 
+
+      let photoUrl = null;
+
+      if (photoFile) {
+        const fileName = `signalement_${Date.now()}_${photoFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        const { error: uploadError } = await supabase.storage.from('signalements-photos').upload(`public/${fileName}`, photoFile);
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage.from('signalements-photos').getPublicUrl(`public/${fileName}`);
+        photoUrl = publicUrlData.publicUrl;
+      }
+
+      const { error: dbError } = await supabase.from('signalements_citoyens').insert([{
+        commune_id: communeId,
+        citoyen_id: citoyenId,
+        categorie: categorie,
+        description: description,
+        photo_url: photoUrl,
+        latitude: latSelectionnee,
+        longitude: lngSelectionnee
+      }]);
+
+      if (dbError) throw dbError;
+
+      alert("✅ Signalement envoyé avec succès !");
+      form.reset();
+      modal.style.display = 'none';
+      if (marker) { map.removeLayer(marker); marker = null; }
+      latSelectionnee = null; lngSelectionnee = null;
+
+    } catch (error) {
+      console.error(error);
+      alert("❌ Erreur lors de l'envoi : " + error.message);
+    } finally {
+      btnEnvoyer.disabled = false;
+      btnEnvoyer.textContent = "Envoyer le signalement";
+    }
+  });
+});
