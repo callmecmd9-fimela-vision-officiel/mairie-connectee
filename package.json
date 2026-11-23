@@ -5,7 +5,8 @@
   "scripts": {
     "test": "node scripts/run-js-tests.js",
     "format:check": "prettier --check \"js/*.js\"",
-    "format": "prettier --write \"js/*.js\""
+    "format": "prettier --write \"js/*.js\"",
+    "theme:build": "node scripts/gen-dark-theme.js"
   },
   "devDependencies": {
     "jsdom": "^26.0.0",

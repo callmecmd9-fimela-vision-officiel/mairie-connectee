@@ -1,0 +1,65 @@
+/* GÉNÉRÉ par scripts/gen-dark-theme.js à partir de css/citoyen.css : ne pas modifier à la main. */
+html[data-theme="dark"]{color-scheme:dark;--bg:#0c1310;--tx:#e7f0e9;--mut:#a9bab0;--ln:#2a3b31;--gtx:color-mix(in srgb,var(--g) 38%,#ffffff);--okt:#7fdba5;--redt:#ff9b91;--ambt:#f2c566;--sur:#16211b;--sur2:#1d2b23}
+html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{border:1px solid #506659;background:#161d19}
+html[data-theme="dark"] .bo{background:#161d19;border:2px solid var(--gtx);color:var(--gtx)}
+html[data-theme="dark"] .pill{background:#153420;color:#aeebc5}
+html[data-theme="dark"] .cd{background:#161d19}
+html[data-theme="dark"] .b1{background:#152234;color:#6d87da}
+html[data-theme="dark"] .b2{background:#362816;color:#e4a792}
+html[data-theme="dark"] .b3{background:#153420;color:#aeebc5}
+html[data-theme="dark"] .bd{background:#3c3519;color:#e6b699}
+html[data-theme="dark"] .bd.ok{background:#153420;color:#aeebc5}
+html[data-theme="dark"] .bd.bl{background:#152234;color:#6d87da}
+html[data-theme="dark"] .stp i{background:#25262a}
+html[data-theme="dark"] .al{background:#311414;color:#e69b9b}
+html[data-theme="dark"] .okb{background:#153420;color:#b9eece}
+html[data-theme="dark"] .sk{background:#161d19;color:var(--gtx)}
+html[data-theme="dark"] .tp{background:#161d19}
+html[data-theme="dark"] .tn{color:var(--gtx)}
+html[data-theme="dark"] .nl:hover{background:#1f281f;color:var(--gtx)}
+html[data-theme="dark"] .mb{color:var(--gtx)}
+html[data-theme="dark"] .mnv{background:#161d19}
+html[data-theme="dark"] .sr2{background:#161d19}
+html[data-theme="dark"] .ar{background:#161d19;color:var(--gtx)}
+html[data-theme="dark"] .tt{background:#161d19;border:2px solid #485546}
+html[data-theme="dark"] .tt:hover{border-color:var(--gtx)}
+html[data-theme="dark"] .ico{background:#1c2a1f;color:var(--gtx)}
+html[data-theme="dark"] .ac{background:linear-gradient(#1d2718,#232e20)}
+html[data-theme="dark"] .lk2{color:var(--gtx)}
+html[data-theme="dark"] .ih{color:var(--gtx)}
+html[data-theme="dark"] #ld{color:var(--gtx)}
+html[data-theme="dark"] #ld i{border:4px solid #485546;border-top-color:var(--gtx)}
+html[data-theme="dark"] .dlb{background:#161d19}
+html[data-theme="dark"] .dlx{background:#21271f;color:var(--gtx)}
+html[data-theme="dark"] .dsr{border:2px solid var(--gtx)}
+html[data-theme="dark"] .chp{border:2px solid var(--gtx);background:#161d19;color:var(--gtx)}
+html[data-theme="dark"] .mc-skip{background:#161d19;color:#e9edeb}
+html[data-theme="dark"] .c-cg{color:var(--gtx)}
+html[data-theme="dark"] .c-slb{border:2px solid var(--gtx);background:#161d19}
+html[data-theme="dark"] .c-okg{background:#1f281d}
+html[data-theme="dark"] .c-cgb{color:var(--gtx)}
+html[data-theme="dark"] .ts{color:var(--gtx)}
+html[data-theme="dark"] .a3.y .ai{color:var(--gtx)}
+html[data-theme="dark"] .sh{border-left-color:var(--gtx)}
+html[data-theme="dark"] .tt{border:1px solid #424c3f}
+html[data-theme="dark"] .ico{background:#1e261b}
+html[data-theme="dark"] .ac{background:linear-gradient(#1d2718,#242f20);border:1px solid #485546}
+
+html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{background:var(--sur);color:var(--tx);border-color:#3a4f43}
+html[data-theme="dark"] input::placeholder,html[data-theme="dark"] textarea::placeholder{color:#8da095}
+html[data-theme="dark"] input:-webkit-autofill{-webkit-text-fill-color:var(--tx);box-shadow:0 0 0 40px var(--sur) inset}
+html[data-theme="dark"] .bg,html[data-theme="dark"] .a3.y{color:#14231a}
+html[data-theme="dark"] :focus-visible{outline-color:#7cb7ff}
+html[data-theme="dark"] .mc-skip{background:var(--sur);color:var(--tx)}
+html[data-theme="dark"] hr{border-top-color:rgba(255,255,255,.2)}
+
+html[data-theme="dark"] .tp,html[data-theme="dark"] .mnv{background:var(--sur)}
+html[data-theme="dark"] .nl{color:var(--tx)}
+html[data-theme="dark"] .tn{color:var(--gtx)}
+html[data-theme="dark"] .tn small{color:var(--tx)}
+html[data-theme="dark"] .cd,html[data-theme="dark"] .tt,html[data-theme="dark"] .dlb{background:var(--sur)}
+html[data-theme="dark"] .sr2{background:var(--sur2);color:var(--mut)}
+html[data-theme="dark"] .ar{background:var(--sur2);color:var(--gtx)}
+html[data-theme="dark"] .a3.y .ar{color:#14231a;background:#fff}
+html[data-theme="dark"] .a3.y .ai{color:#073a1e}
+html[data-theme="dark"] .dlx{background:var(--sur2);color:var(--gtx)}

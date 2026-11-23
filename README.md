@@ -39,6 +39,8 @@ Les fichiers publiés sont ceux autorisés par `.assetsignore` (liste blanche) ;
 - Mots de passe : renouvellement tous les 30 jours avec alerte à J-7 (`docs/POLITIQUE_MOT_DE_PASSE.md`) ; aucun mot de passe n'est lisible, réinitialisation par lien sécurisé.
 - MFA obligatoire pour la plateforme.
 
+
+
 ## Pour aller plus loin
 
 `PROJECT_MASTER.md` (vue d'ensemble), `SETUP.md` et `DEPLOIEMENT_COMMANDES.md` (déploiement), `CHANGELOG.md`, `DECISIONS.md`, `TASKS.md`.

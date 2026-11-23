@@ -109,6 +109,7 @@
     l.setAttribute("for", id);
     var i = el("input", "", "width:100%;box-sizing:border-box;padding:10px;font-size:15px;border:1px solid #888;border-radius:8px");
     i.id = id;
+    i.className = "mdp-in";
     i.type = "password";
     i.autocomplete = "new-password";
     box.appendChild(l);
@@ -125,6 +126,7 @@
     ov.setAttribute("aria-modal", "true");
     ov.setAttribute("aria-labelledby", "mdp-titre");
     var box = el("div", "", "background:#fff;color:#111;max-width:420px;width:100%;border-radius:14px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.4)");
+    box.className = "mdp-box";
     var h = el("h2", obligatoire ? "Mot de passe expiré" : "Changer mon mot de passe", "margin:0 0 8px;font-size:20px");
     h.id = "mdp-titre";
     box.appendChild(h);
@@ -147,6 +149,7 @@
     ok.className = "bt";
     var sec = el("button", obligatoire ? "Se déconnecter" : "Annuler", "margin:8px 0 0 8px;padding:10px 16px;font-size:15px;cursor:pointer");
     sec.type = "button";
+    sec.className = "mdp-sec";
     sec.addEventListener("click", function () {
       if (!obligatoire) return retirer("mdp-ov");
       Promise.resolve(c.auth.signOut()).then(

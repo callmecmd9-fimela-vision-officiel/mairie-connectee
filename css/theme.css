@@ -1,0 +1,16 @@
+/* Bouton clair / sombre (js/theme.js). Commun aux trois espaces. */
+.mc-theme-btn{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:2147481000;display:grid;place-items:center;width:46px;height:46px;padding:0;border-radius:50%;border:2px solid #0b5a2e;background:#fff;color:#0b5a2e;box-shadow:0 4px 14px rgba(0,0,0,.28);cursor:pointer;opacity:.95}
+.mc-theme-btn:hover{opacity:1;transform:scale(1.05)}
+.mc-theme-btn:focus-visible{outline:3px solid #2563eb;outline-offset:2px}
+html[data-theme="dark"] .mc-theme-btn{background:#1d2b23;color:#f2c566;border-color:#f2c566;box-shadow:0 4px 14px rgba(0,0,0,.6)}
+/* au-dessus de la barre d'onglets du super-administrateur sur mobile */
+@media(max-width:767px){body.sa .mc-theme-btn{bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
+@media print{.mc-theme-btn{display:none!important}}
+/* Fenêtre « Mon mot de passe » (js/mdp-policy.js, styles en ligne) */
+html[data-theme="dark"] .mdp-box{background:#16211b!important;color:#e7f0e9!important;box-shadow:0 10px 40px rgba(0,0,0,.7)!important}
+html[data-theme="dark"] .mdp-box .mdp-in{background:#0f1813!important;color:#e7f0e9!important;border-color:#6b8576!important}
+html[data-theme="dark"] .mdp-box label{color:#e7f0e9!important}
+html[data-theme="dark"] .mdp-box p[role="alert"]{color:#ff9b91!important}
+html[data-theme="dark"] .mdp-box .mdp-sec{background:#243228;color:#e7f0e9;border:1px solid #6b8576;border-radius:8px}
+/* Lien d'attribution de la carte : contraste suffisant en clair comme en sombre */
+.leaflet-container .leaflet-control-attribution a{color:#00587a}
