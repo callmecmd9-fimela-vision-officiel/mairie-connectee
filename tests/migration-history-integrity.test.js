@@ -49,7 +49,9 @@ const pendingFiles = [
   '20261122081303_perf_fk_indexes_et_initplan_restrictives.sql',
   '20261122135230_bucket_icones_pwa_public.sql',
   // Politique de mot de passe 30 jours (2026-11-23) : appliquée en production le 2026-11-22 (version 20261122214824).
-  '20261123090000_politique_mot_de_passe_30_jours.sql'
+  '20261123090000_politique_mot_de_passe_30_jours.sql',
+  // Admins de mairie activés = super_admin de leur commune (2026-11-23) : appliquée en production (version 20261123084211).
+  '20261123120000_admin_mairie_actif_vers_admin_commune.sql'
 ];
 const actualSqlFiles = fs.readdirSync(migrationDir).filter(name => name.endsWith('.sql')).sort();
 const expectedSqlFiles = [...historicalFiles, ...pendingFiles].sort();

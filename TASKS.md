@@ -23,7 +23,13 @@ L'historique complet (consignes « copier / appliquer » des lots 3 à 8, audits
 ## Fait en MAJ19 (2026-11-22)
 - [x] Page `confidentialite.html`, en-têtes renforcés, preconnect, test pré-déploiement, workflow `deploy-front.yml`, dependabot (voir CHANGELOG).
 
+## Fait en MAJ22 (2026-11-23)
+- [x] Admins de mairie (Djirnda, Diofior, Joal, Fatick, Fimela + futurs) : interface « Administration Système » de leur commune, MFA TOTP obligatoire.
+- [x] Dépôt et zip synchronisés.
+
 ## À faire — action utilisateur
+- [ ] Chaque admin de mairie : se connecter et enrôler son application d'authentification (aucun facteur vérifié à ce jour pour les 5 comptes).
+- [ ] Tester à la main : créer puis activer un admin de test depuis `/saas`, vérifier rôle, enrôlement TOTP et accès à sa seule commune.
 - [ ] Wolof (255 textes, statut a_verifier) : relecture par un second locuteur.
 - [ ] Wolof : tester sur téléphone (6 textes longs) et faire relire par un second locuteur ; sérère : trouver un traducteur (même CSV, colonne `sereer`).
 - [ ] Faire valider/compléter `confidentialite.html` (responsable, durées, déclaration CDP) ; secrets `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` pour `deploy-front.yml` (sinon `wrangler deploy` manuel).

@@ -8,7 +8,7 @@ Front statique (HTML/JS sans étape de build) servi par Cloudflare Workers (asse
 | Chemin | Fichiers | Public |
 |---|---|---|
 | `/` | `index.html`, `js/citoyen.js` | Citoyens (`/?c=slug`) |
-| `/mairie` | `mairie.html`, `js/core.js` et modules associés | Personnel communal |
+| `/mairie` | `mairie.html`, `js/core.js` et modules associés | Personnel communal (administrateurs : MFA obligatoire) |
 | `/saas` | `saas.html`, `js/saas.js` | Plateforme (MFA obligatoire) |
 
 ## Organisation du dépôt
@@ -37,7 +37,7 @@ Les fichiers publiés sont ceux autorisés par `.assetsignore` (liste blanche) ;
 
 - Isolation par commune côté serveur (RLS, identification par slug).
 - Mots de passe : renouvellement tous les 30 jours avec alerte à J-7 (`docs/POLITIQUE_MOT_DE_PASSE.md`) ; aucun mot de passe n'est lisible, réinitialisation par lien sécurisé.
-- MFA obligatoire pour la plateforme.
+- Double authentification (TOTP) obligatoire pour la plateforme, pour les super admins et pour tous les administrateurs de mairie (`docs/MFA_ADMIN_MAIRIE.md`).
 
 
 

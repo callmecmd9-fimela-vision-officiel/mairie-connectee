@@ -38,3 +38,6 @@ Base : SAAS_MUNICIPAL_MAJ16_COMPLET. Production non touchée, SMS exclu. Voir CH
 
 ## Session 2026-11-22 (MAJ18)
 Base : MAJ17. Production relevée : tout est appliqué (voir `supabase/PRODUCTION_VERSION_MAP.md`) ; seule écriture : migration perf `20261122081303`. Code JS formaté (Prettier) : lancer `npm run format` avant commit ; tests : `npm test`. ZIP de référence : SAAS_MUNICIPAL_MAJ18_COMPLET.zip.
+
+## Session 2026-11-23 (MAJ22)
+Base : SAAS_MUNICIPAL_COMPLET_8.zip, synchronisé avec le dépôt `mairie-connectee` (branche `main`). Admins de mairie = interface « Administration Système » de leur commune + MFA obligatoire (voir `docs/MFA_ADMIN_MAIRIE.md`, CHANGELOG « MAJ22 »). Production relevée en lecture seule : 5 comptes `super_admin` de leur commune, déclencheur actif. Tests : `npm install` puis `npm test`. ZIP de référence : SAAS_MUNICIPAL_COMPLET_9.zip.

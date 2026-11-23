@@ -587,7 +587,8 @@ async function profil() {
     await sb.auth.signOut();
     return false;
   }
-  if (p.role === "super_admin" && !(await exigerMfaSuperAdmin())) return false;
+  /* Double authentification (TOTP) obligatoire pour le super admin ET les admins municipaux (accès aux comptes et aux données de la mairie). */
+  if ((p.role === "super_admin" || p.role === "admin_mairie") && !(await exigerMfaSuperAdmin())) return false;
   await lcm();
   const c = S.cs.find(x => x.id == p.commune_id) || (p.role == "super_admin" ? S.cs[0] : null);
   if (!c) {

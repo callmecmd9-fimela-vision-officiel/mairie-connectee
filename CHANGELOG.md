@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-11-23 (MAJ22) — administrateurs de mairie : interface « Administration Système » + double authentification
+- Les comptes `admindjirnda@`, `admindiofior@`, `adminjoal@`, `adminfatick@` et `adminfimela@gmail.com` ont la même interface que le compte d'administration principal (rôle `super_admin` **de leur commune uniquement** ; isolation RLS inchangée, aucun droit plateforme).
+- Futurs admins de mairie : déclencheur `admin_mairie_actif_vers_admin_commune` (migration `20261123120000`, appliquée en production) — un `admin_mairie` activé avec une commune reçoit le même rôle ; les comptes en attente suivent l'invitation habituelle.
+- `js/core.js` : double authentification (TOTP) exigée pour `super_admin` **et** `admin_mairie` dès la connexion. Côté base, `is_super_admin()` exige déjà aal2 ; `supabase/proposed/20261123_admin_mairie_mfa_serveur.sql` (proposé, non appliqué) étendrait la règle aux fonctions `am_*`.
+- Tests : `tests/admin-commune-promotion.test.js`, `tests/mfa-admin-mairie.test.js`. Doc : `docs/MFA_ADMIN_MAIRIE.md`.
+- Dépôt : synchronisation zip/dépôt (5 fichiers ajoutés, 3 mis à jour), README, REPRISE_SESSION et TASKS mis à jour.
+
 - Espace mairie : bouton « Couleur par défaut » (vert #0B5A2E) à côté de « Enregistrer la couleur ».
 - Portail : plus d’appel `mes_rdvs` sans session (401 à chaque visite) ; couleur trop claire refusée avec message explicite dans l’espace mairie.
 - Audit des droits par rôle (docs/AUDIT_DROITS_2026-11-22.md) ; accueil adapté au poste dans l’interface unique ; module « Territoire » retiré du cabinet (non autorisé côté serveur).
