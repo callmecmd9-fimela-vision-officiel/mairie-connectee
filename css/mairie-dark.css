@@ -46,6 +46,13 @@ html[data-theme="dark"] .ec.k5 svg{color:#a8e9e4}
 html[data-theme="dark"] .ap{background:#1b2e20;color:var(--gtx);border:3px solid #313f37}
 html[data-theme="dark"] .ac{background:#161d19}
 html[data-theme="dark"] .mc-skip{background:#161d19;color:#e9edeb}
+html[data-theme="dark"] .ag-ph{background:#1b2e20}
+html[data-theme="dark"] .ag-ini{color:var(--gtx)}
+html[data-theme="dark"] .bdg{background:#161d19;color:#e9edeb}
+html[data-theme="dark"] .bdg-ph{border:.3mm solid #556d5f;background:#1b2e20}
+html[data-theme="dark"] .bdg-ini{color:#baeed1}
+html[data-theme="dark"] .bdg-s{color:#c2cdc7}
+html[data-theme="dark"] .bdg-m{color:#cfd8d3}
 
 html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{background:var(--sur);color:var(--tx);border-color:#3a4f43}
 html[data-theme="dark"] input::placeholder,html[data-theme="dark"] textarea::placeholder{color:#8da095}

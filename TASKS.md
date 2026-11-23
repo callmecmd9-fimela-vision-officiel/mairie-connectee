@@ -60,3 +60,7 @@ L'historique complet (consignes « copier / appliquer » des lots 3 à 8, audits
 ## 2026-11-22
 - Fait : plus aucun `style=""` dans le code ; `style-src-attr` retiré. Tests 36/36.
 - À faire après déploiement : vider le cache PWA une fois ; vérifier visuellement /mairie et /saas.
+
+## MAJ24 — 2026-11-23
+- [x] Photo d'agent + badge imprimable (admin mairie) : code, CSS, tests, doc (`docs/BADGE_AGENT.md`).
+- [ ] **À faire (accord requis)** : appliquer `supabase/proposed/20261123_agent_photo_badge.sql` en production, puis déployer le front.

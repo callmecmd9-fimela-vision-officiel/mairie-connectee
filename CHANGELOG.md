@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-11-23 (MAJ24) — photo des agents et badge imprimable (administrateur de mairie)
+- **Photo d'identité** : Administration → Services et équipes → Personnel : champ « Photo d'identité (badge) » dans la fiche agent, miniature dans la liste, bouton « Retirer la photo ». Image réduite côté navigateur (WebP, 480 px max), stockée dans le bucket **privé** `agents-photos` (URL signée, 1 h).
+- **Badge** : bouton « Badge » par agent → carte 85,6 × 54 mm (format carte bancaire) imprimée via `#prt` ; clair même en thème sombre. Contenu **non sensible uniquement** : mairie (et blason si défini), photo, prénom, nom, fonction, service, matricule. Jamais de téléphone, e-mail, contrat, date d'embauche, observations ni salaire.
+- **Base** : `supabase/proposed/20261123_agent_photo_badge.sql` (**non appliquée**) : colonne `personnel.photo`, bucket + 4 politiques Storage (écriture : admin de SA commune ; lecture : + maire/RH), RPC `org_sa_agent_photo_set` (garde `org_gest`), `org_sa_organigramme` expose le chemin de la photo. Sans cette migration, l'application fonctionne comme avant : la photo n'est simplement pas encore enregistrée (message d'erreur clair) et le badge s'imprime avec les initiales.
+- Tests : `tests/agent-badge.test.js` (nouveau). Cache : `mairie.css?v=20261123.2`, `org-f.js?v=20261123.2`. Doc : `docs/BADGE_AGENT.md`.
+- Dépôt : zip et dépôt vérifiés identiques (304 fichiers) avant la mise à jour ; branches fusionnées supprimées.
+
 ## 2026-11-23 (MAJ23) — carte sur le portail citoyen, activation d'un e-mail non confirmé
 - **Portail citoyen** : l'adresse de la mairie accepte un lien Google Maps ; il s'affiche en bouton « Voir sur la carte » (nouvel onglet, `rel="noopener noreferrer"`) dans « Infos pratiques » et « Contacter la mairie ». Seuls les liens https `maps.app.goo.gl`, `goo.gl/maps`, `google.*/maps` et `maps.google.*` sont reconnus (jamais d'autre URL cliquable). Le texte d'adresse éventuel reste affiché. Sans schéma ni migration : champ existant `indicateurs.contact_adresse`.
 - **Données de production** : liens enregistrés pour Diofior, Fimela, Joal, Djirnda, Fatick et Djilass (l'ancien texte « Fimela » est remplacé).

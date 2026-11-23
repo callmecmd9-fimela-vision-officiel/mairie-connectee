@@ -84,3 +84,21 @@ label{display:block;font:700 12px 'Nunito Sans';color:var(--mut);margin:0 0 4px}
 .mc-skip:focus{top:8px}
 .mc-sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+/* Photo d'agent et badge (js/org-f.js) : carte format CR80 (85,6 x 54 mm), imprimée via #prt */
+.ag-r{display:flex;align-items:center;gap:10px}
+.ag-ph{width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none;background:#E3F6E8}
+.ag-ini{display:grid;place-items:center;color:var(--g);font:800 16px 'Nunito Sans',sans-serif}
+#prt .bdg-wrap{display:none}
+.bdg{box-sizing:border-box;width:85.6mm;height:54mm;border:.4mm solid #0b5a2e;border-radius:3mm;overflow:hidden;background:#fff;color:#111;font:9pt/1.3 'Nunito Sans',Arial,sans-serif;display:flex;flex-direction:column}
+.bdg-h{display:flex;align-items:center;gap:2mm;background:#0b5a2e;color:#fff;padding:2mm 3mm;font-size:8pt}
+.bdg-h span{display:block;font-size:7pt;opacity:.9}
+.bdg-bl{width:8mm;height:8mm;object-fit:contain}
+.bdg-b{display:flex;gap:3mm;padding:3mm;flex:1;align-items:center}
+.bdg-ph{width:26mm;height:32mm;object-fit:cover;border:.3mm solid #bbb;border-radius:1.5mm;flex:none;background:#E3F6E8}
+.bdg-ini{display:grid;place-items:center;font:800 18pt 'Nunito Sans',Arial,sans-serif;color:#0b5a2e}
+.bdg-n{font-weight:800;font-size:11pt;line-height:1.2}
+.bdg-f{margin-top:1.5mm;font-weight:700}
+.bdg-s{color:#444}
+.bdg-m{margin-top:1.5mm;font-size:8pt;color:#333}
+@media print{#prt .bdg-wrap{display:block;-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{size:auto;margin:10mm}}
+@media print{.bdg{background:#fff!important;color:#111!important}.bdg-ph{background:#E3F6E8!important;border-color:#bbb!important}.bdg-ini{color:#0b5a2e!important}.bdg-s{color:#444!important}.bdg-m{color:#333!important}}

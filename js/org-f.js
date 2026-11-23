@@ -12,6 +12,7 @@ const ORGF = {
   editAgent: null,
   editPost: null,
   editRole: null,
+  photos: {},
   roleModule: "personnel",
   roleSelected: null
 };
@@ -52,6 +53,7 @@ async function orgfLoad() {
   try {
     ORGF.data = (await orgfRpc("org_sa_organigramme", { p_commune: slug() })) || {};
     ORGF.roles = (await orgfRpc("org_sa_roles", { p_commune: slug() })) || [];
+    await orgfSignPhotos();
     try {
       ORGF.kpi = (await orgfRpc("org_kpi", {})) || {};
     } catch (k) {
@@ -136,6 +138,70 @@ function orgfServicesView() {
     ) + (ORGF.editService ? orgfServiceForm() : "")
   );
 }
+/* Photo de l'agent (bucket privé « agents-photos », URL signée) et badge imprimable.
+   Le badge ne contient QUE : mairie, photo, prénom, nom, fonction, service, matricule.
+   Jamais de téléphone, e-mail, contrat, date d'embauche, observations ni salaire. */
+const ORGF_PHOTO_MAX = 8388608;
+async function orgfSignPhotos() {
+  ORGF.photos = {};
+  const paths = orgfAgents()
+    .map(a => a.photo)
+    .filter(Boolean);
+  if (!paths.length || typeof sign !== "function") return;
+  try {
+    ORGF.photos = (await sign("agents-photos", paths)) || {};
+  } catch (e) {
+    ORGF.photos = {};
+  }
+}
+const orgfInitiales = a => ((a.prenom || "").charAt(0) + (a.nom || "").charAt(0)).toUpperCase();
+const orgfAvatar = (a, cls) =>
+  a.photo && ORGF.photos[a.photo]
+    ? `<img class="${cls}" src="${orgfEsc(ORGF.photos[a.photo])}" alt="Photo de ${orgfEsc(a.prenom + " " + a.nom)}">`
+    : `<span class="${cls} ag-ini" aria-hidden="true">${orgfEsc(orgfInitiales(a))}</span>`;
+async function orgfUploadPhoto(id, file) {
+  if (!/^image\//.test(file.type || "")) throw new Error("La photo doit être une image (JPEG, PNG ou WebP).");
+  if (file.size > ORGF_PHOTO_MAX) throw new Error("Photo trop volumineuse (8 Mo maximum).");
+  const bl = await comp(file, 480, 120000);
+  if (bl.size > 1048576) throw new Error("Photo trop volumineuse après réduction.");
+  const ext = bl.type === "image/webp" ? "webp" : "jpg",
+    path = S.cid + "/" + id + "." + ext,
+    old = (orgfAgents().find(x => x.id === id) || {}).photo;
+  const u = await sb.storage.from("agents-photos").upload(path, bl, { contentType: bl.type, upsert: true });
+  if (u.error) throw new Error("Envoi de la photo impossible : " + u.error.message);
+  await orgfRpc("org_sa_agent_photo_set", { p_commune: slug(), p_id: id, p_photo: path });
+  if (old && old !== path) await sb.storage.from("agents-photos").remove([old]);
+}
+async function orgfRemovePhoto(id) {
+  const old = (orgfAgents().find(x => x.id === id) || {}).photo;
+  await orgfRpc("org_sa_agent_photo_set", { p_commune: slug(), p_id: id, p_photo: null });
+  if (old) await sb.storage.from("agents-photos").remove([old]);
+}
+function orgfBadgeHtml(a) {
+  const blason = typeof url === "function" && S.ind && S.ind.blason ? url("blason") : "",
+    ph = a.photo && ORGF.photos[a.photo] ? ORGF.photos[a.photo] : "";
+  return (
+    `<div class="bdg-wrap"><article class="bdg" aria-label="Badge de ${orgfEsc(a.prenom + " " + a.nom)}">` +
+    `<header class="bdg-h">${blason ? `<img class="bdg-bl" src="${orgfEsc(blason)}" alt="">` : ""}<div><b>MAIRIE DE ${orgfEsc((S.co || "").toUpperCase())}</b><span>Agent communal</span></div></header>` +
+    `<div class="bdg-b">${ph ? `<img class="bdg-ph" src="${orgfEsc(ph)}" alt="Photo de l'agent">` : `<span class="bdg-ph bdg-ini">${orgfEsc(orgfInitiales(a))}</span>`}` +
+    `<div class="bdg-i"><div class="bdg-n">${orgfEsc(a.prenom)}<br>${orgfEsc((a.nom || "").toUpperCase())}</div>` +
+    `<div class="bdg-f">${orgfEsc(a.fonction || "")}</div><div class="bdg-s">${orgfEsc(orgfSvcName(a.service_id))}</div>` +
+    `${a.matricule ? `<div class="bdg-m">Matricule : ${orgfEsc(a.matricule)}</div>` : ""}</div></div></article></div>`
+  );
+}
+function orgfPrintBadge(a) {
+  const p = $("#prt");
+  if (!p || !a) return;
+  p.innerHTML = orgfBadgeHtml(a);
+  const clear = () => {
+    p.innerHTML = "";
+    if (typeof window !== "undefined" && window.removeEventListener) window.removeEventListener("afterprint", clear);
+  };
+  if (typeof window !== "undefined" && window.addEventListener) window.addEventListener("afterprint", clear);
+  setTimeout(() => {
+    if (typeof window !== "undefined" && window.print) window.print();
+  }, 400);
+}
 function orgfAgentForm() {
   const e = ORGF.editAgent,
     n = !e || e === "new",
@@ -177,6 +243,11 @@ function orgfAgentForm() {
         ) +
         inp("of_ac", "Type de contrat", "text", a.type_contrat || "Permanent", "Ex. Permanent, contractuel") +
         inp("of_am", "Matricule", "text", a.matricule || "", "Facultatif") +
+        fl(
+          "of_aph",
+          "Photo d'identité (badge)",
+          `<input id="of_aph" type="file" accept="image/*">${!n && a.photo ? `<div data-sty="margin-top:6px">${orgfAvatar(a, "ag-ph")} <button class="tg rd" data-of="agent-photo-del" data-id="${orgfEsc(a.id)}">Retirer la photo</button></div>` : ""}`
+        ) +
         inp("of_at", "Téléphone", "tel", a.telephone || "", "Facultatif") +
         inp("of_ae", "E-mail", "email", a.email || "", "Facultatif") +
         sel(
@@ -196,8 +267,8 @@ function orgfAgentsView() {
   const rows = orgfAgents()
     .map(a =>
       rw(
-        `<b>${orgfEsc(a.prenom)} ${orgfEsc(a.nom)}</b><div class="mut" data-sty="font-size:13px">${orgfEsc(a.fonction || "Fonction non renseignée")} · ${orgfEsc(orgfSvcName(a.service_id))}${a.matricule ? " · Matricule " + orgfEsc(a.matricule) : ""}</div>`,
-        `<div data-sty="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${a.actif === false ? st2("Inactif", "rd") : st2("Actif", "ok")}<button class="tg" data-of="agent-edit" data-id="${orgfEsc(a.id)}">Modifier</button></div>`
+        `<div class="ag-r">${orgfAvatar(a, "ag-ph")}<div><b>${orgfEsc(a.prenom)} ${orgfEsc(a.nom)}</b><div class="mut" data-sty="font-size:13px">${orgfEsc(a.fonction || "Fonction non renseignée")} · ${orgfEsc(orgfSvcName(a.service_id))}${a.matricule ? " · Matricule " + orgfEsc(a.matricule) : ""}</div></div></div>`,
+        `<div data-sty="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${a.actif === false ? st2("Inactif", "rd") : st2("Actif", "ok")}<button class="tg" data-of="agent-badge" data-id="${orgfEsc(a.id)}">Badge</button><button class="tg" data-of="agent-edit" data-id="${orgfEsc(a.id)}">Modifier</button></div>`
       )
     )
     .join("");
@@ -744,8 +815,31 @@ const orgfClick = async e => {
       const account = g("of_au") || null,
         oldAccount = id ? (orgfAgents().find(x => x.id === id) || {}).user_id || null : null;
       if (account !== oldAccount) await orgfRpc("org_sa_lier_compte", { p_commune: slug(), p_personnel: savedId, p_user: account });
+      const photo = ($("#of_aph") || {}).files && $("#of_aph").files[0];
+      ORGF.editAgent = null;
+      if (photo) {
+        try {
+          await orgfUploadPhoto(savedId, photo);
+        } catch (x) {
+          await orgfLoad();
+          throw new Error("Fiche enregistrée, mais la photo n'a pas été envoyée : " + (x.message || "erreur inconnue"));
+        }
+      }
+      await orgfLoad();
+      return;
+    }
+    if (a === "agent-photo-del") {
+      if (!confirm("Retirer la photo de cet agent ?")) {
+        ORGF.annule = true;
+        return;
+      }
+      await orgfRemovePhoto(t.dataset.id);
       ORGF.editAgent = null;
       await orgfLoad();
+      return;
+    }
+    if (a === "agent-badge") {
+      orgfPrintBadge(orgfAgents().find(x => x.id === t.dataset.id));
       return;
     }
     if (a === "assign") {
@@ -796,7 +890,7 @@ const ORGF_OUVRIR = [
     "agent-new",
     "agent-edit"
   ],
-  ORGF_ECRIRE = ["service-save", "post-save", "role-save", "role-rights-save", "agent-save", "assign", "assign-end"];
+  ORGF_ECRIRE = ["service-save", "post-save", "role-save", "role-rights-save", "agent-save", "agent-photo-del", "assign", "assign-end"];
 function orgfToast(msg, ok) {
   if (!document.getElementById || !document.body) return;
   const old = document.getElementById("of-toast");

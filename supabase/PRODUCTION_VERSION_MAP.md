@@ -20,6 +20,7 @@ Toutes les migrations du dépôt sont **appliquées en production** (le ZIP MAJ1
 | 20261122081303_perf_fk_indexes_et_initplan_restrictives.sql | 20261122081303 | **appliquée le 2026-11-22** (7 index de clés étrangères, 2 policies RESTRICTIVE en `(select auth.jwt())`) |
 | 20261123090000_politique_mot_de_passe_30_jours.sql | 20261122214824 | **appliquée le 2026-11-22** après test en transaction annulée (17 comptes suivis, RLS active, `anon` sans accès ; `js/mdp-policy.js` à déployer pour activer l'alerte) |
 | 20261123120000_admin_mairie_actif_vers_admin_commune.sql | 20261123084211 | **appliquée le 2026-11-23** (déclencheur : admin_mairie activé avec commune → super_admin de sa commune ; testé en transaction annulée) |
+| proposed/20261123_agent_photo_badge.sql | — | **NON appliquée** (photo d'agent + badge : colonne, bucket `agents-photos`, RPC ; voir `docs/BADGE_AGENT.md`) |
 
 Les instructions des migrations appliquées ont été compactées par l'outil d'application (tailles différentes) : ne pas comparer octet par octet.
 
