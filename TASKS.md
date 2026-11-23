@@ -27,6 +27,9 @@ L'historique complet (consignes « copier / appliquer » des lots 3 à 8, audits
 - [x] Admins de mairie (Djirnda, Diofior, Joal, Fatick, Fimela + futurs) : interface « Administration Système » de leur commune, MFA TOTP obligatoire.
 - [x] Dépôt et zip synchronisés.
 
+## Fait en MAJ23 (2026-11-23)
+- [x] Bouton « Voir sur la carte » sur le portail citoyen (6 communes) ; activation d'un e-mail non confirmé par le super admin.
+
 ## À faire — action utilisateur
 - [ ] Chaque admin de mairie : se connecter et enrôler son application d'authentification (aucun facteur vérifié à ce jour pour les 5 comptes).
 - [ ] Tester à la main : créer puis activer un admin de test depuis `/saas`, vérifier rôle, enrôlement TOTP et accès à sa seule commune.

@@ -929,10 +929,24 @@ const ecK = () => {
   if (/declar|enregistrement|reconnaissance/.test(t)) return "";
   return /naissance/.test(t) ? "naissance" : /mariage/.test(t) ? "mariage" : /deces/.test(t) ? "deces" : "";
 };
+/* Adresse de la mairie : texte libre et/ou lien Google Maps (seuls les liens Google Maps https sont reconnus et rendus cliquables). */
+const MAPRE =
+  /https:\/\/(?:maps\.app\.goo\.gl|goo\.gl\/maps|(?:www\.)?google\.[a-z]{2,3}(?:\.[a-z]{2})?\/maps|maps\.google\.[a-z]{2,3}(?:\.[a-z]{2})?)\/[^\s<>"']*/i;
+const adr = I => {
+  const a = String((I && I.adresse) || "").trim(),
+    m = a.match(MAPRE);
+  return { txt: (m ? a.replace(m[0], "") : a).replace(/\s+/g, " ").trim(), url: m ? m[0] : "" };
+};
+const mapLk = (c, I) => {
+  const u = adr(I).url;
+  return u
+    ? `<a class="${c}" href="${esc(u)}" target="_blank" rel="noopener noreferrer" aria-label="Voir sur la carte (s’ouvre dans un nouvel onglet)">${ic("pin", 20)} Voir sur la carte</a>`
+    : "";
+};
 const retrait = () => {
   const I = S.info || {},
     P = S.pt || {},
-    l = [I.adresse && "Adresse : " + I.adresse, P.horaires && "Horaires : " + P.horaires].filter(Boolean);
+    l = [adr(I).txt && "Adresse : " + adr(I).txt, P.horaires && "Horaires : " + P.horaires].filter(Boolean);
   return `<p class="sm">Le document ne se télécharge pas : il se retire en mairie.${l.length ? "<br>" + l.map(esc).join("<br>") : ""}</p>`;
 };
 const ecBody = () => {
@@ -1529,8 +1543,8 @@ const home = () => {
 <main id="mc" class="mn hm">${msgs()}<section id="services" class="sw"><div><h2 class="sh">${tr("h_svc")}</h2><div class="tl" id="tl">${tiles()}</div></div>${acct()}</section>
 <div class="sv" id="suivi" data-f="tk"><div><b class="c-fs22">${tr("h_trk")}</b><br><span class="sm">${tr("h_trk_p")}</span></div><input id="tk" placeholder="${esc(tr("h_trk_ph"))}" aria-label="${tr("u_numero_de_suivi")}" autocapitalize="characters" value="${esc(S.tr)}"><button class="bg" data-a="track">${tr("h_go")}</button></div>
 <div class="g2c"><div class="cd" id="mes"><h2>${tr("h_mine")}</h2>${m.length ? `<div class="rw c-cdf"><span>${tr("h_dep")}</span><span class="nb b1">${m.length}</span></div><div class="rw c-cdf"><span>${tr("h_cur")}</span><span class="nb b2">${en}</span></div><div class="rw c-cdf"><span>${tr("h_done")}</span><span class="nb b3">${fi}</span></div>${m.map(x => `<button class="rw" data-a="open" data-n="${esc(x.numero)}"><span><b>${esc(x.type)}</b><br><span class="mu sm">${esc(x.numero)}</span></span>${bd(x.statut)}</button>`).join("")}` : `<p class="mu">${S.user ? "Aucune demande dans votre compte pour le moment." : tr("v_aucune_demande_deposee_sur")}</p>`}</div>
-${rvCard()}<div class="cd" id="infos"><h2><span class="ih">${ic("info", 24)}</span> ${tr("h_info")}</h2><p><b>Mairie de ${esc(cnm())}</b>${P.horaires ? `<br>Horaires : ${esc(P.horaires)}` : ""}${I.tel ? `<br>${tr("u_tel")} <a href="tel:${esc(tel())}">${esc(I.tel)}</a>` : ""}${I.adresse ? `<br>Adresse : ${esc(I.adresse)}` : ""}${P.email ? `<br>${tr("u_e_mail")} <a href="mailto:${esc(P.email)}">${esc(P.email)}</a>` : ""}</p><p class="mu sm">${tr("u_service_gratuit_certaines_demarches")}</p></div>
-<div class="cd" id="contact"><h2><span class="ih">${ic("phone", 24)}</span> ${tr("h_contact")}</h2>${I.tel || P.email ? `<p class="mu">${tr("u_une_question_contactez_la")}</p><p class="ctb">${I.tel ? `<a class="bt cl" href="tel:${esc(tel())}">${tr("h_call")}</a>` : ""}${P.email ? `<a class="bo cl" href="mailto:${esc(P.email)}">${tr("h_mail")}</a>` : ""}</p>` : '<p class="mu">Les coordonnées de la mairie seront bientôt disponibles.</p>'}</div></div>
+${rvCard()}<div class="cd" id="infos"><h2><span class="ih">${ic("info", 24)}</span> ${tr("h_info")}</h2><p><b>Mairie de ${esc(cnm())}</b>${P.horaires ? `<br>Horaires : ${esc(P.horaires)}` : ""}${I.tel ? `<br>${tr("u_tel")} <a href="tel:${esc(tel())}">${esc(I.tel)}</a>` : ""}${adr(I).txt ? `<br>Adresse : ${esc(adr(I).txt)}` : ""}${adr(I).url ? `<br>${mapLk("lk c-cg", I)}` : ""}${P.email ? `<br>${tr("u_e_mail")} <a href="mailto:${esc(P.email)}">${esc(P.email)}</a>` : ""}</p><p class="mu sm">${tr("u_service_gratuit_certaines_demarches")}</p></div>
+<div class="cd" id="contact"><h2><span class="ih">${ic("phone", 24)}</span> ${tr("h_contact")}</h2>${I.tel || P.email || adr(I).url ? `<p class="mu">${tr("u_une_question_contactez_la")}</p><p class="ctb">${I.tel ? `<a class="bt cl" href="tel:${esc(tel())}">${tr("h_call")}</a>` : ""}${P.email ? `<a class="bo cl" href="mailto:${esc(P.email)}">${tr("h_mail")}</a>` : ""}${mapLk("bo cl", I)}</p>` : '<p class="mu">Les coordonnées de la mairie seront bientôt disponibles.</p>'}</div></div>
 <div class="cd" id="travaux"><h2><span class="ih">${ic("tools", 24)}</span> ${tr("h_works")}</h2>${(S.pj || []).length ? S.pj.map(x => `<p class="an"><b>${esc(x.titre)}</b><br><span class="mu sm">${esc([x.localite, PJL[x.statut] || x.statut, x.avancement != null ? x.avancement + " %" : "", x.date_fin ? "fin prévue " + fdj(x.date_fin) : ""].filter(Boolean).join(" · "))}</span></p>`).join("") : '<p class="mu">Aucun projet publié pour le moment.</p>'}</div>
 <div class="cd" id="actus"><h2><span class="ih">${ic("news", 24)}</span> ${tr("h_actu")}</h2>${S.pub.length ? S.pub.map(p => `<p class="an">${p.jour ? `<span class="mu sm">${esc(fdj(p.jour))}</span>` : ""}${p.categorie && p.categorie != "actualite" ? ` <span class="bd bl">${esc(PCL[p.categorie] || "")}</span>` : ""}<br><i>${esc(p.texte)}</i></p>`).join("") : '<p class="mu">Aucune actualité pour le moment.</p>'}</div></main><footer class="ft"><i>${esc(I.devise || I.slogan || cnm())}</i><br><button class="lk c-cg" data-a="chg">${tr("u_ce_n_est_pas2")}</button></footer>`;
 };

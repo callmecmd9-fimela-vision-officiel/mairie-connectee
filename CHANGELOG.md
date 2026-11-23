@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2026-11-23 (MAJ23) — carte sur le portail citoyen, activation d'un e-mail non confirmé
+- **Portail citoyen** : l'adresse de la mairie accepte un lien Google Maps ; il s'affiche en bouton « Voir sur la carte » (nouvel onglet, `rel="noopener noreferrer"`) dans « Infos pratiques » et « Contacter la mairie ». Seuls les liens https `maps.app.goo.gl`, `goo.gl/maps`, `google.*/maps` et `maps.google.*` sont reconnus (jamais d'autre URL cliquable). Le texte d'adresse éventuel reste affiché. Sans schéma ni migration : champ existant `indicateurs.contact_adresse`.
+- **Données de production** : liens enregistrés pour Diofior, Fimela, Joal, Djirnda, Fatick et Djilass (l'ancien texte « Fimela » est remplacé).
+- **Super admin** : `sa-admin` (v17, déployée) confirme l'e-mail du compte lors de l'activation au lieu de répondre « L'invitation doit être acceptée… » ; l'action est tracée (`email_confirme_par_admin`). Le bouton « E-mail non confirmé » devient « Activer ».
+- Tests : `tests/carte-et-activation.test.js` (nouveau), `tests/browser/*` adaptés. Cache : `sw.js` `mc-v12`, `citoyen.js?v=20261123.1`, `superadmin.js?v=20261123.1`.
+
 ## 2026-11-23 (MAJ22) — administrateurs de mairie : interface « Administration Système » + double authentification
 - Les comptes `admindjirnda@`, `admindiofior@`, `adminjoal@`, `adminfatick@` et `adminfimela@gmail.com` ont la même interface que le compte d'administration principal (rôle `super_admin` **de leur commune uniquement** ; isolation RLS inchangée, aucun droit plateforme).
 - Futurs admins de mairie : déclencheur `admin_mairie_actif_vers_admin_commune` (migration `20261123120000`, appliquée en production) — un `admin_mairie` activé avec une commune reçoit le même rôle ; les comptes en attente suivent l'invitation habituelle.

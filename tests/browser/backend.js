@@ -70,7 +70,8 @@ exports.create = async (cfg) => {
       if (t.role === 'super_admin') return fail('Les comptes super-administrateur sont gérés séparément.');
       if (actif && t.role === 'admin_mairie' && !t.commune_id) return fail('Un administrateur municipal doit être rattaché à une commune.', 409);
       if (!actif && t.id === sub) return fail('Vous ne pouvez pas désactiver votre propre compte.');
-      if (actif && !t.email_confirmed_at) return fail('L’invitation doit être acceptée et l’adresse e-mail confirmée avant l’activation.', 409);
+      // Le super admin peut activer un compte dont l'e-mail n'est pas encore confirmé : l'Edge Function le confirme (email_confirm:true).
+      if (actif && !t.email_confirmed_at) await db0.query('update auth.users set email_confirmed_at=now() where id=$1', [b.id]);
       await db0.query('update public.profiles set actif=$2 where id=$1', [b.id, actif]); // service_role : pas de RLS
       return ok({ ok: true, actif });
     }

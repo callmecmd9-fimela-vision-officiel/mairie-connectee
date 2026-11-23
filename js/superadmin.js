@@ -329,7 +329,7 @@ const amPanel = () => {
             (a.statut == "actif"
               ? satg("Suspendre", "am_toggle", i, "rd")
               : a.statut == "affecte" || a.statut == "suspendu"
-                ? satg(a.email_confirme ? "Activer" : "E-mail non confirm\u00e9", "am_toggle", i, a.email_confirme ? "ok" : "or")
+                ? satg("Activer", "am_toggle", i, "ok")
                 : "")
         );
       })

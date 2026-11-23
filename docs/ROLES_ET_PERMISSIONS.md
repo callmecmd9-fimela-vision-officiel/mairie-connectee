@@ -28,7 +28,7 @@ Invariant (contrainte `profiles_admin_mairie_coherence`) : un `admin_mairie` n'e
 ### Procédure (Super Admin, interface `/mairie` → Gestion des utilisateurs → *Administrateurs municipaux*)
 1. **Créer ou rattacher** : e-mail d'un compte Auth **existant** (+ commune facultative). Sans commune → `en_attente`. Avec commune → `affecte`. Aucun compte créé, supprimé ni modifié côté Auth ; aucun mot de passe généré.
 2. **Affecter** (si créé sans commune) : même formulaire avec la commune (RPC `saas_affecter_admin_mairie`).
-3. **Activer** : bouton *Activer* (Edge Function `sa-admin`, action `activer`) — exige commune, e-mail confirmé, MFA plateforme ; synchronise les affectations.
+3. **Activer** : bouton *Activer* (Edge Function `sa-admin`, action `activer`) — exige commune et MFA plateforme ; l’e-mail non confirmé est confirmé par le super admin à l’activation (tracé dans le journal) ; synchronise les affectations.
 4. **Suspendre** : bouton *Suspendre* (révoque les sessions).
 Une nouvelle commune créée via `/saas` (`creer_mairie`) réutilise un compte existant et lui attribue `admin_mairie` inactif.
 

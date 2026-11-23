@@ -66,12 +66,12 @@ Deno.serve(async(req)=>{
   }
   if(action==="activer"){
    const actif=b.actif===true;if(isSA)return fail("Les comptes super-administrateur sont gérés séparément.");if(actif&&target.role==="admin_mairie"&&!communeId)return fail("Un administrateur municipal doit être rattaché à une commune.",409);if(!actif&&self)return fail("Vous ne pouvez pas désactiver votre propre compte.");
-   const {data:authTarget,error:authReadError}=await admin.auth.admin.getUserById(id);if(authReadError||!authTarget.user)return fail("Compte Auth introuvable.",404);if(actif&&!authTarget.user.email_confirmed_at)return fail("L’invitation doit être acceptée et l’adresse e-mail confirmée avant l’activation.",409);const {error:ae}=await admin.auth.admin.updateUserById(id,{ban_duration:actif?"none":"876000h"});if(ae)return fail(ae.message);
+   const {data:authTarget,error:authReadError}=await admin.auth.admin.getUserById(id);if(authReadError||!authTarget.user)return fail("Compte Auth introuvable.",404);const emailAConfirmer=actif&&!authTarget.user.email_confirmed_at;const {error:ae}=await admin.auth.admin.updateUserById(id,emailAConfirmer?{ban_duration:"none",email_confirm:true}:{ban_duration:actif?"none":"876000h"});if(ae)return fail(ae.message);
    const {error:pe}=await admin.from("profiles").update({actif}).eq("id",id);if(pe)return fail(pe.message,500);
    if(!actif)await admin.rpc("_revoquer_sessions",{p_user:id});
    else{const sync=await admin.rpc("org_sync_user_affectations",{p_user:id});if(sync.error){await admin.from("profiles").update({actif:false}).eq("id",id);await admin.auth.admin.updateUserById(id,{ban_duration:"876000h"});return fail("Activation annulée : synchronisation des droits impossible. "+sync.error.message,500)}}
    const {data:au}=await admin.auth.admin.getUserById(id);await admin.auth.admin.updateUserById(id,{user_metadata:{...(au.user?.user_metadata??{}),invite_pending:false}});
-   await audit(communeId,actif?"user_enable":"user_disable",id,{affectations_synchronisees:actif});return out({ok:true,actif});
+   await audit(communeId,actif?"user_enable":"user_disable",id,{affectations_synchronisees:actif,...(emailAConfirmer?{email_confirme_par_admin:true}:{})});return out({ok:true,actif,...(emailAConfirmer?{email_confirme:true}:{})});
   }
   if(action==="reinit_mdp"){
    if(isSA&&!self)return fail("Réinitialisation du mot de passe d’un autre super-administrateur interdite.");

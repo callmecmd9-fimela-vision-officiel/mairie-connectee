@@ -63,11 +63,11 @@ const H = require('./harness'); const { uid } = H;
   check('Admin activé : une seule commune visible (isolation)', await u6.evaluate(() => S.cs.length === 1 && S.cs[0].slug === 'commune-a'));
   await u6.context().close();
 
-  // e-mail non confirmé : activation impossible
+  // e-mail non confirmé : le super admin peut tout de même activer (l'adresse est alors confirmée par l'administrateur)
   await amAct(sa, 'u7@example.test', 'Admin Sept', 'commune-a');
-  check('SA : compte non confirmé => bouton « E-mail non confirmé »', /E-mail non confirmé/.test(await txtAfter(sa, 'u7@example.test', 3)));
+  check('SA : compte non confirmé => bouton « Activer » proposé', /Activer/.test(await txtAfter(sa, 'u7@example.test', 3)) && !/E-mail non confirmé/.test(await txtAfter(sa, 'u7@example.test', 3)));
   await tog(sa, 'u7@example.test'); const p7 = await prof(7);
-  check('SA : activation d’un e-mail non confirmé refusée', /confirmée|acceptée/.test(await sa.locator('[role=alert]').first().innerText().catch(() => '')) && p7.actif === false);
+  check('SA : activation d’un e-mail non confirmé acceptée (plus d’erreur)', p7.actif === true && !/acceptée et l’adresse/.test(await sa.txt()));
 
   // suspension
   await tog(sa, 'u6@example.test'); p6 = await prof(6);

@@ -35,7 +35,7 @@ assert.match(edge, /inviteUserByEmail\(email/);
 assert.match(edge, /if\(action==="reinit_mdp"\)/);
 assert.match(edge, /captchaToken/);
 assert.match(edge, /resetPasswordForEmail/);
-assert.match(html, /\/js\/superadmin\.js\?v=20261120\.1/);
+assert.match(html, /\/js\/superadmin\.js\?v=20261123\.1/);
 
 console.log("OK  création de compte alignée sur l’action serveur inviter");
 console.log("OK  réinitialisation alignée sur reset e-mail + Turnstile");
