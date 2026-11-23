@@ -63,4 +63,5 @@ L'historique complet (consignes « copier / appliquer » des lots 3 à 8, audits
 
 ## MAJ24 — 2026-11-23
 - [x] Photo d'agent + badge imprimable (admin mairie) : code, CSS, tests, doc (`docs/BADGE_AGENT.md`).
-- [ ] **À faire (accord requis)** : appliquer `supabase/proposed/20261123_agent_photo_badge.sql` en production, puis déployer le front.
+- [x] Migration `supabase/proposed/20261123_agent_photo_badge.sql` appliquée en production (version 20261123125215).
+- [ ] **À faire** : déployer le front (`js/org-f.js`, `css/mairie.css`, `css/mairie-dark.css`, `mairie.html`).

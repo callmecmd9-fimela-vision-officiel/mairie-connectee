@@ -19,7 +19,6 @@ Mairie (+ blason), photo, prénom, nom, fonction, service, matricule. Aucune aut
 | Droits | écriture : `admin_mairie` / `super_admin` de **sa** commune (ou plateforme) ; lecture : + `maire`, `rh` de la commune |
 | Tests | `tests/agent-badge.test.js` |
 
-## Mise en production (accord requis, rien n'est appliqué)
-1. Sauvegarde (`docs/SAUVEGARDE.md`).
-2. Appliquer `supabase/proposed/20261123_agent_photo_badge.sql` (idempotent, transactionnel) ; ajouter ensuite la ligne dans `supabase/PRODUCTION_VERSION_MAP.md`.
-3. Déployer le front (`js/org-f.js`, `css/mairie.css`, `css/mairie-dark.css`, `mairie.html`).
+## Mise en production
+1. Base : migration **appliquée le 2026-11-23** (version 20261123125215, voir `supabase/PRODUCTION_VERSION_MAP.md`).
+2. Front : déployer le front (`js/org-f.js`, `css/mairie.css`, `css/mairie-dark.css`, `mairie.html`).

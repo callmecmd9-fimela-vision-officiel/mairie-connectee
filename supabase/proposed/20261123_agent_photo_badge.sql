@@ -1,5 +1,5 @@
 -- Photo d'identité de l'agent + badge (administrateur de mairie).
--- Additif et idempotent. NON APPLIQUÉ : à appliquer après accord (voir docs/BADGE_AGENT.md).
+-- Additif et idempotent. APPLIQUÉ en production le 2026-11-23 (version 20261123125215) ; voir docs/BADGE_AGENT.md.
 -- Le front reste fonctionnel sans cette migration (l'envoi de photo affiche un message clair, le badge s'imprime sans photo).
 begin;
 
