@@ -68,7 +68,7 @@ ok('core : libellés admin_mairie et session autorisée', /admin_mairie:"Admin m
 ok('org-f : réservé à admin_mairie/super-admin', /RP\.orgf=\["admin_mairie"\]/.test(orgf));
 ok('org : écriture réservée à admin_mairie, délégations masquées pour lui', /W=S\.pr=="admin_mairie"&&!S\.sa/.test(org) && /S\.pr=="admin_mairie"\?\[\]:\[\["del"/.test(org));
 ok('org : bouton Modifier du poste réservé à admin_mairie (pas d\'affordance inerte pour le maire)', /const W=S\.pr=="admin_mairie"&&!S\.sa,P=ORG\.P/.test(org) && /\$\{W\?act2\(/.test(org));
-ok('versions de scripts incrémentées', ['core', 'superadmin', 'org', 'org-f'].every(n => new RegExp('/js/' + n + '\\.js\\?v=2026112[01]\\.[1-9]').test(html)));
+ok('versions de scripts incrémentées', ['core', 'superadmin', 'org', 'org-f'].every(n => new RegExp('/js/' + n + '\\.js\\?v=2026112[0-3]\\.[1-9]').test(html)));
 
 // ---- Comportement front (vm)
 const ctx = { console, load: async () => {}, S: { pr: 'admin_mairie', sa: false, orgMy: { postes: [] }, mod: {}, uid: 'u' }, SP: { administration: { subs: [] } }, RP: {}, SPL: {}, SUB: {}, SANAV: [], V: {}, document: { addEventListener() {} }, sb: {}, esc: x => String(x ?? ''), render() {}, $: () => null };

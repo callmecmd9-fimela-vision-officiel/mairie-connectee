@@ -477,5 +477,10 @@ document.addEventListener("click", async e => {
     S.err = x && x.message && !/fetch|network|Failed/i.test(x.message) ? x.message : "Erreur réseau. Réessayez.";
   }
   render();
-  if (!S.keep) window.scrollTo(0, 0);
+  /* Les formulaires s'ouvrent sous la liste : on les amène à l'écran au lieu de revenir en haut de page */
+  const cible = { orgpn: "orgps", orgpe: "orgps", orgrp: "orgdr" }[t.dataset.m],
+    bt = cible && !S.err ? document.querySelector('[data-m="' + cible + '"]') : null,
+    form = bt && bt.closest("section");
+  if (form && form.scrollIntoView) form.scrollIntoView({ block: "start", behavior: "smooth" });
+  else if (!S.keep) window.scrollTo(0, 0);
 });

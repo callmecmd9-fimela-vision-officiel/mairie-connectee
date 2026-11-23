@@ -573,7 +573,7 @@ SP.administration.subs.push(["orgf", "Services et équipes"]);
 RP.orgf = ["admin_mairie"];
 SPL.orgf = "Services, personnel et affectations";
 SUB.orgf = orgfView;
-document.addEventListener("click", async e => {
+const orgfClick = async e => {
   const t = e.target.closest("[data-of]");
   if (!t) return;
   const a = t.dataset.of,
@@ -770,7 +770,10 @@ document.addEventListener("click", async e => {
       return;
     }
     if (a === "assign-end") {
-      if (!confirm("Mettre fin à cette affectation à la date d'aujourd'hui ?")) return;
+      if (!confirm("Mettre fin à cette affectation à la date d'aujourd'hui ?")) {
+        ORGF.annule = true;
+        return;
+      }
       await orgfRpc("org_sa_affectation_fin", { p_commune: slug(), p_id: t.dataset.id, p_fin: orgfDate() });
       await orgfLoad();
       return;
@@ -778,6 +781,64 @@ document.addEventListener("click", async e => {
   } catch (x) {
     S.err = x.message || "Opération impossible.";
     render();
+  }
+};
+/* Retour visuel : le formulaire s'ouvre sous la liste et les messages sont en haut de page, hors écran sur mobile.
+   On amène donc le formulaire à l'écran, on bloque le bouton pendant l'enregistrement et on affiche le résultat en bandeau. */
+const ORGF_OUVRIR = [
+    "service-new",
+    "service-edit",
+    "post-new",
+    "post-edit",
+    "role-new",
+    "role-edit",
+    "role-pick",
+    "agent-new",
+    "agent-edit"
+  ],
+  ORGF_ECRIRE = ["service-save", "post-save", "role-save", "role-rights-save", "agent-save", "assign", "assign-end"];
+function orgfToast(msg, ok) {
+  if (!document.getElementById || !document.body) return;
+  const old = document.getElementById("of-toast");
+  if (old && old.parentNode) old.parentNode.removeChild(old);
+  const d = document.createElement("div");
+  d.id = "of-toast";
+  d.setAttribute("role", ok ? "status" : "alert");
+  d.textContent = msg;
+  d.style.cssText =
+    "position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:2147483100;max-width:92vw;padding:12px 18px;border-radius:10px;font-size:15px;font-weight:700;box-shadow:0 6px 24px rgba(0,0,0,.3);color:#fff;background:" +
+    (ok ? "#0b5a2e" : "#a4161a");
+  document.body.appendChild(d);
+  setTimeout(
+    () => {
+      if (d.parentNode) d.parentNode.removeChild(d);
+    },
+    ok ? 4000 : 9000
+  );
+}
+function orgfVoirFormulaire() {
+  if (!document.querySelector) return;
+  const b = document.querySelector(
+    '[data-of="service-save"],[data-of="post-save"],[data-of="role-save"],[data-of="agent-save"],[data-of="role-rights-save"]'
+  );
+  const f = b && (b.closest("section") || b);
+  if (f && f.scrollIntoView) f.scrollIntoView({ block: "start", behavior: "smooth" });
+}
+document.addEventListener("click", async e => {
+  const t = e.target.closest("[data-of]");
+  if (!t || t.disabled) return;
+  const a = t.dataset.of,
+    ecrit = ORGF_ECRIRE.includes(a);
+  if (ecrit) t.disabled = true;
+  await orgfClick(e);
+  if (ecrit) t.disabled = false;
+  if (ORGF_OUVRIR.includes(a)) orgfVoirFormulaire();
+  else if (ecrit) {
+    if (S.err) {
+      orgfToast(S.err, false);
+      if (typeof window !== "undefined" && window.scrollTo) window.scrollTo(0, 0);
+    } else if (ORGF.annule) ORGF.annule = false;
+    else orgfToast("Modifications enregistrées.", true);
   }
 });
 
