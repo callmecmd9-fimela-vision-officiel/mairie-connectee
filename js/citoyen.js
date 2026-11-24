@@ -2206,157 +2206,57 @@ setInterval(async () => {
   }
 }, 60000);
 
-// ==========================================
-// ==========================================
-// ==========================================
-// ==========================================
-// ==========================================
-// ==========================================
-// MODULE : SIGNALEMENT CITOYEN (Génération Dynamique)
-// ==========================================
-document.addEventListener('DOMContentLoaded', () => {
-  let btnOuvrir = document.getElementById('btn-ouvrir-signalement');
-  
-  // Si le bouton n'existe pas, on le crée
-  if (!btnOuvrir) {
-    btnOuvrir = document.createElement('button');
-    btnOuvrir.id = 'btn-ouvrir-signalement';
-    btnOuvrir.innerHTML = '🚨 Signaler';
-    document.body.appendChild(btnOuvrir);
-  }
-
-  // Style du bouton flottant
-  btnOuvrir.style.cssText = 'position:fixed; bottom:20px; right:20px; z-index:9999; border-radius:50px; padding:15px 25px; background-color:#d32f2f; color:white; border:none; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.4); cursor:pointer; font-size:16px;';
-
-  // 1. SUPPRIMER L'ANCIENNE MODALE CASSÉE SI ELLE EXISTE
-  const ancienneModale = document.getElementById('modal-signalement');
-  if (ancienneModale) ancienneModale.remove();
-
-  // 2. CRÉER LA NOUVELLE MODALE PROPRE EN JS
-  const modal = document.createElement('div');
-  modal.id = 'modal-signalement';
-  modal.style.cssText = 'display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; justify-content:center; align-items:center; padding:15px; box-sizing:border-box;';
-
-  const modalBox = document.createElement('div');
-  modalBox.style.cssText = 'background:white; width:100%; max-width:500px; border-radius:12px; padding:25px; max-height:90vh; overflow-y:auto; position:relative; box-shadow:0 10px 25px rgba(0,0,0,0.5);';
-
-  modalBox.innerHTML = `
-    <button id="btn-fermer-signalement" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:28px; cursor:pointer; color:#333;">&times;</button>
-    <h2 style="margin:0 0 20px 0; color:#333; font-size:22px;">🚨 Signaler un problème</h2>
-    <form id="form-signalement">
-      <div style="margin-bottom:15px;">
-        <label style="display:block; font-weight:bold; margin-bottom:5px; color:#555;">Catégorie</label>
-        <select id="signalement-categorie" required style="width:100%; padding:12px; border:1px solid #ccc; border-radius:8px; font-size:16px;">
-          <option value="">-- Choisir --</option>
-          <option value="voirie">🛣️ Voirie / Nid-de-poule</option>
-          <option value="ordures">🗑️ Dépôt d'ordures</option>
-          <option value="eclairage">💡 Éclairage public</option>
-          <option value="assainissement">🌊 Assainissement / Caniveau</option>
-        </select>
-      </div>
-      <div style="margin-bottom:15px;">
-        <label style="display:block; font-weight:bold; margin-bottom:5px; color:#555;">Description</label>
-        <textarea id="signalement-description" required rows="3" style="width:100%; padding:12px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-family:inherit; font-size:16px;" placeholder="Décrivez le problème..."></textarea>
-      </div>
-      <div style="margin-bottom:15px;">
-        <label style="display:block; font-weight:bold; margin-bottom:5px; color:#555;">Photo (Optionnel)</label>
-        <input type="file" id="signalement-photo" accept="image/*" capture="environment" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box;">
-      </div>
-      <div style="margin-bottom:15px;">
-        <label style="display:block; font-weight:bold; margin-bottom:5px; color:#555;">Localisation (Cliquez sur la carte)</label>
-        <div id="map-signalement" style="height:250px; width:100%; border-radius:8px; border:1px solid #ccc; background:#f0f0f0; z-index:1;"></div>
-      </div>
-      <button type="submit" id="btn-envoyer-signalement" style="width:100%; background:#1976d2; color:white; padding:15px; border:none; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer; margin-top:10px;">Envoyer le signalement</button>
-    </form>
-  `;
-
-  modal.appendChild(modalBox);
-  document.body.appendChild(modal);
-
-  // Références aux éléments
-  const btnFermer = document.getElementById('btn-fermer-signalement');
-  const form = document.getElementById('form-signalement');
-  const btnEnvoyer = document.getElementById('btn-envoyer-signalement');
-  
-  let map = null;
-  let marker = null;
-  let latSelectionnee = null;
-  let lngSelectionnee = null;
-
-  btnOuvrir.addEventListener('click', () => {
-    modal.style.display = 'flex';
-    
-    setTimeout(() => {
-      if (!map) {
-        if (typeof L === 'undefined') return alert("Erreur : Leaflet n'est pas chargé.");
-
-        // Correction des icônes Leaflet via CDN
-        delete L.Icon.Default.prototype._getIconUrl;
-        L.Icon.Default.mergeOptions({
-            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
-        });
-
-        map = L.map('map-signalement').setView([14.4974, -14.4524], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 19 }).addTo(map);
-
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition((pos) => {
-            map.setView([pos.coords.latitude, pos.coords.longitude], 16);
-            placerMarqueur(pos.coords.latitude, pos.coords.longitude);
-          });
-        }
-        map.on('click', (e) => { placerMarqueur(e.latlng.lat, e.latlng.lng); });
-      } else {
-        map.invalidateSize();
-      }
-    }, 400);
-  });
-
-  function placerMarqueur(lat, lng) {
-    latSelectionnee = lat; lngSelectionnee = lng;
-    if (marker) marker.setLatLng([lat, lng]);
-    else marker = L.marker([lat, lng]).addTo(map);
-  }
-
-  btnFermer.addEventListener('click', () => { modal.style.display = 'none'; });
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!latSelectionnee || !lngSelectionnee) return alert("Veuillez sélectionner un emplacement sur la carte.");
-    
-    btnEnvoyer.disabled = true; btnEnvoyer.textContent = "Envoi en cours...";
-
-    try {
-      const categorie = document.getElementById('signalement-categorie').value;
-      const description = document.getElementById('signalement-description').value;
-      const photoFile = document.getElementById('signalement-photo').files[0];
-      const communeId = "98002283-4fc0-4eff-8182-af1eec9a321d"; 
-      let photoUrl = null;
-
-      if (photoFile) {
-        const fileName = `signalement_${Date.now()}.jpg`;
-        const { error: uploadError } = await supabase.storage.from('signalements-photos').upload(`public/${fileName}`, photoFile);
-        if (uploadError) throw uploadError;
-        photoUrl = supabase.storage.from('signalements-photos').getPublicUrl(`public/${fileName}`).data.publicUrl;
-      }
-
-      const { error: dbError } = await supabase.from('signalements_citoyens').insert([{
-        commune_id: communeId, citoyen_id: null, categorie: categorie, description: description, photo_url: photoUrl, latitude: latSelectionnee, longitude: lngSelectionnee
-      }]);
-      if (dbError) throw dbError;
-
-      alert("✅ Signalement envoyé avec succès !");
-      form.reset(); modal.style.display = 'none';
-      if (marker) { map.removeLayer(marker); marker = null; }
-      latSelectionnee = null; lngSelectionnee = null;
-
-    } catch (error) {
-      console.error(error);
-      alert("❌ Erreur : " + error.message);
-    } finally {
-      btnEnvoyer.disabled = false; btnEnvoyer.textContent = "Envoyer le signalement";
+/* Signalement citoyen : bouton flottant + modale + carte Leaflet (Leaflet local : CSP) */
+const SIG_COMMUNE = "98002283-4fc0-4eff-8182-af1eec9a321d";
+const SIG = { map: null, mk: null, pos: null };
+function sigMsg(t, k) { const m = $("#sig-msg"); if (m) { m.textContent = t; m.className = "sig-msg " + (k || ""); } }
+function sigOpen() {
+  const d = $("#sig"); if (!d) return;
+  d.hidden = false; document.body.style.overflow = "hidden"; sigMsg("");
+  setTimeout(() => {
+    if (!window.L) { sigMsg("Carte indisponible.", "err"); return; }
+    if (!SIG.map) {
+      SIG.map = L.map("sig-map").setView([14.4, -16.95], 13);
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 18, attribution: "Tiles © Esri" }).addTo(SIG.map);
+      SIG.map.on("click", ev => {
+        SIG.pos = ev.latlng;
+        if (SIG.mk) SIG.mk.setLatLng(ev.latlng);
+        else SIG.mk = L.circleMarker(ev.latlng, { radius: 10, color: "#fff", weight: 3, fillColor: "#D91E18", fillOpacity: 1 }).addTo(SIG.map);
+      });
+      if (navigator.geolocation) navigator.geolocation.getCurrentPosition(p => SIG.map.setView([p.coords.latitude, p.coords.longitude], 16), () => {});
     }
-  });
+    SIG.map.invalidateSize();
+  }, 300);
+}
+function sigClose() { const d = $("#sig"); if (d) d.hidden = true; document.body.style.overflow = ""; }
+async function sigSend() {
+  const g = id => (($("#" + id) || {}).value || "").trim(), txt = g("sig-txt"), b = $("#sig-send");
+  if (txt.length < 5) { sigMsg("Décrivez le problème en quelques mots.", "err"); return; }
+  if (!SIG.pos) { sigMsg("Touchez la carte pour indiquer l’endroit.", "err"); return; }
+  b.disabled = true; sigMsg("Envoi en cours…");
+  try {
+    let url = null;
+    const f = $("#sig-ph").files && $("#sig-ph").files[0];
+    if (f) {
+      if (!/^image\//.test(f.type)) throw new Error("Photo uniquement.");
+      const bl = await comp(f), p = SIG_COMMUNE + "/" + crypto.randomUUID() + "." + (bl.type == "image/webp" ? "webp" : "jpg"),
+        u = await sb.storage.from("signalements-photos").upload(p, bl, { contentType: bl.type });
+      if (u.error) throw new Error("Envoi de la photo impossible.");
+      url = sb.storage.from("signalements-photos").getPublicUrl(p).data.publicUrl;
+    }
+    const r = await sb.from("signalements_citoyens").insert({ commune_id: SIG_COMMUNE, categorie: g("sig-cat"), description: txt, photo_url: url, latitude: SIG.pos.lat, longitude: SIG.pos.lng });
+    if (r.error) throw new Error("Enregistrement impossible. Réessayez.");
+    sigMsg("Signalement envoyé. Merci !", "ok");
+    $("#sig-txt").value = ""; $("#sig-ph").value = ""; SIG.pos = null;
+    if (SIG.mk) { SIG.mk.remove(); SIG.mk = null; }
+    setTimeout(sigClose, 1500);
+  } catch (e) { sigMsg(e.message || "Erreur réseau.", "err"); }
+  b.disabled = false;
+}
+document.addEventListener("click", e => {
+  const id = e.target && e.target.id;
+  if (id == "sig-open") sigOpen();
+  else if (id == "sig-x" || id == "sig") sigClose();
+  else if (id == "sig-send") sigSend();
 });
+document.addEventListener("keydown", e => { if (e.key == "Escape") sigClose(); });
