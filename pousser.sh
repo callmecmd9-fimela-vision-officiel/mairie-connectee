@@ -1,6 +1,6 @@
 #!/bin/sh
-# À lancer à la racine d'un clone de mairie-connectee, après avoir décompressé cette archive dessus.
+# À lancer à la racine d'un clone de mairie-connectee après avoir copié ces fichiers dessus.
 set -e
-git add supabase/proposed/20261124_paiements_taxes_portail_fiscal.sql supabase/proposed/20261124_signalements_back_office_mairie.sql supabase/proposed/20261125_demarches_paiements_quittances.sql
-git commit -m "chore(supabase): ajouter les 3 scripts SQL proposés absents du dépôt (paiements, signalements, démarches/quittances)"
+git add index.html css/citoyen.css js/citoyen.js
+git commit -m "feat(citoyen): paiement en deux gros boutons (Wave/Orange Money simulés), retrait de « Payer mes taxes », bouton Signaler à gauche"
 git push origin main
