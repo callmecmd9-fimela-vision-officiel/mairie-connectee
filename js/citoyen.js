@@ -620,6 +620,17 @@ async function loadMine() {
     }
     const l = [...new Set([...acc, ...getM()])];
     S.mine = l.length ? (await sb.rpc("suivre_demandes", { p_commune: S.slug, p_numeros: l })).data || [] : [];
+    /* Lot 7 : « Mes quittances » (paiements du compte, RLS : citoyen_id = utilisateur) */
+    S.quit = [];
+    if (S.user) {
+      const q = await sb
+        .from("paiements_taxes")
+        .select("reference_paiement,type_taxe,montant,date_paiement,created_at")
+        .eq("statut", "paye")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      S.quit = q.data || [];
+    }
   } catch (e) {
     S.mine = S.mine || [];
   }
@@ -1714,6 +1725,18 @@ async function openN(n) {
   }
   return false;
 }
+/* Lot 7 : section « Mes quittances » (reçu HTML avec QR code : /quittance?ref=…, impression window.print()) */
+const quitCard = () =>
+  `<div class="cd" id="quits"><h2>Mes quittances</h2>${
+    (S.quit || []).length
+      ? S.quit
+          .map(
+            x =>
+              `<button class="rw" data-a="quit" data-ref="${esc(x.reference_paiement)}"><span><b>${esc(x.type_taxe)}</b><br><span class="mu sm">${esc(x.reference_paiement)} · ${esc(new Date(x.date_paiement || x.created_at).toLocaleDateString("fr-FR"))}</span></span><span>${esc(pfm(x.montant))}</span></button>`
+          )
+          .join("")
+      : '<p class="mu">Aucune quittance pour le moment.</p>'
+  }</div>`;
 const espace = () => {
   const u = S.user,
     a = S.au || {},
@@ -1730,6 +1753,7 @@ const espace = () => {
     `</div>` +
     (u
       ? `<div class="cd"><h2>${tr("h_mine")}</h2>${m.length ? m.map(x => `<button class="rw" data-a="open" data-n="${esc(x.numero)}"><span><b>${esc(x.type)}</b><br><span class="mu sm">${esc(x.numero)}</span></span>${bd(x.statut)}</button>`).join("") : '<p class="mu">Aucune demande dans votre compte pour le moment.</p>'}</div><div class="cd"><h2>${tr("u_notifications")}</h2>${S.nt.length ? (unread() ? `<p><button class="bo" data-a="nrd">${tr("u_tout_marquer_comme_lu")}</button></p>` : "") + S.nt.map(n => `<p class="c-ntf"><b>${n.lu ? "" : "● "}${esc(n.titre)}</b><br>${esc(n.corps || "")}<br><span class="mu sm">${fdt(n.created_at)}</span>${nnum(n) ? `<br><button class="bo" data-a="nopen" data-i="${esc(n.id)}" data-n="${esc(nnum(n))}">${tr("u_voir_le_dossier")}</button>` : ""}</p>`).join("") : '<p class="mu">Aucune notification.</p>'}</div>` +
+        quitCard() +
         rvCard()
       : "") +
     `</main>`
@@ -2150,6 +2174,7 @@ document.addEventListener("click", async e => {
       S.user = null;
       S.prof = null;
       S.nt = [];
+      S.quit = [];
       S.esp = false;
       S.res = null;
       S.from = "";
