@@ -219,11 +219,13 @@ label{display:block;font:700 13px 'Nunito Sans',system-ui,sans-serif;color:var(-
 @media(min-width:1400px){.in,.mn,.pf{max-width:1240px}}
 
 .hdr svg{fill:var(--g)}
-#map-signalement {
-  z-index: 1;
-}
-#btn-envoyer-signalement:disabled {
-  background: #9e9e9e;
-  cursor: not-allowed;
-}
 
+.sig-fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:90;min-height:52px;padding:0 20px;border:0;border-radius:99px;background:#D91E18;color:#fff;font-weight:800;font-size:16px;box-shadow:0 6px 18px rgba(0,0,0,.35);cursor:pointer}
+.sig-ov{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:12px}.sig-ov[hidden]{display:none}
+.sig-box{background:#fff;color:#14231A;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;border-radius:16px;padding:16px;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.sig-h{display:flex;justify-content:space-between;align-items:center;gap:8px}.sig-h h2{font:800 20px 'Nunito Sans',system-ui,sans-serif}
+.sig-cl{width:44px;height:44px;border:0;border-radius:50%;background:#EEF3EC;cursor:pointer;font-size:18px}
+#sig-map{height:240px;border-radius:12px;background:#DDE7DD;margin-bottom:10px}
+.sig-msg{min-height:20px;font-weight:700}.sig-msg.err{color:#B91C1C}.sig-msg.ok{color:#166534}
+.sig-box .bt{width:100%}
+@media print{.sig-fab,.sig-ov{display:none}}
