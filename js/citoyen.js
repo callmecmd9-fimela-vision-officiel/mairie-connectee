@@ -2211,47 +2211,73 @@ setInterval(async () => {
 // ==========================================
 // ==========================================
 // ==========================================
-// MODULE : SIGNALEMENT CITOYEN (Auto-réparateur)
+// ==========================================
+// MODULE : SIGNALEMENT CITOYEN (Génération Dynamique)
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-  const modal = document.getElementById('modal-signalement');
-  const btnOuvrir = document.getElementById('btn-ouvrir-signalement');
+  let btnOuvrir = document.getElementById('btn-ouvrir-signalement');
+  
+  // Si le bouton n'existe pas, on le crée
+  if (!btnOuvrir) {
+    btnOuvrir = document.createElement('button');
+    btnOuvrir.id = 'btn-ouvrir-signalement';
+    btnOuvrir.innerHTML = '🚨 Signaler';
+    document.body.appendChild(btnOuvrir);
+  }
+
+  // Style du bouton flottant
+  btnOuvrir.style.cssText = 'position:fixed; bottom:20px; right:20px; z-index:9999; border-radius:50px; padding:15px 25px; background-color:#d32f2f; color:white; border:none; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.4); cursor:pointer; font-size:16px;';
+
+  // 1. SUPPRIMER L'ANCIENNE MODALE CASSÉE SI ELLE EXISTE
+  const ancienneModale = document.getElementById('modal-signalement');
+  if (ancienneModale) ancienneModale.remove();
+
+  // 2. CRÉER LA NOUVELLE MODALE PROPRE EN JS
+  const modal = document.createElement('div');
+  modal.id = 'modal-signalement';
+  modal.style.cssText = 'display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; justify-content:center; align-items:center; padding:15px; box-sizing:border-box;';
+
+  const modalBox = document.createElement('div');
+  modalBox.style.cssText = 'background:white; width:100%; max-width:500px; border-radius:12px; padding:25px; max-height:90vh; overflow-y:auto; position:relative; box-shadow:0 10px 25px rgba(0,0,0,0.5);';
+
+  modalBox.innerHTML = `
+    <button id="btn-fermer-signalement" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:28px; cursor:pointer; color:#333;">&times;</button>
+    <h2 style="margin:0 0 20px 0; color:#333; font-size:22px;">🚨 Signaler un problème</h2>
+    <form id="form-signalement">
+      <div style="margin-bottom:15px;">
+        <label style="display:block; font-weight:bold; margin-bottom:5px; color:#555;">Catégorie</label>
+        <select id="signalement-categorie" required style="width:100%; padding:12px; border:1px solid #ccc; border-radius:8px; font-size:16px;">
+          <option value="">-- Choisir --</option>
+          <option value="voirie">🛣️ Voirie / Nid-de-poule</option>
+          <option value="ordures">🗑️ Dépôt d'ordures</option>
+          <option value="eclairage">💡 Éclairage public</option>
+          <option value="assainissement">🌊 Assainissement / Caniveau</option>
+        </select>
+      </div>
+      <div style="margin-bottom:15px;">
+        <label style="display:block; font-weight:bold; margin-bottom:5px; color:#555;">Description</label>
+        <textarea id="signalement-description" required rows="3" style="width:100%; padding:12px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-family:inherit; font-size:16px;" placeholder="Décrivez le problème..."></textarea>
+      </div>
+      <div style="margin-bottom:15px;">
+        <label style="display:block; font-weight:bold; margin-bottom:5px; color:#555;">Photo (Optionnel)</label>
+        <input type="file" id="signalement-photo" accept="image/*" capture="environment" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:15px;">
+        <label style="display:block; font-weight:bold; margin-bottom:5px; color:#555;">Localisation (Cliquez sur la carte)</label>
+        <div id="map-signalement" style="height:250px; width:100%; border-radius:8px; border:1px solid #ccc; background:#f0f0f0; z-index:1;"></div>
+      </div>
+      <button type="submit" id="btn-envoyer-signalement" style="width:100%; background:#1976d2; color:white; padding:15px; border:none; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer; margin-top:10px;">Envoyer le signalement</button>
+    </form>
+  `;
+
+  modal.appendChild(modalBox);
+  document.body.appendChild(modal);
+
+  // Références aux éléments
   const btnFermer = document.getElementById('btn-fermer-signalement');
   const form = document.getElementById('form-signalement');
   const btnEnvoyer = document.getElementById('btn-envoyer-signalement');
   
-  if (!btnOuvrir) return; 
-
-  // 1. FORCER LA MODALE À SE CACHER AU DÉMARRAGE
-  modal.style.display = 'none';
-  modal.style.position = 'fixed'; modal.style.top = '0'; modal.style.left = '0'; modal.style.width = '100%'; modal.style.height = '100%';
-  modal.style.backgroundColor = 'rgba(0,0,0,0.7)'; modal.style.zIndex = '10000'; modal.style.justifyContent = 'center'; modal.style.alignItems = 'center';
-
-  // 2. CRÉER LA CARTE SI ELLE A DISPARU DU HTML
-  let mapDiv = document.getElementById('map-signalement');
-  if (!mapDiv) {
-    // On cherche la zone de texte "Localisation"
-    const labels = document.querySelectorAll('#modal-signalement label');
-    let labelLocalisation = null;
-    labels.forEach(l => { if(l.innerText.includes('Localisation')) labelLocalisation = l; });
-    
-    if (labelLocalisation) {
-      mapDiv = document.createElement('div');
-      mapDiv.id = 'map-signalement';
-      labelLocalisation.parentNode.insertBefore(mapDiv, labelLocalisation.nextSibling);
-    }
-  }
-
-  if (mapDiv) {
-    mapDiv.style.height = '250px'; mapDiv.style.width = '100%'; mapDiv.style.backgroundColor = '#e0e0e0';
-    mapDiv.style.borderRadius = '8px'; mapDiv.style.marginTop = '10px'; mapDiv.style.marginBottom = '15px';
-  }
-
-  // Styles du bouton
-  btnOuvrir.style.position = 'fixed'; btnOuvrir.style.bottom = '20px'; btnOuvrir.style.right = '20px';
-  btnOuvrir.style.zIndex = '9999'; btnOuvrir.style.borderRadius = '50px'; btnOuvrir.style.padding = '15px 25px';
-  btnOuvrir.style.backgroundColor = '#d32f2f'; btnOuvrir.style.color = 'white'; btnOuvrir.style.border = 'none'; btnOuvrir.style.fontWeight = 'bold';
-
   let map = null;
   let marker = null;
   let latSelectionnee = null;
@@ -2261,10 +2287,10 @@ document.addEventListener('DOMContentLoaded', () => {
     modal.style.display = 'flex';
     
     setTimeout(() => {
-      if (!map && mapDiv) {
+      if (!map) {
         if (typeof L === 'undefined') return alert("Erreur : Leaflet n'est pas chargé.");
 
-        // Icônes officielles
+        // Correction des icônes Leaflet via CDN
         delete L.Icon.Default.prototype._getIconUrl;
         L.Icon.Default.mergeOptions({
             iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -2282,10 +2308,10 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         }
         map.on('click', (e) => { placerMarqueur(e.latlng.lat, e.latlng.lng); });
-      } else if (map) {
+      } else {
         map.invalidateSize();
       }
-    }, 500);
+    }, 400);
   });
 
   function placerMarqueur(lat, lng) {
@@ -2300,7 +2326,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     if (!latSelectionnee || !lngSelectionnee) return alert("Veuillez sélectionner un emplacement sur la carte.");
     
-    btnEnvoyer.disabled = true; btnEnvoyer.textContent = "Envoi...";
+    btnEnvoyer.disabled = true; btnEnvoyer.textContent = "Envoi en cours...";
 
     try {
       const categorie = document.getElementById('signalement-categorie').value;
@@ -2321,12 +2347,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }]);
       if (dbError) throw dbError;
 
-      alert("✅ Signalement envoyé !");
+      alert("✅ Signalement envoyé avec succès !");
       form.reset(); modal.style.display = 'none';
       if (marker) { map.removeLayer(marker); marker = null; }
       latSelectionnee = null; lngSelectionnee = null;
 
     } catch (error) {
+      console.error(error);
       alert("❌ Erreur : " + error.message);
     } finally {
       btnEnvoyer.disabled = false; btnEnvoyer.textContent = "Envoyer le signalement";
