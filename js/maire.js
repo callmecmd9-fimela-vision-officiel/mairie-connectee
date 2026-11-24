@@ -926,6 +926,7 @@ const MAC = {
     S.menu = false;
     if (t.dataset.dd) {
       S.dd = t.dataset.dd;
+      markSeen(S.dd);
       await openD();
     }
   },

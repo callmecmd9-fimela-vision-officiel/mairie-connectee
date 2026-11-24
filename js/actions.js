@@ -181,6 +181,7 @@ document.addEventListener("click", async e => {
     else if (a == "filt") S.f = t.dataset.f;
     else if (a == "opend") {
       S.dd = d.req[i].id;
+      markSeen(S.dd);
       await openD();
     } else if (a == "cld") {
       S.dd = null;
@@ -1101,6 +1102,16 @@ sb.auth.onAuthStateChange((ev, ses) => {
     }, 0);
   }
 });
+/* Nouvelles demandes : rafraîchissement discret toutes les 45 s (pastille seulement, l'écran n'est pas redessiné) */
+setInterval(() => {
+  if (S.role == "cab" && S.cid && !S.sa && !document.hidden)
+    load(["demandes", "dvues"])
+      .then(() => {
+        syncSeen();
+        majBadge();
+      })
+      .catch(() => {});
+}, 45000);
 setInterval(() => {
   const e = $(".dc div");
   if (e) e.innerHTML = dt();
@@ -1109,7 +1120,10 @@ setInterval(() => {
   try {
     await lcm();
     const x = (await sb.auth.getSession()).data.session;
-    if (x && (await profil())) await load();
+    if (x && (await profil())) {
+      await load();
+      syncSeen();
+    }
   } catch (e) {}
   render();
 })();

@@ -129,6 +129,7 @@ const E0 = {
   rap: [],
   ms: [],
   nt: [],
+  dvues: [],
   an: [],
   act: [],
   dos: [],
@@ -770,6 +771,22 @@ const LG = {
       S.db.ms = r || [];
     }
   ],
+  /* Demandes déjà consultées par cet utilisateur (serveur, partagé entre ses appareils). Tolérant : table absente ou erreur => liste vide, aucun message d'erreur. 999 lignes max (pas de pagination). */
+  dvues: [
+    () =>
+      sb
+        .from("demandes_vues")
+        .select("demande_id")
+        .order("vu_le", DE)
+        .limit(999)
+        .then(
+          r => (r.error ? { data: [] } : r),
+          () => ({ data: [] })
+        ),
+    r => {
+      S.db.dvues = r || [];
+    }
+  ],
   notifications: [
     () => sb.from("notifications").select("*").order("created_at", DE).limit(60),
     r => {
@@ -1023,19 +1040,81 @@ const mt = p => {
 };
 const url = k => S.urls[S.ind[k]] || "";
 /* alertes et activit\u00e9s */
+/* Demandes déjà ouvertes : mémorisées par utilisateur et par commune sur cet appareil (aucune donnée personnelle, seulement des identifiants) */
+const seenKey = () => "mc_vu_" + (S.uid || "") + "_" + (S.cid || "");
+const localSeen = () => {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(seenKey()) || "[]"));
+  } catch (e) {
+    return new Set();
+  }
+};
+const serverSeen = () => new Set((D().dvues || []).map(x => x.demande_id));
+/* « Vu » = serveur (tous les appareils de l'agent) + mémoire locale (immédiat, et repli si le serveur ne répond pas) */
+const seenSet = () => new Set([...localSeen(), ...serverSeen()]);
+/* Enregistre côté serveur ; un échec (réseau, fonction non installée) n'a aucune conséquence : la mémoire locale reste valable */
+const pushSeen = id => {
+  S.vsync = S.vsync || new Set();
+  const k = S.uid + ":" + id;
+  if (S.vsOff || S.vsync.has(k)) return Promise.resolve();
+  S.vsync.add(k);
+  let q;
+  try {
+    q = Promise.resolve(sb.rpc("marquer_demande_vue", { p_demande: id }));
+  } catch (e) {
+    S.vsync.delete(k);
+    return Promise.resolve();
+  }
+  return q.then(
+    r => {
+      if (r && r.error) {
+        S.vsync.delete(k);
+        if (/function|could not find|schema cache|404/i.test(String(r.error.message || r.error.code || ""))) S.vsOff = true;
+      } else if (r && r.data === true) D().dvues = (D().dvues || []).concat([{ demande_id: id }]);
+    },
+    () => S.vsync.delete(k)
+  );
+};
+const markSeen = id => {
+  if (!id) return;
+  try {
+    const s = localSeen();
+    if (!s.has(id)) {
+      s.add(id);
+      const ids = new Set(D().req.map(r => r.id));
+      localStorage.setItem(seenKey(), JSON.stringify([...s].filter(x => ids.has(x))));
+    }
+  } catch (e) {}
+  if (!serverSeen().has(id)) pushSeen(id);
+};
+/* Rattrapage unique : les demandes déjà ouvertes avant cette mise à jour (mémoire locale) sont transmises au serveur, 25 par passage */
+const syncSeen = () => {
+  if (S.vsOff || !S.uid) return;
+  const sv = serverSeen(),
+    ids = new Set(D().req.map(r => r.id));
+  [...localSeen()]
+    .filter(x => ids.has(x) && !sv.has(x))
+    .slice(0, 25)
+    .forEach(pushSeen);
+};
+/* Nouvelles demandes que l'utilisateur n'a pas encore ouvertes */
+const unseenNew = () => {
+  const s = seenSet();
+  return D().req.filter(r => r.st == "Nouvelle" && !s.has(r.id));
+};
 const alerts = () => {
   const d = D(),
     I = S.ind,
     a = [],
     pl = n => (n > 1 ? "s" : "");
   const sg = d.mail.filter(m => m.st == "\u00c0 signer").length;
-  if (sg) a.push({ i: "alert", t: `${sg} dossier${pl(sg)} en attente de signature` });
-  const nv = d.req.filter(r => r.st == "Nouvelle").length;
-  if (nv) a.push({ i: "info", t: `${nv} nouvelle${pl(nv)} demande${pl(nv)} citoyenne${pl(nv)}` });
+  if (sg) a.push({ i: "alert", n: sg, t: `${sg} dossier${pl(sg)} en attente de signature` });
+  const nv = unseenNew().length;
+  if (nv) a.push({ i: "info", n: nv, t: `${nv} nouvelle${pl(nv)} demande${pl(nv)} citoyenne${pl(nv)} \u00e0 consulter` });
   const pv = d.posts.filter(p => p.st == "valider").length;
-  if (pv) a.push({ i: "info", t: `${pv} publication${pl(pv)} \u00e0 valider` });
+  if (pv) a.push({ i: "info", n: pv, t: `${pv} publication${pl(pv)} \u00e0 valider` });
   const dp = d.fin.reduce((s, r) => s + +r.depenses, 0);
-  if (I.budget_annuel && dp > I.budget_annuel) a.push({ i: "alert", t: "Budget : les d\u00e9penses d\u00e9passent le budget annuel" });
+  if (I.budget_annuel && dp > I.budget_annuel) a.push({ i: "alert", n: 1, t: "Budget : les d\u00e9penses d\u00e9passent le budget annuel" });
   const nx = d.rdv.filter(r => r.d >= T).sort(cmp)[0];
   if (nx) a.push({ i: "cal", t: `Prochain rendez-vous : ${nx.t} (${fd(nx.d)})` });
   return a;
@@ -1151,9 +1230,24 @@ function initMap() {
   setTimeout(() => m.invalidateSize(), 150);
 }
 /* coque */
+/* Pastille de la cloche : nombre d'éléments à traiter (pas de catégories) ; l'information « prochain rendez-vous » ne compte pas */
+const badgeN = () => alerts().reduce((s, x) => s + (x.n || 0), 0) + D().nt.filter(n => !n.lu).length;
+/* Met à jour la pastille sans refaire l'écran (aucune perte de saisie) */
+const majBadge = () => {
+  const b = document.querySelector(".tb .bl");
+  if (!b) return;
+  const n = badgeN();
+  let e = b.querySelector("b");
+  if (n) {
+    if (!e) {
+      e = document.createElement("b");
+      b.appendChild(e);
+    }
+    e.textContent = n;
+  } else if (e) e.remove();
+};
 const tb = t => {
-  const a = alerts(),
-    nb = a.length + D().nt.filter(n => !n.lu).length;
+  const nb = badgeN();
   return `<div class="tb"><button class="mb" data-a="menu" aria-label="Menu">${ic("menu", 26)}</button>${t ? `<h1 class="tt">${t}</h1>` : "<span></span>"}<div class="tr"><div class="dc">${ic("cal", 22)}<div>${dt()}</div></div><button class="bl" ${S.pr == "maire" && !S.sa ? 'data-m="go" data-sp="maire" data-t="notif"' : `data-a="go" data-v="${isA() ? "a_notif" : isS() ? "s_notif" : "dash"}"`} aria-label="Notifications">${ic("bell", 24)}${nb ? `<b>${nb}</b>` : ""}</button><div class="av" title="${esc(S.email)}">${esc((S.email || "?")[0])}</div></div></div>`;
 };
 const page = (t, b) =>
