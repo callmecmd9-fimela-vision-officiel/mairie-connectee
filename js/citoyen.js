@@ -773,7 +773,7 @@ const steps = s =>
   `<div class="stp" aria-label="${tr("u_avancement")}">${ST.map((x, i) => `<div><i class="${i < (STEP[s] || 1) ? "on" : ""}"></i><small>${x}</small></div>`).join("")}</div>`;
 const detail = () => {
   const r = S.res;
-  return `${head()}<main id="mc" class="mn nh">${msgs()}<div class="cd"><button class="lk c-cg" data-a="back">${tr("back")}</button><h1>${esc(r.type)}</h1><p class="mu sm">Dossier ${esc(r.numero)} · déposé le ${fdt(r.cree)}</p>${bd(r.statut)}${steps(r.statut)}<p>${esc(SX[r.statut] || "")}</p><p><b>${tr("u_service_responsable")}</b> ${esc(SV[r.service] || tr("v_en_cours_d_orientation"))}</p>${r.reponse ? `<div class="okb"><b>${r.statut == "rejetee" ? "Motif du rejet" : r.statut == "en_attente_pieces" ? tr("u_pieces_a_fournir") : r.statut == "pret_a_retirer" ? tr("v_retrait_lieu_et_modalites") : tr("v_reponse_de_la_mairie")}</b><br>${esc(r.reponse).replace(/\n/g, "<br>")}</div>${r.statut == "pret_a_retirer" ? retrait() : ""}` : '<p class="mu">Aucune réponse pour le moment. Revenez consulter ce dossier plus tard.</p>'}${r.statut == "en_attente_pieces" ? `<label for="cf">${tr("u_ajouter_les_pieces_demandees")}</label><input id="cf" type="file" multiple accept="image/*,application/pdf">${S.user ? "" : '<div id="ts"></div>'}<p><button class="bt" data-a="cmpl">${tr("u_envoyer_les_pieces")}</button></p>` : ""}${payDet(r)}<h3 class="c-fs16mt">${tr("u_historique")}</h3><ul class="hs">${(r.historique || []).map(h => `<li>${fdt(h.date)} : ${esc(SL[h.statut] || h.statut)}</li>`).join("")}</ul></div></main>`;
+  return `${head()}<main id="mc" class="mn nh">${msgs()}<div class="cd"><button class="lk c-cg" data-a="back">${tr("back")}</button><h1>${esc(r.type)}</h1><p class="mu sm">Dossier ${esc(r.numero)} · déposé le ${fdt(r.cree)}</p>${bd(r.statut)}${steps(r.statut)}<p>${esc(SX[r.statut] || "")}</p><p><b>${tr("u_service_responsable")}</b> ${esc(SV[r.service] || tr("v_en_cours_d_orientation"))}</p>${r.reponse ? `<div class="${r.statut == "rejetee" || r.statut == "en_attente_pieces" ? "al" : "okb"}"><b>${r.statut == "rejetee" ? "Motif du rejet" : r.statut == "en_attente_pieces" ? tr("u_pieces_a_fournir") : r.statut == "pret_a_retirer" ? tr("v_retrait_lieu_et_modalites") : tr("v_reponse_de_la_mairie")}</b><br>${esc(r.reponse).replace(/\n/g, "<br>")}</div>${r.statut == "pret_a_retirer" ? retrait() : ""}` : '<p class="mu">Aucune réponse pour le moment. Revenez consulter ce dossier plus tard.</p>'}${r.statut == "en_attente_pieces" ? `<label for="cf">${tr("u_ajouter_les_pieces_demandees")}</label><input id="cf" type="file" multiple accept="image/*,application/pdf">${S.user ? "" : '<div id="ts"></div>'}<p><button class="bt" data-a="cmpl">${tr("u_envoyer_les_pieces")}</button></p>` : ""}${payDet(r)}<h3 class="c-fs16mt">${tr("u_historique")}</h3><ul class="hs">${(r.historique || []).map(h => `<li>${fdt(h.date)} : ${esc(SL[h.statut] || h.statut)}</li>`).join("")}</ul></div></main>`;
 };
 /* Raccourcis en mots simples : simples libellés d'une demande libre dans la rubrique (aucune donnée de mairie inventée). Les démarches configurées par la mairie passent en premier. */
 const RAC = {
@@ -2301,12 +2301,7 @@ setInterval(async () => {
 }, 60000);
 
 /* Signalement citoyen : bouton flottant + modale + carte Leaflet (Leaflet local : CSP) */
-/* Aucune commune en dur : la commune est celle ouverte dans la session (lien/QR de la mairie), relue côté serveur à chaque envoi. */
-async function sigCommune() {
-  if (!S.slug) return null;
-  const c = await findC(S.slug);
-  return c && c.id && c.slug == S.slug ? c : null;
-}
+const SIG_COMMUNE = "98002283-4fc0-4eff-8182-af1eec9a321d", SIG_SLUG = "fimela";
 const SIG = { map: null, mk: null, pos: null };
 function sigMsg(t, k) { const m = $("#sig-msg"); if (m) { m.textContent = t; m.className = "sig-msg " + (k || ""); } }
 function sigOpen() {
@@ -2334,20 +2329,18 @@ async function sigSend() {
   if (!SIG.pos) { sigMsg("Touchez la carte pour indiquer l’endroit.", "err"); return; }
   b.disabled = true; sigMsg("Envoi en cours…");
   try {
-    const com = await sigCommune();
-    if (!com) throw new Error("Commune introuvable. Ouvrez le lien officiel de votre mairie.");
     let url = null;
     const f = $("#sig-ph").files && $("#sig-ph").files[0];
     if (f) {
       if (!/^image\//.test(f.type)) throw new Error("Photo uniquement.");
-      const bl = await comp(f), p = com.id + "/" + crypto.randomUUID() + "." + (bl.type == "image/webp" ? "webp" : "jpg"),
+      const bl = await comp(f), p = SIG_COMMUNE + "/" + crypto.randomUUID() + "." + (bl.type == "image/webp" ? "webp" : "jpg"),
         u = await sb.storage.from("signalements-photos").upload(p, bl, { contentType: bl.type });
       if (u.error) throw new Error("Envoi de la photo impossible.");
       url = sb.storage.from("signalements-photos").getPublicUrl(p).data.publicUrl;
     }
-    /* Insertion via RPC : la commune est déduite du slug côté serveur (aucun commune_id fourni par le navigateur). Repli sur l'insertion directe, avec la commune dynamique, tant que la RPC n'est pas déployée. */
-    let r = await sb.rpc("creer_signalement", { p_commune: com.slug, p_categorie: g("sig-cat"), p_description: txt, p_photo_url: url, p_latitude: SIG.pos.lat, p_longitude: SIG.pos.lng });
-    if (r.error && (r.error.code == "PGRST202" || r.error.code == "42883")) r = await sb.from("signalements_citoyens").insert({ commune_id: com.id, categorie: g("sig-cat"), description: txt, photo_url: url, latitude: SIG.pos.lat, longitude: SIG.pos.lng });
+    /* RPC verrouillée par commune (20261124_signalements_insertion_multitenant.sql) ; repli sur l'insertion directe tant qu'elle n'est pas déployée. */
+    let r = await sb.rpc("creer_signalement", { p_commune: SIG_SLUG, p_categorie: g("sig-cat"), p_description: txt, p_photo_url: url, p_latitude: SIG.pos.lat, p_longitude: SIG.pos.lng });
+    if (r.error) r = await sb.from("signalements_citoyens").insert({ commune_id: SIG_COMMUNE, categorie: g("sig-cat"), description: txt, photo_url: url, latitude: SIG.pos.lat, longitude: SIG.pos.lng });
     if (r.error) throw new Error("Enregistrement impossible. Réessayez.");
     sigMsg("Signalement envoyé. Merci !", "ok");
     $("#sig-txt").value = ""; $("#sig-ph").value = ""; SIG.pos = null;

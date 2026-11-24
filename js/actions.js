@@ -191,7 +191,17 @@ document.addEventListener("click", async e => {
         if (t.dataset.s) u.statut = t.dataset.s;
         if (t.dataset.o) u.service = g("dsv");
         if (t.dataset.r) u.reponse = g("drp") || null;
-        if (["traitee", "redirigee", "rejetee", "en_attente_pieces", "pret_a_retirer"].includes(u.statut) && !u.reponse)
+        if (t.dataset.pc) {
+          u.pieces_demandees = g("dpc") || null;
+          u.reponse = u.pieces_demandees;
+        }
+        if (t.dataset.mr) {
+          u.motif_rejet = g("dmr") || null;
+          u.reponse = u.motif_rejet;
+        }
+        if (t.dataset.pc && !u.pieces_demandees) S.err = "Indiquez la pièce manquante à demander au citoyen.";
+        else if (t.dataset.mr && !u.motif_rejet) S.err = "Saisissez le motif du rejet.";
+        else if (["traitee", "redirigee", "rejetee", "en_attente_pieces", "pret_a_retirer"].includes(u.statut) && !u.reponse)
           S.err = "Rédigez d’abord le message au citoyen (réponse, motif du rejet, pièces demandées ou lieu et modalités de retrait).";
         else {
           await run(sb.from("demandes").update(u).eq("id", r.id));
