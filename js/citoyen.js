@@ -2301,7 +2301,12 @@ setInterval(async () => {
 }, 60000);
 
 /* Signalement citoyen : bouton flottant + modale + carte Leaflet (Leaflet local : CSP) */
-const SIG_COMMUNE = "98002283-4fc0-4eff-8182-af1eec9a321d";
+/* Aucune commune en dur : la commune est celle ouverte dans la session (lien/QR de la mairie), relue côté serveur à chaque envoi. */
+async function sigCommune() {
+  if (!S.slug) return null;
+  const c = await findC(S.slug);
+  return c && c.id && c.slug == S.slug ? c : null;
+}
 const SIG = { map: null, mk: null, pos: null };
 function sigMsg(t, k) { const m = $("#sig-msg"); if (m) { m.textContent = t; m.className = "sig-msg " + (k || ""); } }
 function sigOpen() {
@@ -2329,16 +2334,20 @@ async function sigSend() {
   if (!SIG.pos) { sigMsg("Touchez la carte pour indiquer l’endroit.", "err"); return; }
   b.disabled = true; sigMsg("Envoi en cours…");
   try {
+    const com = await sigCommune();
+    if (!com) throw new Error("Commune introuvable. Ouvrez le lien officiel de votre mairie.");
     let url = null;
     const f = $("#sig-ph").files && $("#sig-ph").files[0];
     if (f) {
       if (!/^image\//.test(f.type)) throw new Error("Photo uniquement.");
-      const bl = await comp(f), p = SIG_COMMUNE + "/" + crypto.randomUUID() + "." + (bl.type == "image/webp" ? "webp" : "jpg"),
+      const bl = await comp(f), p = com.id + "/" + crypto.randomUUID() + "." + (bl.type == "image/webp" ? "webp" : "jpg"),
         u = await sb.storage.from("signalements-photos").upload(p, bl, { contentType: bl.type });
       if (u.error) throw new Error("Envoi de la photo impossible.");
       url = sb.storage.from("signalements-photos").getPublicUrl(p).data.publicUrl;
     }
-    const r = await sb.from("signalements_citoyens").insert({ commune_id: SIG_COMMUNE, categorie: g("sig-cat"), description: txt, photo_url: url, latitude: SIG.pos.lat, longitude: SIG.pos.lng });
+    /* Insertion via RPC : la commune est déduite du slug côté serveur (aucun commune_id fourni par le navigateur). Repli sur l'insertion directe, avec la commune dynamique, tant que la RPC n'est pas déployée. */
+    let r = await sb.rpc("creer_signalement", { p_commune: com.slug, p_categorie: g("sig-cat"), p_description: txt, p_photo_url: url, p_latitude: SIG.pos.lat, p_longitude: SIG.pos.lng });
+    if (r.error && (r.error.code == "PGRST202" || r.error.code == "42883")) r = await sb.from("signalements_citoyens").insert({ commune_id: com.id, categorie: g("sig-cat"), description: txt, photo_url: url, latitude: SIG.pos.lat, longitude: SIG.pos.lng });
     if (r.error) throw new Error("Enregistrement impossible. Réessayez.");
     sigMsg("Signalement envoyé. Merci !", "ok");
     $("#sig-txt").value = ""; $("#sig-ph").value = ""; SIG.pos = null;
