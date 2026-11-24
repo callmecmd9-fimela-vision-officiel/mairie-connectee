@@ -2,11 +2,13 @@
    Architecture : envoyerNotification() (générique, trace en base) -> NOTIF_FOURNISSEURS[NOTIF_CONFIG.fournisseur] -> envoyerMessageWaha() / envoyerMessageMeta().
    Pour basculer vers Meta : implémenter envoyerMessageMeta() puis mettre NOTIF_CONFIG.fournisseur = "meta" (aucune autre modification).
    ATTENTION : toute clé d'API placée ici est visible dans le navigateur. Pour les tests, WAHA tourne sans clé ; en production, appeler le fournisseur depuis une Edge Function. */
+/* URL complète de l'API WAHA (à modifier ici : serveur distant, port, etc.) */
+const WAHA_API_URL = "http://localhost:3000/api/sendText";
 const NOTIF_CONFIG = {
   fournisseur: "waha" /* "waha" | "meta" */,
   indicatifPays: "221" /* ajouté aux numéros locaux (ex. 77 123 45 67) */,
   proposerAuChangementDeStatut: true /* demande confirmation d'avertir le citoyen après un changement de statut */,
-  waha: { baseUrl: "http://localhost:3000", session: "default", apiKey: "", delaiMs: 10000 },
+  waha: { session: "default", apiKey: "", delaiMs: 10000 },
   meta: { version: "v20.0", phoneNumberId: "" } /* le jeton d'accès Meta ne doit JAMAIS figurer ici */
 };
 const NOTIF_TELRE = /^\+?[0-9 ]{8,16}$/;
@@ -17,7 +19,7 @@ function notifNormaliser(tel) {
   else if (!String(tel || "").trim().startsWith("+") && d.length <= 9) d = NOTIF_CONFIG.indicatifPays + d.replace(/^0+/, "");
   return d.length >= 10 && d.length <= 15 ? d : "";
 }
-/* Fournisseur WAHA : POST {baseUrl}/api/sendText */
+/* Fournisseur WAHA : POST WAHA_API_URL (chatId + text) */
 async function envoyerMessageWaha(telephone, message) {
   const num = notifNormaliser(telephone);
   if (!num) throw new Error("Numéro de téléphone invalide.");
@@ -27,7 +29,7 @@ async function envoyerMessageWaha(telephone, message) {
     h = { "Content-Type": "application/json" };
   if (c.apiKey) h["X-Api-Key"] = c.apiKey;
   try {
-    const r = await fetch(String(c.baseUrl).replace(/\/+$/, "") + "/api/sendText", {
+    const r = await fetch(WAHA_API_URL, {
       method: "POST",
       headers: h,
       body: JSON.stringify({ session: c.session || "default", chatId: num + "@c.us", text: String(message) }),
@@ -46,11 +48,13 @@ async function envoyerMessageMeta(telephone, message) {
   throw new Error("Fournisseur Meta non configuré : implémentez envoyerMessageMeta().");
 }
 const NOTIF_FOURNISSEURS = { waha: envoyerMessageWaha, meta: envoyerMessageMeta };
-/* Point d'entrée unique : trace en base (public.notifications_whatsapp), envoi via le fournisseur actif, mise à jour du statut.
+/* Point d'entrée unique : envoyerNotification(telephone, message, ctx?) ; ctx = { commune_id, demande_id } facultatif.
+   Trace en base (public.notifications_whatsapp), envoi via le fournisseur actif, mise à jour du statut ('succes' | 'echec').
    Retourne { ok, id, erreur }. Aucun envoi si la trace ne peut pas être enregistrée. */
-async function envoyerNotification(o) {
-  const tel = String((o && o.telephone) || "").replace(/\s+/g, " ").trim(),
-    msg = String((o && o.message) || "").trim(),
+async function envoyerNotification(telephone, message, ctx) {
+  const o = ctx || {},
+    tel = String(telephone || "").replace(/\s+/g, " ").trim(),
+    msg = String(message || "").trim(),
     canal = NOTIF_CONFIG.fournisseur,
     envoi = NOTIF_FOURNISSEURS[canal];
   if (!NOTIF_TELRE.test(tel)) return { ok: false, erreur: "Numéro de téléphone invalide." };
@@ -65,7 +69,7 @@ async function envoyerNotification(o) {
   const id = ins.data.id;
   try {
     await envoi(tel, msg);
-    await sb.from("notifications_whatsapp").update({ statut: "envoye" }).eq("id", id);
+    await sb.from("notifications_whatsapp").update({ statut: "succes" }).eq("id", id);
     return { ok: true, id };
   } catch (e) {
     const er = String((e && e.message) || "Échec d’envoi").slice(0, 300);
@@ -138,7 +142,7 @@ async function notifProposer(demandeId, statut) {
       tel = d ? notifTelephone(d) : "";
     if (!d || !tel) return;
     if (!confirm("Prévenir le citoyen par WhatsApp (" + tel + ") : statut « " + (NTL[statut] || statut) + " » ?")) return;
-    ntResultat(await envoyerNotification({ commune_id: S.cid, demande_id: d.id, telephone: tel, message: notifTexte(d) }), tel);
+    ntResultat(await envoyerNotification(tel, notifTexte(d), { commune_id: S.cid, demande_id: d.id }), tel);
     await load(["notif_wa"]);
   } catch (x) {
     S.err = x.message || "Notification impossible.";
@@ -153,7 +157,7 @@ const ntPanel = () => {
     "Notifier le citoyen",
     "mail",
     `<p class="mut">${ntE(d.nom || "")} · N° ${ntE(d.numero)} · WhatsApp ${ntE(tel)}</p><label for="nt_msg">Message</label><textarea id="nt_msg" rows="6" maxlength="1000">${ntE(NT.msg)}</textarea><p><button class="bt" data-m="ntsend" data-id="${ntE(d.id)}">Envoyer sur WhatsApp</button> <button class="bo" data-m="ntx">Annuler</button></p>` +
-      emp("Fournisseur : " + ntE(NOTIF_CONFIG.fournisseur) + (NOTIF_CONFIG.fournisseur == "waha" ? " (" + ntE(NOTIF_CONFIG.waha.baseUrl) + ")" : "") + ". Chaque envoi est tracé dans l’historique.")
+      emp("Fournisseur : " + ntE(NOTIF_CONFIG.fournisseur) + (NOTIF_CONFIG.fournisseur == "waha" ? " (" + ntE(WAHA_API_URL) + ")" : "") + ". Chaque envoi est tracé dans l’historique.")
   );
 };
 const ntDem = () => {
@@ -185,7 +189,7 @@ const ntHist = () =>
       .notif_wa.map(n =>
         rw(
           `<div><b>${ntE(n.destinataire_telephone)}</b><div class="mut">${ntE(ntDt(n.date_envoi || n.created_at))}</div><div class="mut">${ntE(String(n.message).slice(0, 160))}${String(n.message).length > 160 ? "…" : ""}</div>${n.erreur ? `<div class="mut">Erreur : ${ntE(n.erreur)}</div>` : ""}</div>`,
-          st2({ envoye: "Envoyé", echec: "Échec", en_attente: "En attente" }[n.statut] || n.statut, n.statut == "envoye" ? "ok" : n.statut == "echec" ? "rd" : "")
+          st2({ succes: "Succès", echec: "Échec", en_attente: "En attente" }[n.statut] || n.statut, n.statut == "succes" ? "ok" : n.statut == "echec" ? "rd" : "")
         )
       )
       .join("") || emp("Aucune notification envoyée pour le moment.")
@@ -204,7 +208,7 @@ SPL.notifwa = "Notifications WhatsApp";
 SUB.notifwa = notifView;
 document.addEventListener("click", async e => {
   const t = e.target && e.target.closest && e.target.closest("[data-m^=nt]");
-  if (!t || S.sa || !/^nt(tab|open|send|x)$/.test(t.dataset.m)) return;
+  if (!t || S.sa || !/^nt(tab|open|send|x|wa)$/.test(t.dataset.m)) return;
   const m = t.dataset.m;
   S.err = "";
   try {
@@ -219,6 +223,20 @@ document.addEventListener("click", async e => {
       NT.msg = notifTexte(d);
       render();
       window.scrollTo(0, 0);
+    } else if (m == "ntwa") {
+      /* Bouton « Notifier le citoyen par WhatsApp » du détail d'une demande */
+      if (t.disabled) return;
+      t.disabled = true;
+      await load(["dem_pay"]);
+      const d = D().dem_pay.find(x => x.id == t.dataset.id),
+        tel = d ? notifTelephone(d) : "";
+      if (!d) throw new Error("Demande introuvable.");
+      if (!tel) throw new Error("Aucun numéro de téléphone associé à cette demande.");
+      const msg = `Bonjour ${d.nom || ""}, votre demande ${d.type || d.objet || ""} (n° ${d.numero}) est prête à être retirée en mairie.\n— Mairie de ${S.co || ""}`.slice(0, 1000);
+      ntResultat(await envoyerNotification(tel, msg, { commune_id: S.cid, demande_id: d.id }), tel);
+      await load(["notif_wa"]);
+      render();
+      window.scrollTo(0, 0);
     } else if (m == "ntx") {
       NT.sel = null;
       render();
@@ -227,7 +245,7 @@ document.addEventListener("click", async e => {
         tel = d ? notifTelephone(d) : "",
         msg = ((($("#nt_msg") || {}).value || "") + "").trim();
       if (!d || !tel) throw new Error("Aucun numéro de téléphone pour cette demande.");
-      ntResultat(await envoyerNotification({ commune_id: S.cid, demande_id: d.id, telephone: tel, message: msg }), tel);
+      ntResultat(await envoyerNotification(tel, msg, { commune_id: S.cid, demande_id: d.id }), tel);
       NT.sel = null;
       await load(["notif_wa"]);
       render();
