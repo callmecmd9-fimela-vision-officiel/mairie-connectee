@@ -2210,7 +2210,8 @@ setInterval(async () => {
 // ==========================================
 // ==========================================
 // ==========================================
-// MODULE : SIGNALEMENT CITOYEN (Version Finale)
+// ==========================================
+// MODULE : SIGNALEMENT CITOYEN (Auto-réparateur)
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
   const modal = document.getElementById('modal-signalement');
@@ -2221,20 +2222,35 @@ document.addEventListener('DOMContentLoaded', () => {
   
   if (!btnOuvrir) return; 
 
+  // 1. FORCER LA MODALE À SE CACHER AU DÉMARRAGE
+  modal.style.display = 'none';
+  modal.style.position = 'fixed'; modal.style.top = '0'; modal.style.left = '0'; modal.style.width = '100%'; modal.style.height = '100%';
+  modal.style.backgroundColor = 'rgba(0,0,0,0.7)'; modal.style.zIndex = '10000'; modal.style.justifyContent = 'center'; modal.style.alignItems = 'center';
+
+  // 2. CRÉER LA CARTE SI ELLE A DISPARU DU HTML
+  let mapDiv = document.getElementById('map-signalement');
+  if (!mapDiv) {
+    // On cherche la zone de texte "Localisation"
+    const labels = document.querySelectorAll('#modal-signalement label');
+    let labelLocalisation = null;
+    labels.forEach(l => { if(l.innerText.includes('Localisation')) labelLocalisation = l; });
+    
+    if (labelLocalisation) {
+      mapDiv = document.createElement('div');
+      mapDiv.id = 'map-signalement';
+      labelLocalisation.parentNode.insertBefore(mapDiv, labelLocalisation.nextSibling);
+    }
+  }
+
+  if (mapDiv) {
+    mapDiv.style.height = '250px'; mapDiv.style.width = '100%'; mapDiv.style.backgroundColor = '#e0e0e0';
+    mapDiv.style.borderRadius = '8px'; mapDiv.style.marginTop = '10px'; mapDiv.style.marginBottom = '15px';
+  }
+
   // Styles du bouton
   btnOuvrir.style.position = 'fixed'; btnOuvrir.style.bottom = '20px'; btnOuvrir.style.right = '20px';
   btnOuvrir.style.zIndex = '9999'; btnOuvrir.style.borderRadius = '50px'; btnOuvrir.style.padding = '15px 25px';
   btnOuvrir.style.backgroundColor = '#d32f2f'; btnOuvrir.style.color = 'white'; btnOuvrir.style.border = 'none'; btnOuvrir.style.fontWeight = 'bold';
-  
-  // Styles de la modale
-  modal.style.position = 'fixed'; modal.style.top = '0'; modal.style.left = '0'; modal.style.width = '100%'; modal.style.height = '100%';
-  modal.style.backgroundColor = 'rgba(0,0,0,0.7)'; modal.style.zIndex = '10000'; modal.style.justifyContent = 'center'; modal.style.alignItems = 'center';
-
-  const modalContent = document.querySelector('#modal-signalement > div');
-  if (modalContent) {
-    modalContent.style.backgroundColor = 'white'; modalContent.style.width = '100%'; modalContent.style.maxWidth = '500px';
-    modalContent.style.padding = '20px'; modalContent.style.borderRadius = '12px'; modalContent.style.maxHeight = '90vh'; modalContent.style.overflowY = 'auto';
-  }
 
   let map = null;
   let marker = null;
@@ -2244,15 +2260,11 @@ document.addEventListener('DOMContentLoaded', () => {
   btnOuvrir.addEventListener('click', () => {
     modal.style.display = 'flex';
     
-    // ON ATTEND QUE LA MODALE SOIT VISIBLE POUR CHARGER LA CARTE
     setTimeout(() => {
-      if (!map) {
-        if (typeof L === 'undefined') {
-          alert("Erreur : Leaflet n'est pas chargé.");
-          return;
-        }
+      if (!map && mapDiv) {
+        if (typeof L === 'undefined') return alert("Erreur : Leaflet n'est pas chargé.");
 
-        // 1. CORRECTION DE L'ICÔNE DU MARQUEUR
+        // Icônes officielles
         delete L.Icon.Default.prototype._getIconUrl;
         L.Icon.Default.mergeOptions({
             iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -2260,30 +2272,20 @@ document.addEventListener('DOMContentLoaded', () => {
             shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
         });
 
-        // 2. INITIALISATION DE LA CARTE
         map = L.map('map-signalement').setView([14.4974, -14.4524], 13);
-        
-        // 3. CHARGEMENT DES TUILES (RUES)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
-          attribution: '© OpenStreetMap',
-          maxZoom: 19
-        }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 19 }).addTo(map);
 
-        // 4. GÉOLOCALISATION
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition((pos) => {
             map.setView([pos.coords.latitude, pos.coords.longitude], 16);
             placerMarqueur(pos.coords.latitude, pos.coords.longitude);
           });
         }
-        
         map.on('click', (e) => { placerMarqueur(e.latlng.lat, e.latlng.lng); });
-
-      } else {
-        // Bug classique : on force le redessin de la carte
+      } else if (map) {
         map.invalidateSize();
       }
-    }, 500); // 500ms de délai pour être sûr
+    }, 500);
   });
 
   function placerMarqueur(lat, lng) {
@@ -2298,8 +2300,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     if (!latSelectionnee || !lngSelectionnee) return alert("Veuillez sélectionner un emplacement sur la carte.");
     
-    btnEnvoyer.disabled = true;
-    btnEnvoyer.textContent = "Envoi en cours...";
+    btnEnvoyer.disabled = true; btnEnvoyer.textContent = "Envoi...";
 
     try {
       const categorie = document.getElementById('signalement-categorie').value;
@@ -2318,20 +2319,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const { error: dbError } = await supabase.from('signalements_citoyens').insert([{
         commune_id: communeId, citoyen_id: null, categorie: categorie, description: description, photo_url: photoUrl, latitude: latSelectionnee, longitude: lngSelectionnee
       }]);
-
       if (dbError) throw dbError;
 
-      alert("✅ Signalement envoyé avec succès !");
+      alert("✅ Signalement envoyé !");
       form.reset(); modal.style.display = 'none';
       if (marker) { map.removeLayer(marker); marker = null; }
       latSelectionnee = null; lngSelectionnee = null;
 
     } catch (error) {
-      console.error(error);
       alert("❌ Erreur : " + error.message);
     } finally {
-      btnEnvoyer.disabled = false;
-      btnEnvoyer.textContent = "Envoyer le signalement";
+      btnEnvoyer.disabled = false; btnEnvoyer.textContent = "Envoyer le signalement";
     }
   });
 });
