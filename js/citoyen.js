@@ -2208,7 +2208,8 @@ setInterval(async () => {
 
 // ==========================================
 // ==========================================
-// MODULE : SIGNALEMENT CITOYEN (Version corrigée)
+// ==========================================
+// MODULE : SIGNALEMENT CITOYEN (Version finale)
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
   const modal = document.getElementById('modal-signalement');
@@ -2217,9 +2218,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('form-signalement');
   const btnEnvoyer = document.getElementById('btn-envoyer-signalement');
   
-  if (!btnOuvrir) return; // Sécurité
+  if (!btnOuvrir) return; 
 
-  // --- CORRECTION DU STYLE FORCÉ ---
+  // --- CORRECTION DES STYLES VIA JS ---
   btnOuvrir.style.position = 'fixed';
   btnOuvrir.style.bottom = '20px';
   btnOuvrir.style.right = '20px';
@@ -2244,6 +2245,28 @@ document.addEventListener('DOMContentLoaded', () => {
   modal.style.padding = '15px';
   modal.style.boxSizing = 'border-box';
 
+  // Forcer le style de la boîte blanche intérieure
+  const modalContent = document.querySelector('#modal-signalement > div');
+  if (modalContent) {
+    modalContent.style.backgroundColor = 'white';
+    modalContent.style.width = '100%';
+    modalContent.style.maxWidth = '500px';
+    modalContent.style.borderRadius = '12px';
+    modalContent.style.padding = '20px';
+    modalContent.style.maxHeight = '90vh';
+    modalContent.style.overflowY = 'auto';
+    modalContent.style.position = 'relative';
+  }
+
+  // Forcer la hauteur de la carte
+  const mapDiv = document.getElementById('map-signalement');
+  if (mapDiv) {
+    mapDiv.style.height = '250px';
+    mapDiv.style.width = '100%';
+    mapDiv.style.borderRadius = '8px';
+    mapDiv.style.marginTop = '10px';
+  }
+
   let map = null;
   let marker = null;
   let latSelectionnee = null;
@@ -2253,7 +2276,6 @@ document.addEventListener('DOMContentLoaded', () => {
     modal.style.display = 'flex';
     
     if (!map) {
-      // Initialiser la carte
       map = L.map('map-signalement').setView([14.4974, -14.4524], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
 
@@ -2268,20 +2290,13 @@ document.addEventListener('DOMContentLoaded', () => {
       map.on('click', (e) => { placerMarqueur(e.latlng.lat, e.latlng.lng); });
     }
     
-    // Correction Leaflet : forcer le recalcul de la taille après ouverture de la modale
-    setTimeout(() => { 
-        if(map) map.invalidateSize(); 
-    }, 300);
+    setTimeout(() => { if(map) map.invalidateSize(); }, 300);
   });
 
   function placerMarqueur(lat, lng) {
     latSelectionnee = lat;
     lngSelectionnee = lng;
-    if (marker) {
-      marker.setLatLng([lat, lng]);
-    } else {
-      marker = L.marker([lat, lng]).addTo(map);
-    }
+    if (marker) { marker.setLatLng([lat, lng]); } else { marker = L.marker([lat, lng]).addTo(map); }
   }
 
   btnFermer.addEventListener('click', () => { modal.style.display = 'none'; });
@@ -2301,9 +2316,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const description = document.getElementById('signalement-description').value;
       const photoFile = document.getElementById('signalement-photo').files[0];
 
-      // ⚠️ L'ID de Fimela est mis en dur pour le test
       const communeId = "98002283-4fc0-4eff-8182-af1eec9a321d"; 
-      const citoyenId = null; // À récupérer plus tard
+      const citoyenId = null; 
 
       let photoUrl = null;
 
