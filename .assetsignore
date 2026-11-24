@@ -31,6 +31,8 @@ CODEOWNERS
 !/mairie.html
 !/confidentialite.html
 !/saas.html
+!/verifier.html
+!/quittance.html
 !/sw.js
 !/_headers
 !/manifest-*.webmanifest
