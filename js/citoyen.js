@@ -915,17 +915,36 @@ const tfOf = () => {
     t = f(ob) || f(ty);
   return t ? +t.montant || 0 : 0;
 };
+/* Paiement mobile (Wave / Orange Money). simulation=true tant que les comptes marchands (Wave Business, Orange Money Business) n'existent pas :
+   aucun argent n'est débité. À l'ouverture des comptes : renseigner "marchand", brancher l'API via une Edge Function, puis passer simulation à false. */
+const PAYCFG = { simulation: true, operateurs: [{ id: "wave", nom: "Wave", marchand: "" }, { id: "om", nom: "Orange Money", marchand: "" }] };
+const payOpNom = id => (PAYCFG.operateurs.find(o => o.id == id) || {}).nom || "";
 const payBlock = () => {
   const m = tfOf();
-  return m > 0
-    ? `<div class="cd" id="payb"><h3>Paiement : ${esc(pfm(m))}</h3><p class="mu sm">Cette démarche est payante : un numéro de téléphone est obligatoire (champ « Téléphone »).</p><label for="fpm">Mode de paiement</label><select id="fpm"><option value="en_ligne">Payer en ligne (simulation)</option><option value="guichet">Payer au guichet</option></select></div>`
-    : "";
+  if (!(m > 0)) return "";
+  const pm = S.pmod || "",
+    op = S.pop || "";
+  return `<div class="cd" id="payb"><h3>Paiement : ${esc(pfm(m))}</h3><p class="mu sm">Cette démarche est payante : un numéro de téléphone est obligatoire (champ « Téléphone »).</p><div class="pmg"><button type="button" class="pmb${pm == "en_ligne" ? " on" : ""}" data-pm="en_ligne">Payer en ligne<small>Wave ou Orange Money${PAYCFG.simulation ? " (simulation)" : ""}</small></button><div class="pmo" id="pmo"${pm == "en_ligne" ? "" : " hidden"}>${PAYCFG.operateurs.map(o => `<button type="button" class="pmb${op == o.id ? " on" : ""}" data-op="${esc(o.id)}">${esc(o.nom)}</button>`).join("")}</div><button type="button" class="pmb${pm == "guichet" ? " on" : ""}" data-pm="guichet">Payer au guichet<small>En espèces à la mairie</small></button></div><p class="pmn" id="pmn" role="status">${pm == "guichet" ? "Vous réglerez en espèces à la mairie." : pm == "en_ligne" ? (op ? "Paiement " + esc(payOpNom(op)) + (PAYCFG.simulation ? " simulé : aucun argent n’est débité." : ".") : "Choisissez Wave ou Orange Money.") : "Choisissez un mode de paiement."}</p></div>`;
 };
+document.addEventListener("click", e => {
+  const b = e.target && e.target.closest && e.target.closest("[data-pm],[data-op]");
+  if (!b || !$("#payb")) return;
+  if (b.dataset.pm) {
+    S.pmod = b.dataset.pm;
+    if (S.pmod != "en_ligne") S.pop = null;
+  } else S.pop = b.dataset.op;
+  document.querySelectorAll("#payb [data-pm]").forEach(x => x.classList.toggle("on", x.dataset.pm == S.pmod));
+  document.querySelectorAll("#payb [data-op]").forEach(x => x.classList.toggle("on", x.dataset.op == S.pop));
+  const o = $("#pmo"),
+    n = $("#pmn");
+  if (o) o.hidden = S.pmod != "en_ligne";
+  if (n) n.textContent = S.pmod == "guichet" ? "Vous réglerez en espèces à la mairie." : S.pop ? "Paiement " + payOpNom(S.pop) + (PAYCFG.simulation ? " simulé : aucun argent n’est débité." : ".") : "Choisissez Wave ou Orange Money.";
+});
 const payOk = () => {
   const p = S.pm;
   if (!p || p.statut_paiement == "gratuit") return "";
   return p.statut_paiement == "paye" && p.reference
-    ? `<p class="c-m10"><b>Paiement reçu : ${esc(pfm(p.montant))}</b> (simulation) <button class="bo" data-a="quit" data-ref="${esc(p.reference)}">Voir ma quittance</button></p>`
+    ? `<p class="c-m10"><b>Paiement reçu : ${esc(pfm(p.montant))}</b> (simulation${p.op ? " · " + esc(payOpNom(p.op)) : ""}) <button class="bo" data-a="quit" data-ref="${esc(p.reference)}">Voir ma quittance</button></p>`
     : `<p class="c-m10"><b>À régler au guichet : ${esc(pfm(p.montant))}</b>. Présentez votre numéro de dossier ; la mairie délivrera le document après encaissement.</p>`;
 };
 const payDet = r => {
@@ -1768,9 +1787,18 @@ async function send() {
   }
   const payM = tfOf(),
     payTel = String(S.d.ft || "").replace(/\s+/g, " ").trim(),
-    payMode = (($("#fpm") || {}).value || "guichet") == "en_ligne" ? "en_ligne" : "guichet";
+    payMode = S.pmod == "en_ligne" ? "en_ligne" : "guichet",
+    payOp = S.pop;
   if (payM > 0 && !/^\+?[0-9 ]{8,16}$/.test(payTel)) {
     S.err = "Indiquez un numéro de téléphone valide : il est obligatoire pour une démarche payante.";
+    return;
+  }
+  if (payM > 0 && !S.pmod) {
+    S.err = "Choisissez un mode de paiement : en ligne ou au guichet.";
+    return;
+  }
+  if (payM > 0 && payMode == "en_ligne" && !PAYCFG.operateurs.some(o => o.id == payOp)) {
+    S.err = "Choisissez Wave ou Orange Money pour payer en ligne.";
     return;
   }
   if (!S.tok && !S.user) {
@@ -1823,7 +1851,7 @@ async function send() {
     S.pm = null;
     if (payM > 0 || /^\+?[0-9 ]{8,16}$/.test(payTel)) {
       const q = await sb.rpc("choisir_paiement_demande", { p_commune: S.slug, p_numero: r.data, p_telephone: payTel, p_mode: payMode });
-      if (!q.error && q.data && q.data[0]) S.pm = q.data[0];
+      if (!q.error && q.data && q.data[0]) S.pm = Object.assign({}, q.data[0], payMode == "en_ligne" ? { op: payOp } : {});
       else if (payM > 0) S.pm = { statut_paiement: "non_paye", montant: payM };
     }
     if (!S.user) addM(r.data);
@@ -1833,6 +1861,8 @@ async function send() {
     S.ls = false;
     S.rec = false;
     S.d = {};
+    S.pmod = null;
+    S.pop = null;
     await loadMine();
   } catch (e) {
     S.err = e.message || "Erreur réseau. Réessayez.";
@@ -2324,88 +2354,3 @@ document.addEventListener("click", e => {
   else if (id == "sig-send") sigSend();
 });
 document.addEventListener("keydown", e => { if (e.key == "Escape") sigClose(); });
-
-/* Portail fiscal citoyen : « Payer mes taxes » (modale) + « Mes paiements ». Paiement mobile simulé (intégration Wave/Orange Money à venir). */
-const TAXE = { cur: null, due: null, base: { TEOM: 5000, "Taxe foncière": 25000, "Droits de place": 2000 } };
-const taxeF = n => (+n || 0).toLocaleString("fr-FR") + " FCFA";
-function taxeMsg(t, k) { const m = $("#tx-msg"); if (m) { m.textContent = t; m.className = "sig-msg " + (k || ""); } }
-function taxeMontant(ty, ref) {
-  let h = 0;
-  for (const c of ty + "|" + ref.toLowerCase()) h = (h * 31 + c.charCodeAt(0)) % 100003;
-  return (TAXE.base[ty] || 5000) + (h % 10) * 500;
-}
-function taxeQuittance(x) {
-  if (x && /^[A-Z0-9-]{10,60}$/.test(String(x.reference_paiement || ""))) { window.open("/quittance?ref=" + encodeURIComponent(x.reference_paiement), "_blank", "noopener"); return; }
-  const e = esc, d = new Date(x.created_at || Date.now()).toLocaleDateString("fr-FR");
-  const html = `<!doctype html><meta charset="utf-8"><title>Quittance ${e(x.reference_paiement)}</title><h1>Quittance de paiement</h1><p>Commune : ${e(cnm())}</p><p>Taxe : ${e(x.type_taxe)}</p><p>Montant : ${e(taxeF(x.montant))}</p><p>Référence : ${e(x.reference_paiement)}</p><p>Date : ${e(d)}</p><p>Statut : payé</p><p><i>Document fictif de démonstration.</i></p>`;
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([html], { type: "text/html" }));
-  a.download = "quittance-" + String(x.reference_paiement || "taxe").replace(/[^\w-]/g, "") + ".html";
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-}
-async function taxeList() {
-  const box = $("#tx-list"); if (!box) return;
-  if (!S.user) { box.innerHTML = '<p class="sm">Connectez-vous (Mon espace) pour voir vos paiements.</p>'; return; }
-  const r = await sb.from("paiements_taxes").select("*").eq("citoyen_id", S.user.id).order("created_at", { ascending: false });
-  if (r.error) { box.innerHTML = '<p class="sm">Historique indisponible.</p>'; return; }
-  TAXE.rows = r.data || [];
-  box.innerHTML = TAXE.rows.map(x => `<div class="txr"><div><b>${esc(x.type_taxe)}</b> · ${esc(taxeF(x.montant))}<small>${esc(new Date(x.created_at).toLocaleDateString("fr-FR"))} · ${esc(x.reference_paiement)} · ${x.statut == "paye" ? "Payé" : x.statut == "en_attente" ? "En attente" : esc(x.statut)}</small></div>${x.statut == "paye" ? `<button type="button" class="txq" data-tq="${esc(x.id)}">Télécharger la quittance</button>` : ""}</div>`).join("") || '<p class="sm">Aucun paiement pour le moment.</p>';
-}
-function taxeOpen() {
-  const d = $("#tx"); if (!d) return;
-  d.hidden = false; document.body.style.overflow = "hidden"; taxeMsg(""); taxeList();
-}
-function taxeClose() { const d = $("#tx"); if (d) d.hidden = true; document.body.style.overflow = ""; }
-function taxeCheck() {
-  const ty = ($("#tx-ty") || {}).value, ref = (($("#tx-ref") || {}).value || "").trim();
-  TAXE.due = null; $("#tx-pay").disabled = true; $("#tx-sim").hidden = true; TAXE.cur = null;
-  if (ref.length < 3) { $("#tx-amt").textContent = ""; taxeMsg("Saisissez votre numéro de contribuable ou votre adresse.", "err"); return; }
-  TAXE.due = { ty, ref, montant: taxeMontant(ty, ref) };
-  $("#tx-amt").textContent = "Montant dû : " + taxeF(TAXE.due.montant) + " (simulation)";
-  $("#tx-pay").disabled = false; taxeMsg("");
-}
-async function taxePay() {
-  const b = $("#tx-pay"), x = TAXE.due;
-  if (!x) { taxeMsg("Vérifiez d’abord votre montant.", "err"); return; }
-  if (!S.user) { taxeMsg("Connectez-vous (Mon espace) pour payer vos taxes.", "err"); return; }
-  b.disabled = true; taxeMsg("Enregistrement…");
-  try {
-    const r = await sb.from("paiements_taxes").insert({ commune_id: S.cid || SIG_COMMUNE, citoyen_id: S.user.id, type_taxe: x.ty, montant: x.montant, statut: "en_attente" }).select().single();
-    if (r.error) throw new Error("Enregistrement impossible. Réessayez.");
-    TAXE.cur = r.data; TAXE.due = null;
-    $("#tx-sim").hidden = false;
-    taxeMsg("Redirection vers Wave/Orange Money... (Intégration à venir). Référence : " + (r.data.reference_paiement || ""), "ok");
-    await taxeList();
-  } catch (e) { taxeMsg(e.message || "Erreur réseau.", "err"); b.disabled = false; }
-}
-async function taxeSim() {
-  const x = TAXE.cur; if (!x) return;
-  const b = $("#tx-sim"); b.disabled = true;
-  try {
-    const r = await sb.from("paiements_taxes").update({ statut: "paye", quittance_url: "/quittance?ref=" + encodeURIComponent(x.reference_paiement) }).eq("id", x.id).select("id");
-    if (r.error || !r.data || !r.data.length) throw new Error("Simulation refusée.");
-    TAXE.cur = null; b.hidden = true; $("#tx-pay").disabled = true; $("#tx-amt").textContent = "";
-    taxeMsg("Paiement simulé : votre quittance est disponible ci-dessous.", "ok");
-    await taxeList();
-  } catch (e) { taxeMsg(e.message || "Erreur réseau.", "err"); }
-  b.disabled = false;
-}
-document.addEventListener("click", e => {
-  const t = e.target || {}, id = t.id;
-  if (id == "tx-open") taxeOpen();
-  else if (id == "tx-x" || id == "tx") taxeClose();
-  else if (id == "tx-chk") taxeCheck();
-  else if (id == "tx-pay") taxePay();
-  else if (id == "tx-sim") taxeSim();
-  else if (t.dataset && t.dataset.tq) { const x = (TAXE.rows || []).find(y => y.id == t.dataset.tq); if (x) taxeQuittance(x); }
-});
-document.addEventListener("keydown", e => { if (e.key == "Escape") taxeClose(); });
-document.addEventListener("input", e => {
-  const id = e.target && e.target.id;
-  if ((id == "tx-ty" || id == "tx-ref") && TAXE.due) { TAXE.due = null; $("#tx-pay").disabled = true; $("#tx-amt").textContent = ""; }
-});
-document.addEventListener("change", e => {
-  const id = e.target && e.target.id;
-  if (id == "tx-ty" && TAXE.due) { TAXE.due = null; $("#tx-pay").disabled = true; $("#tx-amt").textContent = ""; }
-});
