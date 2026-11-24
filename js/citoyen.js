@@ -635,9 +635,9 @@ async function choose(c) {
     history.replaceState(null, "", "?c=" + c.slug);
     localStorage.setItem("mc_co", c.slug);
   } catch (e) {}
-  let i, p, dm, id, pt, pl;
+  let i, p, dm, id, pt, pl, tf;
   try {
-    [i, p, dm, id, pt, pl] = await Promise.all([
+    [i, p, dm, id, pt, pl, tf] = await Promise.all([
       sb.rpc("infos_commune", { p_commune: c.slug }),
       sb.rpc("actualites", { p_commune: c.slug }),
       sb.rpc("demarches_commune", { p_commune: c.slug }),
@@ -649,6 +649,10 @@ async function choose(c) {
       sb.rpc("planning_rdv", { p_commune: c.slug }).then(
         r => r,
         () => ({ data: [] })
+      ),
+      sb.rpc("tarifs_commune", { p_commune: c.slug }).then(
+        r => r,
+        () => ({ data: [] })
       )
     ]);
     if (i.error) throw i.error;
@@ -658,6 +662,7 @@ async function choose(c) {
   }
   S.co = c.nom;
   S.cid = c.id;
+  S.tf = (tf && tf.data) || [];
   S.icn = undefined;
   S.dm = dm.data || [];
   S.info = (i.data || [])[0] || {};
@@ -713,7 +718,7 @@ const msgs = () =>
   (S.rinf ? `<div class="okb" role="status">${esc(S.rinf)}</div>` : "") +
   (S.rok ? RKB() : "") +
   (S.ok
-    ? `<div class="okb" role="status"><b>${tr("u_demande_enregistree")}</b><br>${tr("u_votre_numero_de_suivi")} <b class="c-fs20">${esc(S.ok)}</b><br><span class="sm">${S.user ? tr("v_conservez_le_votre_dossier") : tr("v_conservez_le_il_vous")}</span><p class="c-m10"><button class="bo" data-a="copy">${tr("u_copier_le_numero")}</button></p></div>`
+    ? `<div class="okb" role="status"><b>${tr("u_demande_enregistree")}</b><br>${tr("u_votre_numero_de_suivi")} <b class="c-fs20">${esc(S.ok)}</b><br><span class="sm">${S.user ? tr("v_conservez_le_votre_dossier") : tr("v_conservez_le_il_vous")}</span><p class="c-m10"><button class="bo" data-a="copy">${tr("u_copier_le_numero")}</button></p>${payOk()}</div>`
     : "");
 /* Sans commune : jamais de liste. Message clair + saisie du code discrète */
 const pick = () =>
@@ -768,7 +773,7 @@ const steps = s =>
   `<div class="stp" aria-label="${tr("u_avancement")}">${ST.map((x, i) => `<div><i class="${i < (STEP[s] || 1) ? "on" : ""}"></i><small>${x}</small></div>`).join("")}</div>`;
 const detail = () => {
   const r = S.res;
-  return `${head()}<main id="mc" class="mn nh">${msgs()}<div class="cd"><button class="lk c-cg" data-a="back">${tr("back")}</button><h1>${esc(r.type)}</h1><p class="mu sm">Dossier ${esc(r.numero)} · déposé le ${fdt(r.cree)}</p>${bd(r.statut)}${steps(r.statut)}<p>${esc(SX[r.statut] || "")}</p><p><b>${tr("u_service_responsable")}</b> ${esc(SV[r.service] || tr("v_en_cours_d_orientation"))}</p>${r.reponse ? `<div class="okb"><b>${r.statut == "rejetee" ? "Motif du rejet" : r.statut == "en_attente_pieces" ? tr("u_pieces_a_fournir") : r.statut == "pret_a_retirer" ? tr("v_retrait_lieu_et_modalites") : tr("v_reponse_de_la_mairie")}</b><br>${esc(r.reponse).replace(/\n/g, "<br>")}</div>${r.statut == "pret_a_retirer" ? retrait() : ""}` : '<p class="mu">Aucune réponse pour le moment. Revenez consulter ce dossier plus tard.</p>'}${r.statut == "en_attente_pieces" ? `<label for="cf">${tr("u_ajouter_les_pieces_demandees")}</label><input id="cf" type="file" multiple accept="image/*,application/pdf">${S.user ? "" : '<div id="ts"></div>'}<p><button class="bt" data-a="cmpl">${tr("u_envoyer_les_pieces")}</button></p>` : ""}<h3 class="c-fs16mt">${tr("u_historique")}</h3><ul class="hs">${(r.historique || []).map(h => `<li>${fdt(h.date)} : ${esc(SL[h.statut] || h.statut)}</li>`).join("")}</ul></div></main>`;
+  return `${head()}<main id="mc" class="mn nh">${msgs()}<div class="cd"><button class="lk c-cg" data-a="back">${tr("back")}</button><h1>${esc(r.type)}</h1><p class="mu sm">Dossier ${esc(r.numero)} · déposé le ${fdt(r.cree)}</p>${bd(r.statut)}${steps(r.statut)}<p>${esc(SX[r.statut] || "")}</p><p><b>${tr("u_service_responsable")}</b> ${esc(SV[r.service] || tr("v_en_cours_d_orientation"))}</p>${r.reponse ? `<div class="okb"><b>${r.statut == "rejetee" ? "Motif du rejet" : r.statut == "en_attente_pieces" ? tr("u_pieces_a_fournir") : r.statut == "pret_a_retirer" ? tr("v_retrait_lieu_et_modalites") : tr("v_reponse_de_la_mairie")}</b><br>${esc(r.reponse).replace(/\n/g, "<br>")}</div>${r.statut == "pret_a_retirer" ? retrait() : ""}` : '<p class="mu">Aucune réponse pour le moment. Revenez consulter ce dossier plus tard.</p>'}${r.statut == "en_attente_pieces" ? `<label for="cf">${tr("u_ajouter_les_pieces_demandees")}</label><input id="cf" type="file" multiple accept="image/*,application/pdf">${S.user ? "" : '<div id="ts"></div>'}<p><button class="bt" data-a="cmpl">${tr("u_envoyer_les_pieces")}</button></p>` : ""}${payDet(r)}<h3 class="c-fs16mt">${tr("u_historique")}</h3><ul class="hs">${(r.historique || []).map(h => `<li>${fdt(h.date)} : ${esc(SL[h.statut] || h.statut)}</li>`).join("")}</ul></div></main>`;
 };
 /* Raccourcis en mots simples : simples libellés d'une demande libre dans la rubrique (aucune donnée de mairie inventée). Les démarches configurées par la mairie passent en premier. */
 const RAC = {
@@ -898,6 +903,37 @@ const dmL = () => {
     return (S.dm || []).filter(x => c[3].includes(x.type));
   },
   dmSel = () => (S.dm || []).find(x => x.id == S.d.dm);
+/* Paiement des démarches : le montant est calculé par le serveur ; ici affichage indicatif (tarif par démarche puis par catégorie). */
+const pfm = m => (+m || 0).toLocaleString("fr-FR") + " FCFA";
+const tfOf = () => {
+  const dm = dmSel() || {},
+    c = CATS.find(x => x[0] == S.cat) || [],
+    ty = String(dm.type || S.d.ty || (c[3] || [])[0] || "").toLowerCase(),
+    ob = String(S.d.fo || dm.titre || "").trim().toLowerCase(),
+    L = S.tf || [],
+    f = k => k && L.find(x => String(x.type_service).toLowerCase() == k),
+    t = f(ob) || f(ty);
+  return t ? +t.montant || 0 : 0;
+};
+const payBlock = () => {
+  const m = tfOf();
+  return m > 0
+    ? `<div class="cd" id="payb"><h3>Paiement : ${esc(pfm(m))}</h3><p class="mu sm">Cette démarche est payante : un numéro de téléphone est obligatoire (champ « Téléphone »).</p><label for="fpm">Mode de paiement</label><select id="fpm"><option value="en_ligne">Payer en ligne (simulation)</option><option value="guichet">Payer au guichet</option></select></div>`
+    : "";
+};
+const payOk = () => {
+  const p = S.pm;
+  if (!p || p.statut_paiement == "gratuit") return "";
+  return p.statut_paiement == "paye" && p.reference
+    ? `<p class="c-m10"><b>Paiement reçu : ${esc(pfm(p.montant))}</b> (simulation) <button class="bo" data-a="quit" data-ref="${esc(p.reference)}">Voir ma quittance</button></p>`
+    : `<p class="c-m10"><b>À régler au guichet : ${esc(pfm(p.montant))}</b>. Présentez votre numéro de dossier ; la mairie délivrera le document après encaissement.</p>`;
+};
+const payDet = r => {
+  const p = r.pay;
+  if (!p || p.statut_paiement == "gratuit") return "";
+  const late = p.date_limite && new Date(p.date_limite) < new Date() && p.statut_paiement != "paye";
+  return `<div class="cd"><h3>Paiement</h3><p>${esc(pfm(p.montant))} · ${p.statut_paiement == "paye" ? "Payé" : "À régler au guichet"}${p.date_limite && p.statut_paiement != "paye" ? " avant le " + esc(new Date(p.date_limite).toLocaleDateString("fr-FR")) + (late ? " (délai dépassé)" : "") : ""}</p>${p.reference ? `<button class="bo" data-a="quit" data-ref="${esc(p.reference)}">Voir ma quittance</button>` : ""}${p.document_url ? ` <button class="bt" data-a="dldoc" data-p="${esc(p.document_url)}">Télécharger mon document</button>` : ""}</div>`;
+};
 const dmInfo = () => {
   const x = dmSel();
   if (!x) return "";
@@ -1021,7 +1057,7 @@ const ecRec = () => {
     d = S.d,
     m = d.ecm || "n",
     row = (a, b) => (b ? `<div class="rw c-cdf"><span class="mu">${a}</span><b class="c-tar">${esc(b)}</b></div>` : "");
-  return `${head()}<main id="mc" class="mn nh">${msgs()}<div class="cd"><button class="lk c-cg" data-a="ecedit">${tr("u_modifier")}</button><h1>${tr("u_verifiez_votre_demande")}</h1>${row("Document", "Extrait d’acte de " + ECL[k])}${row(tr("v_personne_concernee"), d.ecp)}${row("Conjoint", d.ecc)}${m == "n" ? row("N° d’acte", d.ecn) + row(tr("v_annee"), d.eca) : row(tr("v_pieces_jointes"), (d.files || []).map(f => f.name).join(", "))}${row("Demandeur", d.fn)}${row(tr("v_telephone"), d.ft)}<p class="mu sm">Le document se retire en mairie. ${S.user ? tr("v_vous_serez_prevenu_dans") : tr("v_gardez_le_numero_de")}</p>${S.user ? "" : '<div id="ts"></div>'}<p><button class="bt" id="sd" data-a="send">${tr("u_envoyer_ma_demande")}</button> <button class="bo" data-a="ecedit">${tr("u_modifier2")}</button></p></div></main>`;
+  return `${head()}<main id="mc" class="mn nh">${msgs()}<div class="cd"><button class="lk c-cg" data-a="ecedit">${tr("u_modifier")}</button><h1>${tr("u_verifiez_votre_demande")}</h1>${row("Document", "Extrait d’acte de " + ECL[k])}${row(tr("v_personne_concernee"), d.ecp)}${row("Conjoint", d.ecc)}${m == "n" ? row("N° d’acte", d.ecn) + row(tr("v_annee"), d.eca) : row(tr("v_pieces_jointes"), (d.files || []).map(f => f.name).join(", "))}${row("Demandeur", d.fn)}${row(tr("v_telephone"), d.ft)}<p class="mu sm">Le document se retire en mairie. ${S.user ? tr("v_vous_serez_prevenu_dans") : tr("v_gardez_le_numero_de")}</p>${S.user ? "" : '<div id="ts"></div>'}${payBlock()}<p><button class="bt" id="sd" data-a="send">${tr("u_envoyer_ma_demande")}</button> <button class="bo" data-a="ecedit">${tr("u_modifier2")}</button></p></div></main>`;
 };
 /* Lot 4 : formulaires par modèle (identite, legalisation, foncier, social ; libre = formulaire générique) */
 const MD = {
@@ -1143,7 +1179,7 @@ const modRec = () => {
     m = MD[x.modele],
     d = S.d,
     row = (a, b) => (b ? `<div class="rw c-cdf"><span class="mu">${esc(a)}</span><b class="c-tar">${esc(b)}</b></div>` : "");
-  return `${head()}<main id="mc" class="mn nh">${msgs()}<div class="cd"><button class="lk c-cg" data-a="medit">${tr("u_modifier")}</button><h1>${tr("u_verifiez_votre_demande")}</h1>${row(tr("u_demarche"), x.titre)}${m.f.map(f => row(f[1], d.mf[f[0]])).join("")}${row(tr("v_pieces_jointes"), (d.files || []).map(f => f.name).join(", "))}${row("Frais", frX(x))}${row("Service", svOf(x))}${row("Demandeur", d.fn)}${row(tr("v_telephone"), d.ft)}${x.retrait ? `<p class="mu sm">${esc(x.retrait)}</p>` : ""}${S.user ? "" : '<div id="ts"></div>'}<p><button class="bt" id="sd" data-a="send">${tr("u_envoyer_ma_demande")}</button> <button class="bo" data-a="medit">${tr("u_modifier2")}</button></p></div></main>`;
+  return `${head()}<main id="mc" class="mn nh">${msgs()}<div class="cd"><button class="lk c-cg" data-a="medit">${tr("u_modifier")}</button><h1>${tr("u_verifiez_votre_demande")}</h1>${row(tr("u_demarche"), x.titre)}${m.f.map(f => row(f[1], d.mf[f[0]])).join("")}${row(tr("v_pieces_jointes"), (d.files || []).map(f => f.name).join(", "))}${row("Frais", frX(x))}${row("Service", svOf(x))}${row("Demandeur", d.fn)}${row(tr("v_telephone"), d.ft)}${x.retrait ? `<p class="mu sm">${esc(x.retrait)}</p>` : ""}${S.user ? "" : '<div id="ts"></div>'}${payBlock()}<p><button class="bt" id="sd" data-a="send">${tr("u_envoyer_ma_demande")}</button> <button class="bo" data-a="medit">${tr("u_modifier2")}</button></p></div></main>`;
 };
 /* Lot 6 : rendez-vous. Le citoyen propose une date ; le service confirme (jamais automatique). */
 const RVS = lk("rvs_");
@@ -1369,7 +1405,7 @@ ${
       : ""
 }${idBlock(d)}<label for="fo">${tr("u_objet_de_la_demande")}</label><input id="fo" maxlength="200" value="${esc(d.fo)}"><label for="fm">${tr("u_votre_message")}</label><textarea id="fm" rows="5" maxlength="2000">${esc(d.fm)}</textarea>
 <label for="ff">${tr("u_pieces_justificatives_3_maximum")}</label><input id="ff" type="file" multiple accept="image/*,application/pdf">
-<p class="mu sm c-mt12">${tr("u_toutes_les_demandes_ne")}</p>${S.user ? "" : '<div id="ts"></div>'}<p><button class="bt" id="sd" data-a="send">${tr("u_envoyer_ma_demande")}</button></p></div></main>`;
+<p class="mu sm c-mt12">${tr("u_toutes_les_demandes_ne")}</p>${S.user ? "" : '<div id="ts"></div>'}${payBlock()}<p><button class="bt" id="sd" data-a="send">${tr("u_envoyer_ma_demande")}</button></p></div></main>`;
 };
 /* Passer à true quand le fournisseur SMS est actif */
 const SMS_ON = false;
@@ -1639,6 +1675,10 @@ async function openN(n) {
   const r = n ? (await sb.rpc("suivre_demande", { p_commune: S.slug, p_numero: n })).data : null;
   if (r && r[0]) {
     S.res = Object.assign({ numero: n }, r[0]);
+    try {
+      const pp = await sb.rpc("paiement_demande", { p_commune: S.slug, p_numero: n });
+      S.res.pay = pp && pp.data && pp.data[0];
+    } catch (e) {}
     return true;
   }
   return false;
@@ -1726,6 +1766,13 @@ async function send() {
     S.err = tr("u_indiquez_votre_nom_et");
     return;
   }
+  const payM = tfOf(),
+    payTel = String(S.d.ft || "").replace(/\s+/g, " ").trim(),
+    payMode = (($("#fpm") || {}).value || "guichet") == "en_ligne" ? "en_ligne" : "guichet";
+  if (payM > 0 && !/^\+?[0-9 ]{8,16}$/.test(payTel)) {
+    S.err = "Indiquez un numéro de téléphone valide : il est obligatoire pour une démarche payante.";
+    return;
+  }
   if (!S.tok && !S.user) {
     S.err = tr("u_veuillez_valider_la_verification");
     return;
@@ -1773,6 +1820,12 @@ async function send() {
       ...(dmSel() ? { p_demarche: dmSel().id } : {})
     });
     if (r.error) throw new Error(tr("v_envoi_impossible_verifiez_les"));
+    S.pm = null;
+    if (payM > 0 || /^\+?[0-9 ]{8,16}$/.test(payTel)) {
+      const q = await sb.rpc("choisir_paiement_demande", { p_commune: S.slug, p_numero: r.data, p_telephone: payTel, p_mode: payMode });
+      if (!q.error && q.data && q.data[0]) S.pm = q.data[0];
+      else if (payM > 0) S.pm = { statut_paiement: "non_paye", montant: payM };
+    }
     if (!S.user) addM(r.data);
     S.ok = r.data;
     S.cat = null;
@@ -2081,6 +2134,17 @@ document.addEventListener("click", async e => {
       if (r.error || !r.data) S.err = tr("u_annulation_impossible_ce_rendez");
       else S.rinf = tr("v_rendez_vous_annule_le");
       await loadRdv();
+    } else if (a == "quit") {
+      const rf = String(t.dataset.ref || "");
+      if (/^[A-Z0-9-]{10,60}$/.test(rf)) window.open("/quittance?ref=" + encodeURIComponent(rf), "_blank", "noopener");
+    } else if (a == "dldoc") {
+      const pt = String(t.dataset.p || "");
+      if (!S.user) S.err = "Connectez-vous (Mon espace) pour télécharger votre document.";
+      else {
+        const u = await sb.storage.from("documents-delivres").createSignedUrl(pt, 120);
+        if (u.error || !u.data) S.err = "Document indisponible pour le moment.";
+        else window.open(u.data.signedUrl, "_blank", "noopener");
+      }
     } else if (a == "send") {
       t.disabled = true;
       t.textContent = tr("v_envoi_en_cours");
@@ -2271,6 +2335,7 @@ function taxeMontant(ty, ref) {
   return (TAXE.base[ty] || 5000) + (h % 10) * 500;
 }
 function taxeQuittance(x) {
+  if (x && /^[A-Z0-9-]{10,60}$/.test(String(x.reference_paiement || ""))) { window.open("/quittance?ref=" + encodeURIComponent(x.reference_paiement), "_blank", "noopener"); return; }
   const e = esc, d = new Date(x.created_at || Date.now()).toLocaleDateString("fr-FR");
   const html = `<!doctype html><meta charset="utf-8"><title>Quittance ${e(x.reference_paiement)}</title><h1>Quittance de paiement</h1><p>Commune : ${e(cnm())}</p><p>Taxe : ${e(x.type_taxe)}</p><p>Montant : ${e(taxeF(x.montant))}</p><p>Référence : ${e(x.reference_paiement)}</p><p>Date : ${e(d)}</p><p>Statut : payé</p><p><i>Document fictif de démonstration.</i></p>`;
   const a = document.createElement("a");
@@ -2306,13 +2371,11 @@ async function taxePay() {
   if (!S.user) { taxeMsg("Connectez-vous (Mon espace) pour payer vos taxes.", "err"); return; }
   b.disabled = true; taxeMsg("Enregistrement…");
   try {
-    const u = new Uint32Array(2); crypto.getRandomValues(u);
-    const ref = "TAX-" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + "-" + u[0].toString(36).toUpperCase() + u[1].toString(36).toUpperCase().slice(0, 3);
-    const r = await sb.from("paiements_taxes").insert({ commune_id: S.cid || SIG_COMMUNE, citoyen_id: S.user.id, type_taxe: x.ty, montant: x.montant, reference_paiement: ref, statut: "en_attente" }).select().single();
+    const r = await sb.from("paiements_taxes").insert({ commune_id: S.cid || SIG_COMMUNE, citoyen_id: S.user.id, type_taxe: x.ty, montant: x.montant, statut: "en_attente" }).select().single();
     if (r.error) throw new Error("Enregistrement impossible. Réessayez.");
     TAXE.cur = r.data; TAXE.due = null;
     $("#tx-sim").hidden = false;
-    taxeMsg("Redirection vers Wave/Orange Money... (Intégration à venir). Référence : " + ref, "ok");
+    taxeMsg("Redirection vers Wave/Orange Money... (Intégration à venir). Référence : " + (r.data.reference_paiement || ""), "ok");
     await taxeList();
   } catch (e) { taxeMsg(e.message || "Erreur réseau.", "err"); b.disabled = false; }
 }

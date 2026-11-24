@@ -8,6 +8,11 @@ LG.paiements_taxes = [
 ];
 const PTS = { en_attente: "En attente", paye: "Payé" },
   PTC = { en_attente: "or", paye: "ok" };
+const PSR = { en_ligne_simule: "en ligne (simulation)", guichet: "espèces au guichet", taxe: "taxe" },
+  ptQ = v => {
+    const t = String(v == null ? "" : v);
+    return '"' + (/^[=+\-@\t\r]/.test(t) ? "'" + t : t).replace(/"/g, '""') + '"';
+  };
 const ptF = n => (+n || 0).toLocaleString("fr-FR") + " FCFA",
   ptD = x => {
     const d = x ? new Date(x) : null;
@@ -27,10 +32,11 @@ const taxes = () => {
       L.map(x => {
         const s = x.statut;
         return rw(
-          `<b>${esc(x.type_taxe || "Taxe")}</b> · ${esc(ptF(x.montant))}<div class="mut" data-sty="font-size:13px">${esc(ptD(x.created_at))} · Réf. ${esc(x.reference_paiement || "—")}</div>`,
+          `<b>${esc(x.type_taxe || "Taxe")}</b> · ${esc(ptF(x.montant))}<div class="mut" data-sty="font-size:13px">${esc(ptD(x.created_at))} · Réf. ${esc(x.reference_paiement || "—")} · ${esc(PSR[x.source] || "")}</div>`,
           `<span data-sty="display:grid;gap:6px;justify-items:end">${st2(PTS[s] || s || "—", PTC[s] || "rd")}${s == "en_attente" ? `<button class="bt" data-m="ptval" data-id="${esc(x.id)}">Valider (espèces)</button>` : ""}</span>`
         );
-      }).join("") || emp("Aucun paiement de taxe enregistré.")
+      }).join("") || emp("Aucun paiement de taxe enregistré."),
+      `<button class="bo" data-m="ptcsv">Exporter CSV (comptabilité)</button>`
     ) +
     emp("Un paiement en attente peut être validé ici lorsqu’il a été réglé en espèces au guichet.")
   );
@@ -39,6 +45,21 @@ SP.finances.subs.push(["taxes", "Recettes / Taxes"]);
 RP.taxes = ["maire", "finances", "secretariat", "agent"];
 SPL.taxes = "Recettes / Taxes";
 SUB.taxes = taxes;
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-m=ptcsv]");
+  if (!t) return;
+  const ok = D().paiements_taxes.filter(x => x.statut == "paye"),
+    rows = [["Date", "Référence", "Objet", "Payeur", "Mode", "Montant FCFA"]].concat(
+      ok.map(x => [ptD(x.date_paiement || x.created_at), x.reference_paiement, x.type_taxe, x.nom || "", PSR[x.source] || "", +x.montant || 0])
+    ),
+    a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["\ufeff" + rows.map(r => r.map(ptQ).join(";")).join("\n")], { type: "text/csv" }));
+  a.download = "recettes-" + new Date().toISOString().slice(0, 10) + ".csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+});
 document.addEventListener("click", async e => {
   const t = e.target.closest("[data-m=ptval]");
   if (!t || S.sa) return;
