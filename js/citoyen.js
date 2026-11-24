@@ -2207,7 +2207,8 @@ setInterval(async () => {
 }, 60000);
 
 // ==========================================
-// MODULE : SIGNALEMENT CITOYEN
+// ==========================================
+// MODULE : SIGNALEMENT CITOYEN (Version corrigée)
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
   const modal = document.getElementById('modal-signalement');
@@ -2216,16 +2217,43 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('form-signalement');
   const btnEnvoyer = document.getElementById('btn-envoyer-signalement');
   
+  if (!btnOuvrir) return; // Sécurité
+
+  // --- CORRECTION DU STYLE FORCÉ ---
+  btnOuvrir.style.position = 'fixed';
+  btnOuvrir.style.bottom = '20px';
+  btnOuvrir.style.right = '20px';
+  btnOuvrir.style.zIndex = '9999';
+  btnOuvrir.style.borderRadius = '50px';
+  btnOuvrir.style.padding = '15px 25px';
+  btnOuvrir.style.boxShadow = '0 4px 10px rgba(0,0,0,0.4)';
+  btnOuvrir.style.backgroundColor = '#d32f2f';
+  btnOuvrir.style.color = 'white';
+  btnOuvrir.style.border = 'none';
+  btnOuvrir.style.fontWeight = 'bold';
+  
+  modal.style.position = 'fixed';
+  modal.style.top = '0';
+  modal.style.left = '0';
+  modal.style.width = '100%';
+  modal.style.height = '100%';
+  modal.style.backgroundColor = 'rgba(0,0,0,0.7)';
+  modal.style.zIndex = '10000';
+  modal.style.justifyContent = 'center';
+  modal.style.alignItems = 'center';
+  modal.style.padding = '15px';
+  modal.style.boxSizing = 'border-box';
+
   let map = null;
   let marker = null;
   let latSelectionnee = null;
   let lngSelectionnee = null;
 
-  if (!btnOuvrir) return; // Sécurité si le HTML n'est pas encore là
-
   btnOuvrir.addEventListener('click', () => {
     modal.style.display = 'flex';
+    
     if (!map) {
+      // Initialiser la carte
       map = L.map('map-signalement').setView([14.4974, -14.4524], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
 
@@ -2238,9 +2266,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
       map.on('click', (e) => { placerMarqueur(e.latlng.lat, e.latlng.lng); });
-    } else {
-      setTimeout(() => { map.invalidateSize(); }, 200);
     }
+    
+    // Correction Leaflet : forcer le recalcul de la taille après ouverture de la modale
+    setTimeout(() => { 
+        if(map) map.invalidateSize(); 
+    }, 300);
   });
 
   function placerMarqueur(lat, lng) {
@@ -2270,9 +2301,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const description = document.getElementById('signalement-description').value;
       const photoFile = document.getElementById('signalement-photo').files[0];
 
-      // ⚠️ TODO : REMPLACEZ PAR VOTRE LOGIQUE DE RÉCUPÉRATION D'ID
-      const communeId = window.currentCommuneId || "98002283-4fc0-4eff-8182-af1eec9a321d"; 
-      const citoyenId = window.currentUserId || "98002283-4fc0-4eff-8182-af1eec9a321d"; 
+      // ⚠️ L'ID de Fimela est mis en dur pour le test
+      const communeId = "98002283-4fc0-4eff-8182-af1eec9a321d"; 
+      const citoyenId = null; // À récupérer plus tard
 
       let photoUrl = null;
 
@@ -2305,7 +2336,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (error) {
       console.error(error);
-      alert("❌ Erreur lors de l'envoi : " + error.message);
+      alert("❌ Erreur : " + error.message);
     } finally {
       btnEnvoyer.disabled = false;
       btnEnvoyer.textContent = "Envoyer le signalement";
