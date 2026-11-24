@@ -1,4 +1,4 @@
-/* Page publique /verifier.html?ref=… : lit la référence dans l'URL et interroge Supabase (aucune connexion requise). */
+/* Page publique /verifier.html?ref=… : lit la référence dans l'URL et interroge Supabase (aucune connexion requise). Quittances de paiement et copies d'actes (EC-…). */
 (function () {
   var sb = supabase.createClient("https://aiqegpijisspankpkwfj.supabase.co", "sb_publishable__Zc0adl_eD_PyMkaR5ACzA_-_yjwmbI", {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
@@ -14,6 +14,26 @@
   }
   var ref = (new URLSearchParams(location.search).get("ref") || "").trim().toUpperCase();
   if (!/^[A-Z0-9-]{10,60}$/.test(ref)) return msg("ko", "Faux reçu : référence absente ou invalide.");
+  /* Copies d'actes d'état civil (LOT 5) : références « EC-AAAA-… », identité masquée */
+  if (/^EC-/.test(ref)) {
+    var TY = { naissance: "naissance", mariage: "mariage", deces: "décès" };
+    return sb.rpc("verifier_acte", { p_ref: ref }).then(
+      function (r) {
+        var x = r && !r.error && r.data && r.data[0];
+        if (!x) return msg("ko", r && r.error ? "Vérification impossible pour le moment. Réessayez." : "Faux document");
+        var d = new Date(x.date_delivrance),
+          ds = isNaN(d) ? "—" : d.toLocaleDateString("fr-FR");
+        msg("ok", "Copie d’acte authentique : acte de " + (TY[x.type_acte] || x.type_acte) + " n° " + x.numero_acte + "/" + x.annee_acte + ", délivrée le " + ds);
+        var p = document.createElement("p");
+        p.className = "mut";
+        p.textContent = (x.commune || "") + " · Titulaire : " + (x.titulaire || "—") + " · Réf. " + ref;
+        box.appendChild(p);
+      },
+      function () {
+        msg("ko", "Vérification impossible pour le moment. Réessayez.");
+      }
+    );
+  }
   sb.rpc("verifier_quittance", { p_ref: ref }).then(
     function (r) {
       var x = r && !r.error && r.data && r.data[0];
