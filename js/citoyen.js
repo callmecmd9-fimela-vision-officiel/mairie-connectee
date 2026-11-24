@@ -1037,7 +1037,11 @@ function ecRev() {
   d.eca = r("eca");
   ecSv();
   d.fn = known() ? fullName() : val("fn") || d.fn || "";
-  d.ft = known() ? myTel() : val("ft") || d.ft || "";
+  d.ft = val("ft") || myTel() || d.ft || "";
+  if (!TELRE.test(String(d.ft).replace(/\s+/g, " ").trim())) {
+    S.err = TELMSG;
+    return;
+  }
   const y = +d.eca;
   if (d.ecp.length < 2) {
     S.err = tr("u_indiquez_le_nom_complet");
@@ -1168,7 +1172,11 @@ function modRev() {
   const fl = [...(($("#ff") || {}).files || [])].slice(0, 3);
   if (fl.length) d.files = fl;
   d.fn = known() ? fullName() : val("fn") || d.fn || "";
-  d.ft = known() ? myTel() : val("ft") || d.ft || "";
+  d.ft = val("ft") || myTel() || d.ft || "";
+  if (!TELRE.test(String(d.ft).replace(/\s+/g, " ").trim())) {
+    S.err = TELMSG;
+    return;
+  }
   for (const f of m.f)
     if (f[3] && !d.mf[f[0]]) {
       S.err = "Remplissez : " + f[1] + ".";
@@ -1322,7 +1330,7 @@ async function rdvSend() {
   d.rd = g("rd");
   if (S.plan) d.rh = ($('input[name="rh"]:checked') || {}).value || "";
   d.fn = known() ? fullName() : g("fn") || d.fn || "";
-  d.ft = known() ? myTel() : g("ft") || d.ft || "";
+  d.ft = g("ft") || myTel() || d.ft || "";
   if (d.fn.length < 2) {
     S.err = tr("u_indiquez_votre_nom_complet");
     return;
@@ -1404,10 +1412,14 @@ const lstv0 = () => {
 const fullName = () => (((S.prof || {}).prenom || "") + " " + ((S.prof || {}).nom || "")).trim();
 const myTel = () => (S.user && S.user.phone ? "+" + String(S.user.phone).replace(/^\+/, "") : "");
 const known = () => !!(S.user && fullName().length >= 2);
+const TELRE = /^\+?[0-9 ]{8,16}$/,
+  TELMSG = "Indiquez un numéro de téléphone valide (WhatsApp) : il permet à la mairie de vous prévenir de l’avancement de votre demande.",
+  telField = d =>
+    `<label for="ft">Téléphone WhatsApp (pour être prévenu(e) de l’avancement)</label><input id="ft" type="tel" inputmode="tel" autocomplete="tel" placeholder="77 123 45 67" required value="${esc(d.ft || myTel())}">`;
 const idBlock = d =>
   known()
-    ? `<div class="okb c-okg"><b>Demande au nom de ${esc(fullName())}</b>${myTel() ? `<br><span class="sm">Téléphone : ${esc(myTel())}</span>` : ""}<br><button class="lk c-cg" data-a="esp">${tr("u_modifier_mon_profil")}</button></div>`
-    : `<label for="fn">${tr("u_votre_nom_complet")}</label><input id="fn" autocomplete="name" value="${esc(d.fn || fullName())}"><label for="ft">${tr("u_telephone_facultatif_pour_vous")}</label><input id="ft" type="tel" autocomplete="tel" value="${esc(d.ft || myTel())}">`;
+    ? `<div class="okb c-okg"><b>Demande au nom de ${esc(fullName())}</b>${myTel() ? `<br><span class="sm">Téléphone : ${esc(myTel())}</span>` : ""}<br><button class="lk c-cg" data-a="esp">${tr("u_modifier_mon_profil")}</button></div>${myTel() ? "" : telField(d)}`
+    : `<label for="fn">${tr("u_votre_nom_complet")}</label><input id="fn" autocomplete="name" value="${esc(d.fn || fullName())}">${telField(d)}`;
 const form = () => {
   if (ecK()) return ecForm();
   if (modK()) return modForm();
@@ -1777,7 +1789,7 @@ async function send() {
       ty: g("fy"),
       dm: g("fdm"),
       fn: g("fn") || (known() ? fullName() : ""),
-      ft: g("ft") || (known() ? myTel() : ""),
+      ft: g("ft") || myTel() || (S.d && S.d.ft) || "",
       fo: g("fo"),
       fm: g("fm")
     };
@@ -1789,8 +1801,8 @@ async function send() {
     payTel = String(S.d.ft || "").replace(/\s+/g, " ").trim(),
     payMode = S.pmod == "en_ligne" ? "en_ligne" : "guichet",
     payOp = S.pop;
-  if (payM > 0 && !/^\+?[0-9 ]{8,16}$/.test(payTel)) {
-    S.err = "Indiquez un numéro de téléphone valide : il est obligatoire pour une démarche payante.";
+  if (!TELRE.test(payTel)) {
+    S.err = TELMSG;
     return;
   }
   if (payM > 0 && !S.pmod) {

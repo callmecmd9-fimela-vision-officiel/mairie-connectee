@@ -204,9 +204,11 @@ document.addEventListener("click", async e => {
         else if (["traitee", "redirigee", "rejetee", "en_attente_pieces", "pret_a_retirer"].includes(u.statut) && !u.reponse)
           S.err = "Rédigez d’abord le message au citoyen (réponse, motif du rejet, pièces demandées ou lieu et modalités de retrait).";
         else {
-          await run(sb.from("demandes").update(u).eq("id", r.id));
+          const ur = await run(sb.from("demandes").update(u).eq("id", r.id));
           await load(["demandes"]);
           await openD();
+          /* LOT 6 : proposition d'avertir le citoyen par WhatsApp après un changement de statut réussi (js/notifications.js) */
+          if (!ur.error && u.statut && typeof notifProposer == "function") notifProposer(r.id, u.statut);
         }
       }
     } else if (UIB.includes(a)) {
