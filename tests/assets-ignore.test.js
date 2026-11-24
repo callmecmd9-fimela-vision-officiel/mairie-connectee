@@ -16,7 +16,7 @@ assert.equal(fs.existsSync(path.join(__dirname, "..", " .assetsignore")), false,
 const iStar = rules.indexOf("/*");
 assert.ok(iStar >= 0, "règle « /* » (exclusion par défaut) manquante");
 const allowed = rules.slice(iStar + 1).filter(r => r.startsWith("!"));
-assert.deepEqual(allowed.sort(), ["!/_headers", "!/confidentialite.html", "!/css/", "!/icon-*.png", "!/index.html", "!/js/", "!/mairie.html", "!/manifest-*.webmanifest", "!/saas.html", "!/sw.js"].sort(),
+assert.deepEqual(allowed.sort(), ["!/_headers", "!/confidentialite.html", "!/css/", "!/icon-*.png", "!/index.html", "!/js/", "!/mairie.html", "!/manifest-*.webmanifest", "!/saas.html", "!/verifier.html", "!/quittance.html", "!/sw.js"].sort(),
   "la liste blanche des fichiers publiés a changé : vérifier qu'aucun fichier sensible n'est ouvert");
 for (const r of ["package.json", "package-lock.json"]) assert.ok(rules.includes(r), "règle d’exclusion manquante : " + r);
 
