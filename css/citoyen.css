@@ -228,4 +228,7 @@ label{display:block;font:700 13px 'Nunito Sans',system-ui,sans-serif;color:var(-
 #sig-map{height:240px;border-radius:12px;background:#DDE7DD;margin-bottom:10px}
 .sig-msg{min-height:20px;font-weight:700}.sig-msg.err{color:#B91C1C}.sig-msg.ok{color:#166534}
 .sig-box .bt{width:100%}
+.tx-fab{right:auto;left:16px;background:#0B5A2E}
+.tx-amt{min-height:24px;font:800 18px 'Nunito Sans',system-ui,sans-serif}
+.tx-list .txr{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;border-top:1px solid #E3E9E1}.tx-list .txr small{display:block;color:#5B6B62}.tx-list a,.tx-list .txq{color:#0B5A2E;font-weight:800;background:none;border:0;text-decoration:underline;cursor:pointer;min-height:44px;font-size:14px}
 @media print{.sig-fab,.sig-ov{display:none}}
