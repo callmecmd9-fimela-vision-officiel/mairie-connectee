@@ -25,6 +25,8 @@ const FAM = [
     "Certificats et attestations",
     "Légalisations et certifications",
     "Foncier et urbanisme",
+    "Commerce et domaine public",
+    "Affaires sociales",
     "Action sociale et services communaux"
   ],
   MODL = [
@@ -35,6 +37,15 @@ const FAM = [
     ["social", "Social"]
   ],
   STD = { actif: "Active", inactif: "Désactivée", archive: "Archivée" };
+/* Démarches types (LOT 2) : type = rubrique existante du portail citoyen, famille = catégorie du catalogue, modele = formulaire utilisé par « Choisir » */
+const DMX = [
+  ["Urbanisme", "Foncier et urbanisme", "foncier", "Déclaration de travaux", "Déclarer des travaux de construction, d’extension ou de rénovation sur votre terrain ou votre bâtiment.", "Pièce d’identité\nTitre foncier ou attestation d’attribution\nPlan de situation ou croquis des travaux", "technique"],
+  ["Urbanisme", "Foncier et urbanisme", "foncier", "Autorisation d’urbanisme", "Demander une autorisation avant de construire, de lotir ou de modifier l’usage d’un terrain.", "Pièce d’identité\nTitre foncier ou attestation d’attribution\nPlan de masse ou croquis du projet", "technique"],
+  ["Commerce", "Commerce et domaine public", "libre", "Occupation temporaire du domaine public", "Demander l’autorisation d’occuper temporairement un espace public (voie, place, trottoir, marché).", "Pièce d’identité\nDescription de l’activité et de l’emplacement souhaité\nDurée d’occupation demandée", "secretariat"],
+  ["Commerce", "Commerce et domaine public", "libre", "Kiosques et étals", "Demander un emplacement ou une autorisation pour installer un kiosque ou un étal.", "Pièce d’identité\nNature de l’activité\nEmplacement souhaité", "secretariat"],
+  ["Aide sociale", "Affaires sociales", "social", "Aides funéraires", "Demander une aide de la commune pour les frais d’obsèques d’un proche.", "Pièce d’identité du demandeur\nActe ou certificat de décès\nJustificatif de situation sociale", "secretariat"],
+  ["Aide sociale", "Affaires sociales", "social", "Accompagnement social", "Demander un accompagnement social (orientation, soutien, suivi de votre situation).", "Pièce d’identité\nBrève description de la situation", "secretariat"]
+];
 const demarches = () => {
   const d = D(),
     e = S.ed && S.ed.e == "dmr",
@@ -57,7 +68,7 @@ const demarches = () => {
         ta("dm_ds", "Description", "description") +
         ta("dm_pc", "Pièces justificatives (une par ligne)", "pieces") +
         ta("dm_cd", "Conditions", "conditions") +
-        `<p data-sty="margin-top:10px"><button class="bt" data-m="dmsave">Enregistrer</button> ${e ? `<button class="bo" data-a="ecl">Annuler</button>` : ""}</p>` +
+        `<p data-sty="margin-top:10px"><button class="bt" data-m="dmsave">Enregistrer</button> ${e ? `<button class="bo" data-a="ecl">Annuler</button>` : ""} <button class="bo" data-m="dmseed">Ajouter les démarches types manquantes</button></p>` +
         emp("Si une autorité est indiquée, le citoyen est prévenu que la mairie l’oriente vers cet organisme.")
     ) +
     pn(
@@ -83,7 +94,7 @@ document.addEventListener("click", async e => {
   if (!t || S.sa) return;
   const m = t.dataset.m,
     g = id => (($("#" + id) || {}).value || "").trim();
-  if (!["dmsave", "dmact", "dmarch", "dmdel"].includes(m)) return;
+  if (!["dmsave", "dmact", "dmarch", "dmdel", "dmseed"].includes(m)) return;
   S.err = "";
   try {
     if (m == "dmsave") {
@@ -121,6 +132,23 @@ document.addEventListener("click", async e => {
           .update({ statut: x.statut == "archive" ? "inactif" : "archive" })
           .eq("id", x.id);
       if (r.error) throw new Error(r.error.message);
+    } else if (m == "dmseed") {
+      const ex = D().dmr.map(y => String(y.titre).toLowerCase()),
+        L = DMX.filter(x => !ex.includes(x[3].toLowerCase())).map(x => ({
+          commune_id: S.cid,
+          type: x[0],
+          famille: x[1],
+          modele: x[2],
+          titre: x[3],
+          description: x[4],
+          pieces: x[5],
+          service: x[6],
+          statut: "actif"
+        }));
+      if (!L.length) throw new Error("Toutes les démarches types existent déjà.");
+      const r = await sb.from("demarches").insert(L);
+      if (r.error) throw new Error(r.error.message);
+      S.err = L.length + " démarche(s) ajoutée(s).";
     } else if (confirm("Supprimer cette démarche ?")) {
       const r = await sb.from("demarches").delete().eq("id", t.dataset.id);
       if (r.error) throw new Error(r.error.message);
