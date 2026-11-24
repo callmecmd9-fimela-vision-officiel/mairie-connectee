@@ -1,0 +1,27 @@
+/* LOT 5 : registre d'état civil (écran) et copie d'acte imprimable (#prt, via window.print) */
+.ec-q{margin-bottom:12px}
+.ec-q input{width:100%;max-width:420px}
+.ec-act{display:grid;gap:6px;justify-items:end}
+.ecd{box-sizing:border-box;max-width:180mm;margin:0 auto;padding:10mm 8mm;border:.5mm solid #0b5a2e;color:#111;background:#fff;font:11pt/1.45 'Nunito Sans',Arial,sans-serif}
+.ecd-h{display:flex;align-items:center;gap:5mm;border-bottom:.6mm solid #0b5a2e;padding-bottom:4mm}
+.ecd-h b{display:block;font-size:14pt;color:#073a1e;letter-spacing:.3pt}
+.ecd-h span{display:block;font-size:10pt;color:#444}
+.ecd-bl{width:22mm;height:22mm;object-fit:contain;flex:none}
+.ecd-sh{display:grid;place-items:center;color:#0b5a2e}
+.ecd-t{margin:8mm 0 1mm;text-align:center;font-size:18pt;text-transform:uppercase;color:#073a1e}
+.ecd-s{margin:0 0 6mm;text-align:center;color:#444;font-size:10pt}
+.ecd-d{display:grid;grid-template-columns:48mm 1fr;gap:2mm 5mm;margin:0 0 8mm}
+.ecd-d dt{font-weight:800;color:#333}
+.ecd-d dd{margin:0;word-break:break-word}
+.ecd-f{display:flex;justify-content:space-between;align-items:flex-end;gap:8mm;margin-top:10mm}
+.ecd-g p{margin:0 0 2mm}
+.ecd-o{font-weight:800}
+.ecd-sg{width:60mm;height:22mm;border-bottom:.3mm solid #666}
+.ecd-q{text-align:center;font-size:8pt;max-width:42mm}
+.ecd-q img{width:32mm;height:32mm;display:block;margin:0 auto 1mm}
+.ecd-q p{margin:0;word-break:break-all}
+.ecd-n{margin:8mm 0 0;font-size:8pt;color:#555;text-align:center;border-top:.2mm solid #bbb;padding-top:2mm}
+@media print{
+ #prt .ecd{-webkit-print-color-adjust:exact;print-color-adjust:exact;border-color:#0b5a2e!important;color:#111!important;background:#fff!important}
+ .ecd-h b,.ecd-t{color:#073a1e!important}
+}
