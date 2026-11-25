@@ -19,8 +19,7 @@
 --
 -- APPLIQUÉE en production le 2026-11-25 (SQL direct, projet fimela-vision-officiel) : étape 1 (table + RPC) puis étape 2
 -- (fermeture de la faille), après déploiement de js/taxes.js appelant la RPC. Le fichier est idempotent : le rejouer
--- via `supabase db push` est sans effet. La version n'est pas encore inscrite dans l'historique Supabase ; pour l'y
--- inscrire sans rejouer le SQL : `supabase migration repair --status applied 20261202000600`.
+-- via `supabase db push` est sans effet. Version inscrite dans l'historique Supabase le 2026-11-25.
 -- Version 20261202000600 : placée APRÈS 20261202000500 (dernière version enregistrée) pour ne pas être refusée
 -- comme migration « hors ordre ».
 
