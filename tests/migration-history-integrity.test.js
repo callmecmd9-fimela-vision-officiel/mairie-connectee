@@ -73,7 +73,9 @@ const pendingFiles = [
   // P1 gouvernance (2026-11-25) : conseillers.user_id, rôle conseiller, RLS vote adjoint/conseiller, Realtime — PROPOSÉE, non appliquée en production.
   '20261202001100_p1_gouvernance_fixes.sql',
   // P1 gouvernance (2026-11-25) : RPC cloturer_deliberation (SECURITY DEFINER) — PROPOSÉE, non appliquée en production.
-  '20261202001200_p1_rpc_cloture_deliberation.sql'
+  '20261202001200_p1_rpc_cloture_deliberation.sql',
+  // P1 patrimoine (2026-11-25) : biens.latitude / longitude — PROPOSÉE, non appliquée en production.
+  '20261202001300_p1_patrimoine_geolocalisation.sql'
 ];
 const actualSqlFiles = fs.readdirSync(migrationDir).filter(name => name.endsWith('.sql')).sort();
 const expectedSqlFiles = [...historicalFiles, ...pendingFiles].sort();
