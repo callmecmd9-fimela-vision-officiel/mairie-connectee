@@ -1,7 +1,7 @@
 // Portail fiscal mairie : recettes / taxes (total, tableau, validation guichet). node tests/mairie-taxes.test.js
 const vm=require('vm'),fs=require('fs'),path=require('path');let f=0;const ok=(n,c)=>{console.log(c?'OK  ':'FAIL',n);if(!c)f++};
 function mk({rows=[],updRes={data:[{id:'p1'}]},conf=true}={}){const handlers=[],upd=[],loads=[];
- const ctx={E0:{},LG:{},SP:{finances:{subs:[]}},RP:{},SPL:{},SUB:{},S:{cid:'c1',sa:false,err:'',db:{paiements_taxes:rows}},
+ const ctx={E0:{},LG:{},SP:{finances:{subs:[]}},RP:{},SPL:{},SUB:{},S:{cid:'c1',sa:false,pr:'finances',err:'',db:{paiements_taxes:rows}},
   D:()=>ctx.S.db,LQ:t=>({order(){return{t}}}),esc:s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),
   pn:(t,i,b)=>`<section>${t}${b}</section>`,emp:m=>`<p>${m}</p>`,st2:l=>`<span>${l}</span>`,rw:(a,b)=>`<div>${a}${b}</div>`,ic:()=>'',render(){},load:async k=>{loads.push(k)},confirm:()=>conf,
   sb:{from:t=>({update:u=>{const eqs=[];const q={eq:(a,b)=>{eqs.push([a,b]);return q},select:async()=>{upd.push([t,u,eqs]);return updRes}};return q}})},
