@@ -225,7 +225,12 @@ label{display:block;font:700 13px 'Nunito Sans',system-ui,sans-serif;color:var(-
 .sig-box{background:#fff;color:#14231A;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;border-radius:16px;padding:16px;box-shadow:0 12px 40px rgba(0,0,0,.4)}
 .sig-h{display:flex;justify-content:space-between;align-items:center;gap:8px}.sig-h h2{font:800 20px 'Nunito Sans',system-ui,sans-serif}
 .sig-cl{width:44px;height:44px;border:0;border-radius:50%;background:#EEF3EC;cursor:pointer;font-size:18px}
-#sig-map{height:240px;border-radius:12px;background:#DDE7DD;margin-bottom:10px}
+#sig-map{height:340px;border-radius:12px;background:#DDE7DD;margin-bottom:8px;overflow:hidden}
+.sig-lgd{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;font-weight:700;margin-bottom:6px}.sig-lgd span{display:inline-flex;align-items:center;gap:6px}
+.sig-d{width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25)}.sig-d-n{background:#D91E18}.sig-d-e{background:#F59E0B}.sig-d-r{background:#16A34A}
+.sig-hint{margin:4px 0 10px;font-weight:700}.sig-hint[hidden],#sig-form[hidden]{display:none}
+#sig-pos{width:100%;box-sizing:border-box;margin-bottom:10px}
+.sig-pin{width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#D91E18;border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.45)}
 .sig-msg{min-height:20px;font-weight:700}.sig-msg.err{color:#B91C1C}.sig-msg.ok{color:#166534}
 .sig-box .bt{width:100%}
 @media print{.sig-fab,.sig-ov{display:none}}
