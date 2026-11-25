@@ -1,5 +1,10 @@
 # TASKS — état au 2026-11-25
 
+## P1 Budget — engagements (2026-11-25)
+- [ ] **Appliquer** `supabase/migrations/20261202001000_p1_rls_engagements_secretariat.sql` (sinon l'INSERT d'un engagement par `secretariat` est refusé par la RLS), puis déployer `js/budget.js` + `mairie.html`.
+- [ ] Décision à prendre : `secretariat` ne peut ni ouvrir l'écran Budgets (`RP.budgets` = maire, adjoint, finances) ni lire `budget_lignes` / `engagements` (politiques `*_lecture`). Pour qu'il utilise réellement « Nouvel engagement », étendre `RP.budgets` et les politiques de lecture, ou lui fournir une RPC dédiée.
+- [ ] Le trigger proposé `20261202000900` rend les budgets `vote`/`approuve`/`cloture` immuables mais ne couvre pas `engagements` : prévoir un contrôle côté base du crédit disponible (le refus actuel est côté client uniquement).
+
 ## Audit P0/P1 — 2026-11-25 (machines à états, CI, thème)
 - [ ] **Avant d'appliquer** `supabase/migrations/20261202000900_p0_triggers_machines_etats.sql` : créer la RPC de vote/adoption des délibérations et adapter `js/deliberations.js` (ligne ~152) et `js/actions.js` (ligne ~944), qui insèrent directement en `adoptee` ; vérifier les écrans marchés (`js/maire.js`, `js/marches.js`) qui changent le statut librement ; prévoir la RPC de transition des budgets.
 - [ ] Non couverts par ces triggers : suppression (DELETE) sur `budgets`, `marches`, `deliberations`, et modification des `budget_lignes` d'un budget voté.
