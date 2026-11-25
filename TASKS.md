@@ -1,5 +1,10 @@
 # TASKS — état au 2026-11-25
 
+## P1 Marchés — détail, avenants, ordres de service (2026-11-25)
+- [ ] Déployer `js/marches.js` + `mairie.html` (v20261125.4), vider le cache/PWA, puis tester : Administration > Marchés en cours > Détail ; ajout d'un avenant et d'un ordre de service avec un compte `maire` ou `finances` ; vérifier que `secretariat` voit les listes sans les boutons.
+- [ ] Non géré (volontaire) : modification / annulation d'un avenant ou d'un ordre de service depuis l'interface (la RLS UPDATE existe ; le DELETE est révoqué).
+- [ ] Les marchés réceptionnés ou annulés n'apparaissent pas dans cet écran, donc leur détail n'est pas accessible ici.
+
 ## P1 Budget — engagements (2026-11-25)
 - [ ] **Appliquer** `supabase/migrations/20261202001000_p1_rls_engagements_secretariat.sql` (sinon l'INSERT d'un engagement par `secretariat` est refusé par la RLS), puis déployer `js/budget.js` + `mairie.html`.
 - [ ] Décision à prendre : `secretariat` ne peut ni ouvrir l'écran Budgets (`RP.budgets` = maire, adjoint, finances) ni lire `budget_lignes` / `engagements` (politiques `*_lecture`). Pour qu'il utilise réellement « Nouvel engagement », étendre `RP.budgets` et les politiques de lecture, ou lui fournir une RPC dédiée.

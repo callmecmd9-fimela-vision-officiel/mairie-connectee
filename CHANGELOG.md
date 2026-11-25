@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 2026-11-25 — P1 Marchés : détail du marché, avenants et ordres de service
+- **Front** (`js/marches.js`, `mairie.html` v20261125.4) : bouton « Détail » sur chaque marché en cours ouvrant une vue « Détail du marché » (informations de base, total des avenants, montant actuel) puis la liste des **avenants** (`marches_avenants` : montant_supplementaire, motif, date_signature) et des **ordres de service** (`ordres_service` : objet, date_emission, statut). Lecture : maire, finances, secrétariat.
+- **Saisie** (maire et finances uniquement) : boutons « Ajouter un avenant » et « Émettre un ordre de service » avec formulaires et insertion dans les tables correspondantes (commune_id et marche_id renseignés ; contrôles : motif/objet obligatoires, montant valide, date d'exécution prévue ≥ date d'émission). Pas de suppression (traçabilité, cf. migration lot 10).
+- **SQL** : aucune nouvelle migration (tables et RLS déjà en production via `20261202000200_lot10_marches.sql`).
+
 ## 2026-11-25 — P1 Budget : engagements par ligne budgétaire + crédit disponible
 - **Front** (`js/budget.js`, `mairie.html` v20261125.3) : dans le détail d'un budget, chaque ligne de dépense affiche ses engagements (date, montant, statut), le total engagé et un indicateur **Crédit disponible = montant_prevu − (somme des engagements + montant_realise)** ; les engagements au statut `annule` ne consomment pas de crédit. Deux indicateurs de synthèse (total engagé, crédit disponible des dépenses) s'ajoutent aux KPI du budget. Bouton **« Nouvel engagement »** (formulaire montant + date) visible pour `maire`, `finances` et `secretariat` ; refus si le montant dépasse le crédit disponible. Chargeur `LG.engagements` / `E0.engagements`.
 - **SQL (PROPOSÉE — non appliquée)** : `supabase/migrations/20261202001000_p1_rls_engagements_secretariat.sql` — la politique `engagements_creation` autorise désormais `secretariat` à insérer (en plus de `maire`, `finances`). Numéro placé après `20261202000900` : la migration doit s'exécuter après `20261202000100_lot9_budget.sql` qui crée la table et la politique.
