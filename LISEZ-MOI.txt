@@ -1,16 +1,13 @@
 Fichiers a pousser dans le depot (chemins relatifs a la racine fimela_unified/) :
 - supabase/migrations/20261202000600_p0_rpc_valider_paiement.sql  (RPC + table d'audit + etape 2)
 - supabase/migrations/20261202000700_p0_rls_paiements.sql         (garde-fou RLS : UPDATE direct interdit a l'API)
-- supabase/migrations/20261202000800_p0_revoke_paiements.sql      (NOUVEAU : retrait DELETE/TRUNCATE/REFERENCES/TRIGGER, anon sans droit)
+- supabase/migrations/20261202000800_p0_revoke_paiements.sql      (retrait DELETE/TRUNCATE/REFERENCES/TRIGGER, anon sans droit)
 - supabase/PRODUCTION_VERSION_MAP.md
 - CHANGELOG.md
 - tests/migration-history-integrity.test.js  (liste des migrations mise a jour)
 - js/taxes.js  (inchange, pour reference)
 
-Les trois migrations sont deja appliquees en production (SQL direct). Pour inscrire leurs versions dans l'historique
-(a taper dans un terminal avec la CLI Supabase, pas dans l'editeur SQL) :
-  supabase migration repair --status applied 20261202000600
-  supabase migration repair --status applied 20261202000700
-  supabase migration repair --status applied 20261202000800
+Les trois migrations sont deja appliquees en production ET inscrites dans l'historique Supabase
+(versions 20261202000600, 20261202000700, 20261202000800) : aucune commande `migration repair` n'est necessaire.
 
 Ne pas pousser les anciens noms 20261201000000_* et 20261201000100_* : versions anterieures a 20261202000500, refusees comme "hors ordre".
