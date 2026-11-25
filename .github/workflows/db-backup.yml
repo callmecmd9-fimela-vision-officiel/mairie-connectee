@@ -26,19 +26,30 @@ jobs:
           if [ -z "${SUPABASE_DB_URL}" ] || [ -z "${BACKUP_PASSPHRASE}" ]; then
             echo "::error::Secrets SUPABASE_DB_URL et BACKUP_PASSPHRASE requis (voir docs/SAUVEGARDE.md)"; exit 1
           fi
-      - name: pg_dump (schémas public et auth) puis chiffrement
+      - name: pg_dump (schémas public, auth et private) puis chiffrement
         run: |
           set -euo pipefail
           umask 077
-          docker run --rm -e DB="${SUPABASE_DB_URL}" postgres:17 sh -c 'pg_dump "$DB" --no-owner --no-privileges --schema=public --schema=auth' > dump.sql
+          docker run --rm -e DB="${SUPABASE_DB_URL}" postgres:17 sh -c 'pg_dump "$DB" --no-owner --no-privileges --schema=public --schema=auth --schema=private' > dump.sql
           test -s dump.sql
           gpg --batch --yes --pinentry-mode loopback --passphrase "${BACKUP_PASSPHRASE}" --symmetric --cipher-algo AES256 -o "fimela-$(date -u +%Y%m%d).sql.gpg" dump.sql
           shred -u dump.sql || rm -f dump.sql
           ls -l fimela-*.sql.gpg
+      - name: Générer l'empreinte SHA256
+        run: |
+          set -euo pipefail
+          for f in fimela-*.sql.gpg; do
+            sha256sum "$f" > "${f%.sql.gpg}.sha256"
+          done
+          ls -l fimela-*.sha256
       - name: Conserver 30 jours (artefact privé du dépôt)
         uses: actions/upload-artifact@v4
         with:
           name: fimela-db-backup
-          path: fimela-*.sql.gpg
+          path: |
+            fimela-*.sql.gpg
+            fimela-*.sha256
           retention-days: 30
           if-no-files-found: error
+
+# TODO: Ajouter la sauvegarde des fichiers Storage (S3) ici
