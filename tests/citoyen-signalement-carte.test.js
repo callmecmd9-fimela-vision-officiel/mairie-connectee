@@ -1,0 +1,23 @@
+// Carte 3D des signalements (portail citoyen) : Mapbox GL JS remplace Leaflet ; CSP, jeton, statuts, clic, clustering.
+const assert = require("node:assert/strict"), fs = require("node:fs"), path = require("node:path");
+const read = f => fs.readFileSync(path.join(__dirname, "..", f), "utf8");
+const js = read("js/citoyen.js"), html = read("index.html"), csp = (read("_headers").match(/Content-Security-Policy:\s*(.+)/) || [])[1] || "";
+const sig = js.slice(js.indexOf("/* Signalement citoyen"));
+assert.doesNotMatch(sig, /\bL\.(map|tileLayer|circleMarker)\b|window\.L\b/, "Leaflet encore utilisé dans le module signalement");
+assert.doesNotMatch(html, /leaflet/i, "index.html référence encore Leaflet");
+assert.match(sig, /new mapboxgl\.Map\(/); assert.match(sig, /pitch: 45/); assert.match(sig, /streets-v12/);
+assert.match(sig, /fill-extrusion/); assert.match(sig, /cluster: true/); assert.match(sig, /getClusterExpansionZoom/);
+assert.match(sig, /signalements_carte/); assert.match(sig, /from\("signalements_citoyens"\)/);
+assert.match(sig, /nouveau: "#D91E18"/); assert.match(sig, /en_cours: "#F59E0B"/); assert.match(sig, /resolu: "#16A34A"/);
+assert.match(sig, /ev\.lngLat\.lng, ev\.lngLat\.lat/); assert.match(sig, /await sigRefresh\(/);
+assert.match(sig, /\^pk\\\./, "seuls les jetons publics pk. sont acceptés");
+assert.match(html, /<meta name="mc-mapbox"/);
+for (const id of ["sig-map", "sig-form", "sig-pos", "sig-hint", "sig-send", "sig-msg"]) assert.match(html, new RegExp('id="' + id + '"'), id);
+const dir = n => (csp.split(";").map(s => s.trim()).find(s => s.startsWith(n + " ")) || "").split(/\s+/).slice(1);
+assert.ok(dir("script-src").includes("https://api.mapbox.com")); assert.ok(dir("style-src").includes("https://api.mapbox.com"));
+assert.ok(dir("worker-src").includes("blob:")); assert.ok(dir("child-src").includes("blob:"));
+for (const h of ["https://api.mapbox.com", "https://*.tiles.mapbox.com", "https://events.mapbox.com"]) assert.ok(dir("connect-src").includes(h), h);
+assert.ok(dir("img-src").includes("https://api.mapbox.com"));
+const sql = read("supabase/proposed/20261202_signalements_carte_publique.sql");
+assert.match(sql, /signalements_carte/); assert.doesNotMatch(sql, /s\.description|photo_url/);
+console.log("OK   carte 3D des signalements (Mapbox, statuts, clic, clustering, CSP, RPC sans donnée sensible)");
