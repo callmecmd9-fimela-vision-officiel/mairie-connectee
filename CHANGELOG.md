@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2026-11-25 — P1 Patrimoine : modification, suppression, détail du bien et entretiens
+- **Front** (`js/patrimoine.js`, `mairie.html` v20261125.2) : boutons **Modifier** et **Supprimer** sur chaque bien (maire, secrétariat, technique ; `confirm` avant suppression, détection « 0 ligne » et message dédié si la clé étrangère (23503) bloque car le bien a des entretiens). Vue **« Détail du bien »** (bouton « Détail », retour à la liste) avec l'historique des entretiens (`patrimoine_entretiens`, coût total hors annulés) et bouton **« Ajouter un entretien »** (date, description, coût, prestataire, statut ; contrôles de saisie). Pas de suppression d'entretien (traçabilité, cf. lot 12).
+- **Géolocalisation** : champs latitude / longitude facultatifs (les deux ou aucun, bornes ±90 / ±180), lien « Voir sur la carte » (OpenStreetMap). Coordonnées envoyées seulement si saisies ; message clair si la migration n'est pas appliquée.
+- **SQL (PROPOSÉE — non appliquée)** : `supabase/migrations/20261202001300_p1_patrimoine_geolocalisation.sql` (colonnes `latitude` / `longitude` + CHECK). Aucune autre modification de schéma (RLS de lecture / écriture / suppression déjà en place via le lot 12).
+- **Tests / doc** : `tests/migration-history-integrity.test.js` et `supabase/PRODUCTION_VERSION_MAP.md` déclarent la migration.
+
 ## 2026-11-25 — Application en production des migrations 20261202001000, 001100 et 001200
 - Appliquées sur le projet Supabase de production et inscrites dans l'historique sous leurs versions du dépôt : `20261202001000_p1_rls_engagements_secretariat`, `20261202001100_p1_gouvernance_fixes`, `20261202001200_p1_rpc_cloture_deliberation`. `20261202000900` était déjà en production (triggers `trg_p0_*` actifs).
 - Contrôles faits en base : `profiles_role_check` contient `conseiller` ; `conseillers.user_id` existe ; `votes_deliberations` est dans la publication `supabase_realtime` ; politiques de lecture/insertion présentes ; `cloturer_deliberation` appartient à `postgres`, EXECUTE accordé à `authenticated` et refusé à `anon`. Essais en transaction annulée : un `maire` atteint bien le contrôle « délibération introuvable » (P0002), un `secretariat` est refusé (42501). Aucune donnée modifiée.

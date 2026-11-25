@@ -1,5 +1,10 @@
 # TASKS — état au 2026-11-25
 
+## P1 Patrimoine — modifier / supprimer / détail / entretiens (2026-11-25)
+- [ ] Appliquer `20261202001300_p1_patrimoine_geolocalisation.sql` (facultatif : sans elle, laisser latitude / longitude vides), puis déployer `js/patrimoine.js` + `mairie.html` (v20261125.2), vider le cache/PWA.
+- [ ] Tester avec `maire` / `secretariat` / `technique` : modifier un bien ; supprimer un bien sans entretien (OK) et avec entretien (message FK) ; Détail > Ajouter un entretien ; `adjoint` / `finances` : lecture seule, aucun bouton.
+- [ ] Reste : pas de modification / annulation d'un entretien dans l'interface (statut `annule` possible seulement en base) ; pas de carte intégrée (lien OpenStreetMap) ; `patrimoine_inventaires` sans écran.
+
 ## P1 Gouvernance — RPC de clôture (2026-11-25)
 - [x] Migrations `20261202001000`, `001100` et `001200` **appliquées en production le 2026-11-25** (000900 y était déjà). Reste à déployer `js/deliberations.js` + `mairie.html` (v20261125.4), vider le cache/PWA.
 - [ ] Tester : compte `maire` → « Clôturer le vote » (adoptée / rejetée / aucun vote refusé) ; compte non maire → 42501 ; 2e clôture → 55000 « vote clos » ; vérifier la trace `audit_log` de la mise à jour.
