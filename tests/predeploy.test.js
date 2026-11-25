@@ -5,7 +5,7 @@ const rules = fs.readFileSync(path.join(R, ".assetsignore"), "utf8").split(/\r?\
 const allow = rules.filter(r => r.startsWith("!/")).map(r => r.slice(2));
 const published = rel => allow.some(a => a.endsWith("/") ? rel.startsWith(a) : new RegExp("^" + a.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^/]*") + "$").test(rel));
 let n = 0;
-for (const page of ["index.html", "mairie.html", "saas.html", "confidentialite.html", "verifier.html", "quittance.html"]) {
+for (const page of ["index.html", "mairie.html", "saas.html", "confidentialite.html", "verifier.html", "quittance.html", "suivi.html"]) {
   const html = fs.readFileSync(path.join(R, page), "utf8");
   for (const m of html.matchAll(/(?:src|href)="(\/[^"#?]*)(?:\?[^"]*)?"/g)) {
     const rel = m[1].slice(1);
