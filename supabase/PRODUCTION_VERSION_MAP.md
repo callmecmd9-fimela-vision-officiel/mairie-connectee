@@ -31,6 +31,7 @@ Les migrations du dépôt sont **appliquées en production** (le ZIP MAJ16 les c
 | 20261202000700_p0_rls_paiements.sql | 20261202000700 | **appliquée le 2026-11-25 en SQL direct** (garde-fou : politique restrictive `ptx_update_interdit_api`, retrait des droits UPDATE niveau colonne, contrôle final). Version inscrite dans l'historique Supabase le 2026-11-25. |
 | 20261202000800_p0_revoke_paiements.sql | 20261202000800 | **appliquée le 2026-11-25 en SQL direct** (`paiements_taxes` : DELETE, TRUNCATE, REFERENCES, TRIGGER retirés à `authenticated`, tout retiré à `anon` ; mêmes retraits d'écriture sur les autres tables financières si elles existent ; contrôle final). Version inscrite dans l'historique Supabase le 2026-11-25. |
 | 20261202000900_p0_triggers_machines_etats.sql | — | **PROPOSÉE, non appliquée** (triggers BEFORE sur `votes_deliberations`, `deliberations`, `budgets`, `marches` : machines à états verrouillées côté base). À appliquer après adaptation des écrans qui insèrent des délibérations en `adoptee` (`js/deliberations.js`, `js/actions.js`) et des écrans marchés qui changent le statut librement. |
+| 20261202001000_p1_rls_engagements_secretariat.sql | — | **PROPOSÉE, non appliquée** (politique `engagements_creation` : INSERT étendu de `maire`, `finances` à `maire`, `finances`, `secretariat` ; idempotente, update/delete inchangés). Alignée sur le bouton « Nouvel engagement » de `js/budget.js`. |
 
 Les instructions des migrations appliquées ont été compactées par l'outil d'application (tailles différentes) : ne pas comparer octet par octet.
 
