@@ -1,5 +1,5 @@
 # Correspondance dépôt ↔ historique de production (relevé en lecture seule le 2026-11-22, projet aiqegpijisspankpkwfj)
-Toutes les migrations du dépôt sont **appliquées en production** (le ZIP MAJ16 les croyait en attente), y compris la dernière ligne du tableau ci-dessous. Ne rien rejouer.
+Les migrations du dépôt sont **appliquées en production** (le ZIP MAJ16 les croyait en attente), à l'exception de la ligne marquée « PROPOSÉE » en bas du tableau (relevé complété le 2026-11-25). Ne rien rejouer.
 
 | Fichier du dépôt | Version en production | État |
 |---|---|---|
@@ -21,6 +21,13 @@ Toutes les migrations du dépôt sont **appliquées en production** (le ZIP MAJ1
 | 20261123090000_politique_mot_de_passe_30_jours.sql | 20261122214824 | **appliquée le 2026-11-22** après test en transaction annulée (17 comptes suivis, RLS active, `anon` sans accès ; `js/mdp-policy.js` à déployer pour activer l'alerte) |
 | 20261123120000_admin_mairie_actif_vers_admin_commune.sql | 20261123084211 | **appliquée le 2026-11-23** (déclencheur : admin_mairie activé avec commune → super_admin de sa commune ; testé en transaction annulée) |
 | proposed/20261123_agent_photo_badge.sql | 20261123125215 | **appliquée le 2026-11-23** (colonne `personnel.photo`, bucket privé `agents-photos` + 4 politiques, RPC `org_sa_agent_photo_set`, `org_sa_organigramme` expose la photo ; vérifiée : `anon` sans accès) |
+| 20261202000000_communes_geo.sql | 20261202000000 | **appliquée** (objets vérifiés en lecture seule le 2026-11-25 : colonnes géographiques, `communes_geo_chk` ; 5 communes sur 6 renseignées) ; inscrite a posteriori dans l'historique |
+| 20261202000100_lot9_budget.sql | 20261202000100 | **appliquée** (tables `budgets`, `budget_lignes`, `engagements`, RLS et politiques vérifiées) ; inscrite a posteriori |
+| 20261202000200_lot10_marches.sql | 20261202000200 | **appliquée** (`plan_passation`, `marches_avenants`, `ordres_service`, colonnes `marches.plan_id/reference/type_marche`) ; inscrite a posteriori |
+| 20261202000300_lot11_gouvernance.sql | 20261202000300 | **appliquée** (`votes_deliberations`, statuts conseillers/présences, trigger `sync_statut_presence`) ; inscrite a posteriori |
+| 20261202000400_lot12_patrimoine.sql | 20261202000400 | **appliquée** (`patrimoine_biens`, `patrimoine_entretiens`, `patrimoine_inventaires`) ; inscrite a posteriori |
+| 20261202000500_lot13_services_territoriaux.sql | 20261202000500 | **appliquée** (`territoire_infrastructures`, `territoire_actions`) ; inscrite a posteriori |
+| 20261202000600_p0_rpc_valider_paiement.sql | — | **appliquée le 2026-11-25 en SQL direct** (RPC `valider_paiement_especes` + table `paiements_validations` + étape 2 : politique `ptx_staff_upd` supprimée et droit UPDATE direct retiré à `authenticated`). Version non encore inscrite dans l'historique : `supabase migration repair --status applied 20261202000600`. |
 
 Les instructions des migrations appliquées ont été compactées par l'outil d'application (tailles différentes) : ne pas comparer octet par octet.
 
