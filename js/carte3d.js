@@ -3,6 +3,50 @@
    Jeton public (pk.…) lu dans <meta name="mc-mapbox"> de mairie.html. */
 const MBX = { v: "3.10.0", style: "mapbox://styles/mapbox/streets-v12", pitch: 45, bearing: -10, cluster: 50, clusterMax: 15 };
 let MBX_LIB = null;
+/* Géographie multi-commune (LOT A : js/communes-geo.js, [lat,lng]). Mapbox attend [lng,lat] et maxBounds [[ouest,sud],[est,nord]]. */
+function mbxSlug(o) {
+  if (o && o.slug) return String(o.slug);
+  try {
+    return typeof slug == "function" ? String(slug() || "") : "";
+  } catch (e) {
+    return "";
+  }
+}
+function mbxGeo(sl) {
+  try {
+    const g = sl && typeof COMMUNES_GEO != "undefined" ? COMMUNES_GEO.get(sl) : null;
+    if (!g) return null;
+    const [[s, w], [n, e]] = g.maxBounds;
+    return { nom: g.nom, centre: [g.center[1], g.center[0]], zoom: g.zoom, maxBounds: [[w, s], [e, n]] };
+  } catch (e) {
+    return null;
+  }
+}
+/* Contrôle « Recentrer sur ma commune » : fitBounds(maxBounds). Texte uniquement ; styles via CSSOM (compatible CSP). */
+function mbxRecentre(h) {
+  let box = null;
+  return {
+    onAdd() {
+      box = document.createElement("div");
+      box.className = "mapboxgl-ctrl mapboxgl-ctrl-group";
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = "◎ Recentrer sur ma commune";
+      b.title = b.ariaLabel = "Recentrer sur ma commune";
+      b.setAttribute("aria-label", "Recentrer sur ma commune");
+      b.style.width = "auto";
+      b.style.padding = "0 10px";
+      b.style.fontSize = "13px";
+      b.addEventListener("click", () => h.recentrer());
+      box.appendChild(b);
+      return box;
+    },
+    onRemove() {
+      if (box && box.parentNode) box.parentNode.removeChild(box);
+      box = null;
+    }
+  };
+}
 const mbxToken = () => {
   const m = document.querySelector('meta[name="mc-mapbox"]'),
     t = ((m && m.content) || "").trim();
@@ -64,12 +108,25 @@ function mbxPopup(m, f) {
   });
   new mapboxgl.Popup({ offset: 14, closeButton: false }).setLngLat(f.geometry.coordinates.slice()).setDOMContent(box).addTo(m);
 }
-/* Carte 3D dans el. o = { centre:[lng,lat], zoom, fitMax, one, pts:[{lat,lng,c,l1,l2,l3}] } (c = couleur de la pastille, l1..l3 = lignes de la fenêtre).
+/* Carte 3D dans el. o = { centre:[lng,lat] (sinon COMMUNES_GEO), zoom (idem), slug (sinon slug() de core.js), fitMax, one, pts:[{lat,lng,c,l1,l2,l3}] } (c = couleur de la pastille, l1..l3 = lignes de la fenêtre).
    Retourne tout de suite un objet { remove() } (la bibliothèque se charge à la demande) ; en cas d'échec, un message remplace la carte. */
 function mapbox3d(el, o) {
+  const geo = mbxGeo(mbxSlug(o));
   const h = {
     m: null,
     dead: false,
+    geo,
+    pend: null,
+    /* Recentre sur l'emprise de la commune (fitBounds(maxBounds)). */
+    recentrer() {
+      if (h.m && geo) h.m.fitBounds(geo.maxBounds, { padding: 20, pitch: MBX.pitch, duration: 600 });
+    },
+    /* Va sur un point (lat, lng) : équivalent Mapbox de setView([lat, lng], zoom). */
+    goto(lat, lng, z) {
+      if (!isFinite(+lat) || !isFinite(+lng) || lat == null || lng == null) return;
+      if (h.m) h.m.flyTo({ center: [+lng, +lat], zoom: z || 16, pitch: MBX.pitch });
+      else h.pend = [+lng, +lat, z || 16];
+    },
     remove() {
       h.dead = true;
       if (h.m)
@@ -103,8 +160,9 @@ function mapbox3d(el, o) {
       const m = (h.m = new mapboxgl.Map({
         container: el,
         style: MBX.style,
-        center: o.centre,
-        zoom: o.zoom || 11,
+        center: o.centre || (geo && geo.centre) || [-16.7, 14.2],
+        zoom: o.zoom || (geo && geo.zoom) || 11,
+        ...(geo ? { maxBounds: geo.maxBounds } : {}),
         pitch: MBX.pitch,
         bearing: MBX.bearing,
         antialias: true,
@@ -116,6 +174,7 @@ function mapbox3d(el, o) {
         }
       }));
       m.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), "top-right");
+      if (geo) m.addControl(mbxRecentre(h), "top-left");
       m.on("load", () => {
         mbxBuildings(m);
         m.addSource("mc-src", {
@@ -169,6 +228,10 @@ function mapbox3d(el, o) {
           feats.forEach(f => b.extend(f.geometry.coordinates));
           m.fitBounds(b, { padding: 50, maxZoom: o.fitMax || 13, pitch: MBX.pitch, duration: 0 });
         } else if (feats.length == 1) m.jumpTo({ center: feats[0].geometry.coordinates, zoom: o.one || 13 });
+        if (h.pend) {
+          m.jumpTo({ center: [h.pend[0], h.pend[1]], zoom: h.pend[2] });
+          h.pend = null;
+        }
       });
       m.on("click", ev => {
         const hit = m.queryRenderedFeatures(ev.point, { layers: ["mc-cl", "mc-pt"] })[0];

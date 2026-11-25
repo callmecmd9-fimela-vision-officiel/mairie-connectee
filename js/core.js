@@ -1210,8 +1210,8 @@ function initMap() {
   const I = S.ind || {},
     ps = D().proj.filter(p => p.lat != null && p.lng != null);
   S.map = mapbox3d(el, {
-    centre: [I.centre_lng ?? -16.7, I.centre_lat ?? 14.2],
-    zoom: I.zoom || 11,
+    centre: I.centre_lng != null && I.centre_lat != null ? [I.centre_lng, I.centre_lat] : null,
+    zoom: I.zoom || 0,
     fitMax: 13,
     one: 13,
     pts: ps.map(p => ({ lat: p.lat, lng: p.lng, c: PCOL[p.statut], l1: p.titre, l2: p.localite || "", l3: PSL[p.statut] + " : " + p.avancement + "%" }))

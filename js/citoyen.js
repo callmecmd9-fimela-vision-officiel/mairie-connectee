@@ -2346,6 +2346,17 @@ const SIG_COL = { nouveau: "#D91E18", en_cours: "#F59E0B", resolu: "#16A34A" };
 const SIG_LIB = { nouveau: "Nouveau", en_cours: "En cours", resolu: "Résolu" };
 const SIG = { map: null, mk: null, pos: null, rows: [], ready: false, lib: null, geo: false, fit: false };
 const sigCid = () => S.cid || SIG_COMMUNE, sigSlug = () => S.slug || SIG_SLUG;
+/* Géographie de la commune active (LOT A : js/communes-geo.js, [lat,lng]) → format Mapbox [lng,lat]. */
+function sigGeo() {
+  try {
+    const g = typeof COMMUNES_GEO != "undefined" ? COMMUNES_GEO.get(sigSlug()) : null;
+    if (!g) return null;
+    const [[s, w], [n, e]] = g.maxBounds;
+    return { centre: [g.center[1], g.center[0]], zoom: g.zoom, maxBounds: [[w, s], [e, n]], bbox: g.bbox, localites: g.localites || [] };
+  } catch (e) { return null; }
+}
+/* Vrai si (lat, lng) est dans la bbox de la commune {south, west, north, east}. */
+function sigDansBbox(lat, lng, b) { return !b || (lat >= b.south && lat <= b.north && lng >= b.west && lng <= b.east); }
 function sigMsg(t, k) { const m = $("#sig-msg"); if (m) { m.textContent = t; m.className = "sig-msg " + (k || ""); } }
 function sigToken() {
   const m = document.querySelector('meta[name="mc-mapbox"]'), t = ((m && m.content) || "").trim();
@@ -2467,12 +2478,42 @@ function sigPick(lng, lat) {
   if (f) { f.hidden = false; try { f.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) {} }
   sigMsg("");
 }
+/* Menu « Aller à un village/quartier » au-dessus de la carte (DOM, texte uniquement). */
+function sigLocMenu(m, geo) {
+  const el = $("#sig-map"), old = $("#sig-loc-wrap");
+  if (old) old.remove();
+  if (!el || !geo.localites.length) return;
+  const w = document.createElement("p"), l = document.createElement("label"), sl = document.createElement("select"), o0 = document.createElement("option");
+  w.id = "sig-loc-wrap"; l.htmlFor = sl.id = "sig-loc"; l.textContent = "Aller à un village/quartier "; o0.value = ""; o0.textContent = "— Choisir —"; sl.appendChild(o0);
+  sl.style.maxWidth = "100%";
+  geo.localites.forEach((x, i) => { const o = document.createElement("option"); o.value = String(i); o.textContent = x.nom + (x.type ? " (" + x.type + ")" : ""); sl.appendChild(o); });
+  sl.addEventListener("change", () => { const x = geo.localites[+sl.value]; if (x && sl.value !== "") m.flyTo({ center: [x.lng, x.lat], zoom: 16, pitch: MBX.pitch }); });
+  w.appendChild(l); w.appendChild(sl); el.parentNode.insertBefore(w, el);
+}
+/* Contrôle « Recentrer sur ma commune » : fitBounds(maxBounds). */
+function sigRecentre(m, geo) {
+  let box = null;
+  return {
+    onAdd() {
+      box = document.createElement("div"); box.className = "mapboxgl-ctrl mapboxgl-ctrl-group";
+      const b = document.createElement("button"); b.type = "button"; b.textContent = "◎ Recentrer sur ma commune";
+      b.title = "Recentrer sur ma commune"; b.setAttribute("aria-label", "Recentrer sur ma commune");
+      b.style.width = "auto"; b.style.padding = "0 10px"; b.style.fontSize = "13px";
+      b.addEventListener("click", () => m.fitBounds(geo.maxBounds, { padding: 20, pitch: MBX.pitch, duration: 600 }));
+      box.appendChild(b); return box;
+    },
+    onRemove() { if (box && box.parentNode) box.parentNode.removeChild(box); box = null; }
+  };
+}
 function sigInit() {
   const tok = sigToken();
   if (!tok) { sigMsg("Carte indisponible (jeton Mapbox absent).", "err"); return; }
   mapboxgl.accessToken = tok;
-  const m = (SIG.map = new mapboxgl.Map({ container: "sig-map", style: MBX.style, center: MBX.centre, zoom: MBX.zoom, pitch: MBX.pitch, bearing: MBX.bearing, antialias: true }));
+  const geo = sigGeo();
+  SIG.slug = sigSlug();
+  const m = (SIG.map = new mapboxgl.Map({ container: "sig-map", style: MBX.style, center: geo ? geo.centre : MBX.centre, zoom: geo ? geo.zoom : MBX.zoom, pitch: MBX.pitch, bearing: MBX.bearing, antialias: true, ...(geo ? { maxBounds: geo.maxBounds } : {}) }));
   m.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), "top-right");
+  if (geo) { sigLocMenu(m, geo); m.addControl(sigRecentre(m, geo), "top-left"); }
   m.on("error", ev => { if (!SIG.ready && ev && ev.error && /40[13]/.test(String(ev.error.status || ev.error.message))) sigMsg("Carte indisponible (jeton Mapbox refusé).", "err"); });
   m.on("load", () => {
     sigBuildings(m); sigLayers(m);
@@ -2495,6 +2536,11 @@ function sigInit() {
 function sigOpen() {
   const d = $("#sig"); if (!d) return;
   d.hidden = false; document.body.style.overflow = "hidden"; sigMsg("");
+  /* Commune changée depuis la dernière ouverture : on reconstruit la carte (centre, limites, menu). */
+  if (SIG.map && SIG.slug !== sigSlug()) {
+    try { SIG.map.remove(); } catch (e) {}
+    SIG.map = SIG.mk = SIG.pos = null; SIG.ready = false; SIG.fit = false;
+  }
   setTimeout(async () => {
     if (SIG.map) { SIG.map.resize(); if (SIG.ready) sigRefresh().catch(() => {}); return; }
     try { await sigLib(); } catch (e) { sigMsg("Carte indisponible.", "err"); return; }
@@ -2506,6 +2552,8 @@ async function sigSend() {
   const g = id => (($("#" + id) || {}).value || "").trim(), txt = g("sig-txt"), b = $("#sig-send");
   if (txt.length < 5) { sigMsg("Décrivez le problème en quelques mots.", "err"); return; }
   if (!SIG.pos) { sigMsg("Touchez la carte pour indiquer l’endroit.", "err"); return; }
+  const gz = sigGeo();
+  if (gz && !sigDansBbox(SIG.pos.lat, SIG.pos.lng, gz.bbox) && !window.confirm("Vous êtes hors du périmètre de la commune, voulez-vous continuer ?")) return;
   b.disabled = true; sigMsg("Envoi en cours…");
   try {
     let url = null;

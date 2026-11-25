@@ -22,6 +22,21 @@ const sgPhoto = x =>
   /^https:\/\//.test(x.photo_url || "")
     ? `<a href="${esc(x.photo_url)}" target="_blank" rel="noopener noreferrer" aria-label="Agrandir la photo du signalement"><img class="th" src="${esc(x.photo_url)}" alt="Photo du signalement" loading="lazy"></a>`
     : "";
+/* Localités de la commune active (COMMUNES_GEO, LOT A) pour le menu « Aller à un village/quartier ». */
+const sgLoc = () => {
+  try {
+    const g = typeof COMMUNES_GEO != "undefined" ? COMMUNES_GEO.get(slug()) : null;
+    return (g && g.localites) || [];
+  } catch (e) {
+    return [];
+  }
+};
+const sgLocSel = () => {
+  const lc = sgLoc();
+  return lc.length
+    ? `<p><label for="sg-loc" class="mut">Aller à un village/quartier</label> <select id="sg-loc" data-m="sgloc" aria-label="Aller à un village ou quartier"><option value="">— Choisir —</option>${lc.map((l, i) => `<option value="${i}">${esc(l.nom)} (${esc(l.type || "")})</option>`).join("")}</select></p>`
+    : "";
+};
 const signalements = () => {
   const L = D().signalements_citoyens,
     f = SGS[S.sgf] ? S.sgf : "tous",
@@ -37,7 +52,7 @@ const signalements = () => {
     pn(
       "Carte des signalements",
       "map",
-      `<div id="sigmap" class="map" role="img" aria-label="Carte des signalements de la commune"></div><div class="lgd">${Object.keys(SGS)
+      sgLocSel() + `<div id="sigmap" class="map" role="img" aria-label="Carte des signalements de la commune"></div><div class="lgd">${Object.keys(SGS)
         .map(k => `<span><i data-sty="background:${SGK[k]}"></i>${SGS[k]}</span>`)
         .join("")}</div>`
     ) +
@@ -87,13 +102,25 @@ function sgMap() {
       l3: d.length > 140 ? d.slice(0, 140) + "…" : d
     });
   });
-  S.sgmap = mapbox3d(el, { centre: [I.centre_lng ?? -16.7, I.centre_lat ?? 14.2], zoom: I.zoom || 11, fitMax: 16, one: 15, pts });
+  S.sgmap = mapbox3d(el, {
+    centre: I.centre_lng != null && I.centre_lat != null ? [I.centre_lng, I.centre_lat] : null,
+    zoom: I.zoom || 0,
+    fitMax: 16,
+    one: 15,
+    pts
+  });
 }
 const sgRender0 = render0;
 render0 = function () {
   sgRender0();
   sgMap();
 };
+document.addEventListener("change", e => {
+  const t = e.target && e.target.closest && e.target.closest("[data-m=sgloc]");
+  if (!t || t.value === "") return;
+  const l = sgLoc()[+t.value];
+  if (l && S.sgmap) S.sgmap.goto(l.lat, l.lng, 16);
+});
 document.addEventListener("click", async e => {
   const f = e.target.closest("[data-m=sgflt]");
   if (f) {
