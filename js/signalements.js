@@ -71,31 +71,23 @@ function sgMap() {
   }
   const el = $("#sigmap");
   if (!el) return;
-  if (!window.L) {
-    el.innerHTML = '<p class="mut" data-sty="padding:14px">Carte indisponible.</p>';
-    return;
-  }
   const I = S.ind || {},
-    m = L.map(el, { scrollWheelZoom: false }).setView([I.centre_lat ?? 14.2, I.centre_lng ?? -16.7], I.zoom || 11);
-  S.sgmap = m;
-  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-    maxZoom: 18,
-    attribution: "Tiles © Esri"
-  }).addTo(m);
-  const pts = [];
+    pts = [];
   D().signalements_citoyens.forEach(x => {
     const p = sgPos(x);
     if (!p) return;
     const s = SGS[x.statut] ? x.statut : "nouveau",
       d = String(x.description || "");
-    L.circleMarker(p, { radius: 9, color: "#fff", weight: 2, fillColor: SGK[s], fillOpacity: 0.95 })
-      .addTo(m)
-      .bindPopup("<b>" + esc(x.categorie || "Autre") + "</b> · " + esc(SGS[s]) + "<br>" + esc(d.length > 140 ? d.slice(0, 140) + "…" : d));
-    pts.push(p);
+    pts.push({
+      lat: p[0],
+      lng: p[1],
+      c: SGK[s],
+      l1: x.categorie || "Autre",
+      l2: SGS[s],
+      l3: d.length > 140 ? d.slice(0, 140) + "…" : d
+    });
   });
-  if (pts.length > 1) m.fitBounds(pts, { padding: [30, 30], maxZoom: 16 });
-  else if (pts.length == 1) m.setView(pts[0], 15);
-  setTimeout(() => m.invalidateSize(), 150);
+  S.sgmap = mapbox3d(el, { centre: [I.centre_lng ?? -16.7, I.centre_lat ?? 14.2], zoom: I.zoom || 11, fitMax: 16, one: 15, pts });
 }
 const sgRender0 = render0;
 render0 = function () {

@@ -1207,27 +1207,15 @@ const mapP = xl =>
 function initMap() {
   const el = $("#map");
   if (!el) return;
-  if (!window.L) {
-    el.innerHTML = '<p class="mut" data-sty="padding:14px">Carte indisponible.</p>';
-    return;
-  }
-  const I = S.ind,
-    ps = D().proj.filter(p => p.lat != null && p.lng != null),
-    m = L.map(el, { scrollWheelZoom: false }).setView([I.centre_lat ?? 14.2, I.centre_lng ?? -16.7], I.zoom || 11);
-  S.map = m;
-  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-    maxZoom: 18,
-    attribution: "Tiles \u00a9 Esri"
-  }).addTo(m);
-  const pts = ps.map(p => {
-    L.circleMarker([p.lat, p.lng], { radius: 9, color: "#fff", weight: 2, fillColor: PCOL[p.statut], fillOpacity: 0.95 })
-      .addTo(m)
-      .bindPopup("<b>" + esc(p.titre) + "</b><br>" + esc(p.localite || "") + "<br>" + PSL[p.statut] + " : " + p.avancement + "%");
-    return [p.lat, p.lng];
+  const I = S.ind || {},
+    ps = D().proj.filter(p => p.lat != null && p.lng != null);
+  S.map = mapbox3d(el, {
+    centre: [I.centre_lng ?? -16.7, I.centre_lat ?? 14.2],
+    zoom: I.zoom || 11,
+    fitMax: 13,
+    one: 13,
+    pts: ps.map(p => ({ lat: p.lat, lng: p.lng, c: PCOL[p.statut], l1: p.titre, l2: p.localite || "", l3: PSL[p.statut] + " : " + p.avancement + "%" }))
   });
-  if (pts.length > 1) m.fitBounds(pts, { padding: [30, 30], maxZoom: 13 });
-  else if (pts.length == 1) m.setView(pts[0], 13);
-  setTimeout(() => m.invalidateSize(), 150);
 }
 /* coque */
 /* Pastille de la cloche : nombre d'éléments à traiter (pas de catégories) ; l'information « prochain rendez-vous » ne compte pas */
