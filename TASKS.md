@@ -1,5 +1,30 @@
 # TASKS — état au 2026-11-25
 
+## P1 Gouvernance — RPC de clôture (2026-11-25)
+- [ ] **Ordre d'application** : `20261202000900` → `20261202001100` → `20261202001200` (la RPC exige `private.hors_maintenance()` et le trigger de garde). Puis déployer `js/deliberations.js` + `mairie.html` (v20261125.4), vider le cache/PWA.
+- [ ] Tester : compte `maire` → « Clôturer le vote » (adoptée / rejetée / aucun vote refusé) ; compte non maire → 42501 ; 2e clôture → 55000 « vote clos » ; vérifier la trace `audit_log` de la mise à jour.
+- [ ] Vérifier après application : `select proowner::regrole from pg_proc where proname='cloturer_deliberation'` doit renvoyer `postgres` (sinon le trigger refusera l'UPDATE).
+- [ ] Reste hors périmètre : `js/actions.js` (~l. 944) insère encore une délibération directement en `adoptee` (refusé par le trigger) ; voix prépondérante du maire en cas d'égalité non gérée (égalité = rejetée).
+
+## P1 Gouvernance — clôture du vote et PV (2026-11-25)
+- [ ] Déployer `js/deliberations.js` + `mairie.html` (v20261125.3), vider le cache/PWA ; tester avec le compte `maire` : vote(s) puis « Clôturer le vote » (adoptée si Pour > Contre, rejetée sinon ; refus si aucun vote) ; « Imprimer le Procès-Verbal » (maire et secrétariat).
+- [x] ~~Bloquant avec `20261202000900`~~ : traité par la RPC `cloturer_deliberation` (migration `20261202001200`) ; l'`UPDATE` direct a été retiré de `clore()`.
+- [ ] Le PV n'indique pas le détail nominatif des votes ni le nom du maire ; ajouter si exigé réglementairement. Règle d'égalité (Contre ≥ Pour = rejetée) : à confirmer, la voix prépondérante du maire n'est pas gérée.
+
+## P1 Gouvernance — vote des conseillers (2026-11-25)
+- [ ] **Appliquer** `supabase/migrations/20261202001100_p1_gouvernance_fixes.sql` (avec ou avant `20261202000900`), **redéployer** l'Edge Function `sa-admin` (rôle `conseiller` autorisé), puis déployer `js/core.js` + `js/deliberations.js` + `mairie.html` (vider le cache/PWA).
+- [ ] Tester : compte `conseiller` lié à une fiche → connexion, lecture des délibérations, vote sur un projet ; refus du 2e vote (23505) ; vote clos dès que le statut n'est plus `projet`.
+- [ ] À vérifier : menu du rôle `conseiller` (entrée « Suivi des sessions » sous Conseil municipal : `RP.suiviconseil` ne liste pas encore `conseiller`, l'écran s'ouvre via `VOTANTS`) ; si le menu reste vide pour ce rôle, ajouter `conseiller` à la navigation.
+- [ ] Reste à faire : une RPC d'adoption / de rejet (aujourd'hui `adoptee` / `rejetee` ne peuvent être posés que par SECURITY DEFINER, cf. trigger `000900`) ; `js/actions.js` (~l. 944) insère encore directement en `adoptee`.
+- [ ] Résorber le rapprochement par e-mail (`conseillers.contact`) : il ne sert plus que de dernier recours pour le maire ; adjoints et conseillers doivent avoir `user_id` renseigné (la RLS l'exige).
+
+### Procédure : création d'un conseiller (Super Admin)
+1. Créer le compte (console Super Admin → `sa-admin`, rôle « Conseiller municipal ») avec l'e-mail du conseiller, rattaché à sa commune.
+2. Vérifier `profiles` : `id` = id du compte, `commune_id` = sa commune, `role` = `conseiller` (ou `adjoint` pour un adjoint votant), `actif` = true.
+3. Créer ou retrouver sa fiche dans `conseillers` (même `commune_id`, `actif` = true) puis la lier : `UPDATE public.conseillers SET user_id = '<auth.users.id>' WHERE id = '<fiche>' AND commune_id = '<commune>';` (un compte = une fiche par commune : index unique).
+4. Contrôle : connecté en tant que conseiller, ouvrir une délibération au statut « Projet » → les boutons de vote sont actifs.
+5. Départ d'un conseiller : `actif = false` sur la fiche (le trigger refuse alors le vote) ; désactiver aussi le compte.
+
 ## P1 Marchés — détail, avenants, ordres de service (2026-11-25)
 - [ ] Déployer `js/marches.js` + `mairie.html` (v20261125.4), vider le cache/PWA, puis tester : Administration > Marchés en cours > Détail ; ajout d'un avenant et d'un ordre de service avec un compte `maire` ou `finances` ; vérifier que `secretariat` voit les listes sans les boutons.
 - [ ] Non géré (volontaire) : modification / annulation d'un avenant ou d'un ordre de service depuis l'interface (la RLS UPDATE existe ; le DELETE est révoqué).
@@ -11,7 +36,7 @@
 - [ ] Le trigger proposé `20261202000900` rend les budgets `vote`/`approuve`/`cloture` immuables mais ne couvre pas `engagements` : prévoir un contrôle côté base du crédit disponible (le refus actuel est côté client uniquement).
 
 ## Audit P0/P1 — 2026-11-25 (machines à états, CI, thème)
-- [ ] **Avant d'appliquer** `supabase/migrations/20261202000900_p0_triggers_machines_etats.sql` : créer la RPC de vote/adoption des délibérations et adapter `js/deliberations.js` (ligne ~152) et `js/actions.js` (ligne ~944), qui insèrent directement en `adoptee` ; vérifier les écrans marchés (`js/maire.js`, `js/marches.js`) qui changent le statut librement ; prévoir la RPC de transition des budgets.
+- [ ] **Avant d'appliquer** `supabase/migrations/20261202000900_p0_triggers_machines_etats.sql` : créer la RPC de vote/adoption des délibérations et adapter `js/actions.js` (ligne ~944), qui insère directement en `adoptee` (`js/deliberations.js` est corrigé : création toujours en `projet`) ; vérifier les écrans marchés (`js/maire.js`, `js/marches.js`) qui changent le statut librement ; prévoir la RPC de transition des budgets.
 - [ ] Non couverts par ces triggers : suppression (DELETE) sur `budgets`, `marches`, `deliberations`, et modification des `budget_lignes` d'un budget voté.
 - [ ] CI : `npm test` échoue désormais si un test est `SKIP` (jsdom absent) : lancer `npm ci` avant `npm test` ; 2 fichiers de test étaient concernés en local.
 - [x] `css/citoyen-dark.css` régénéré (`node scripts/gen-dark-theme.js`), contrôle `--check` réactivé.
