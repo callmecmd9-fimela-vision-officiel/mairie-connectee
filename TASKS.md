@@ -1,4 +1,19 @@
-# TASKS — état au 2026-11-22 (MAJ18)
+# TASKS — état au 2026-11-25
+
+## Audit P0/P1 — 2026-11-25 (machines à états, CI, thème)
+- [ ] **Avant d'appliquer** `supabase/migrations/20261202000900_p0_triggers_machines_etats.sql` : créer la RPC de vote/adoption des délibérations et adapter `js/deliberations.js` (ligne ~152) et `js/actions.js` (ligne ~944), qui insèrent directement en `adoptee` ; vérifier les écrans marchés (`js/maire.js`, `js/marches.js`) qui changent le statut librement ; prévoir la RPC de transition des budgets.
+- [ ] Non couverts par ces triggers : suppression (DELETE) sur `budgets`, `marches`, `deliberations`, et modification des `budget_lignes` d'un budget voté.
+- [ ] CI : `npm test` échoue désormais si un test est `SKIP` (jsdom absent) : lancer `npm ci` avant `npm test` ; 2 fichiers de test étaient concernés en local.
+- [x] `css/citoyen-dark.css` régénéré (`node scripts/gen-dark-theme.js`), contrôle `--check` réactivé.
+
+## MAJ25 — 2026-11-24 (Lots 1 à 8)
+- [x] Lots 1 à 7 livrés (sécurité, catalogue, état civil/PDF, circuits, WhatsApp, fiscalité) ; Lot 8 : QA, RLS, documentation, livraison.
+- [x] SQL appliqué en production : `20261125_demarches_paiements_quittances`, `20261129_lot7_portail_fiscal` (confirmé par l'utilisateur).
+- [ ] **Appliquer** `supabase/proposed/20261128_lot6_notifications.sql` si ce n'est pas fait (sinon le bouton WhatsApp échoue : « Trace impossible »).
+- [ ] **Appliquer** `supabase/proposed/20261130_lot8_paiements_rls_durcissement.sql` (statut initial obligatoire sur `paiements_taxes`).
+- [ ] WhatsApp : lancer WAHA (`WAHA_API_URL` dans `js/notifications.js`), scanner le QR de la session « default » ; en production, passer par une Edge Function (aucune clé dans le navigateur) ou l'API Meta.
+- [ ] Paiement en ligne : la simulation est à remplacer par Wave / Orange Money réels (confirmation serveur, jamais côté navigateur).
+- [ ] Corriger les 2 tests `citoyen-etatcivil` (widget anti-spam) — préexistants.
 
 L'historique complet (consignes « copier / appliquer » des lots 3 à 8, audits, mises à jour MAJ5–MAJ6) est conservé tel quel dans `docs/TASKS_HISTORIQUE_avant_MAJ17.md`.
 
