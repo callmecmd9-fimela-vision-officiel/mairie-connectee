@@ -1,3 +1,4 @@
+// TODO: Traductions Wolof et Sérère à faire valider par un locuteur natif avant mise en production (cf. docs/I18N_WOLOF_SERERE.md)
 /* Langues de l'application citoyenne. Le français est la référence.
    RÈGLE : aucune traduction wolof/sereer n'est inventée ni publiée sans validation par un locuteur compétent.
    Procédure : exporter docs/i18n/textes_a_valider.csv (npm run … / node scripts/i18n-export.js), faire remplir et valider,
@@ -5,8 +6,8 @@
    que si statut = "valide" ET 100 % des textes sont traduits (contrôle dans citoyen.js : langsOk, et tests/i18n.test.js). */
 window.MC_LANGS = {
   fr: { nom: "Français", statut: "valide" },
-  wo: { nom: "Wolof", statut: "valide" },
-  sr: { nom: "Sereer", statut: "a_valider" }
+  wo: { nom: "Wolof", statut: "a_verifier" },
+  sr: { nom: "Sereer", statut: "a_verifier" }
 };
 /* Wolof : textes fournis et relus par Cheikhou Diop (2026-11-22) — CSV « textes_a_valider_wolof_simple », statut source « a_verifier » ; relecture par un second locuteur recommandée. */
 window.MC_TX = {
