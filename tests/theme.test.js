@@ -8,8 +8,8 @@ const R = path.join(__dirname, "..");
 const read = f => fs.readFileSync(path.join(R, f), "utf8");
 
 // 1) Les feuilles sombres existent, ne sont pas vides et ciblent bien le thème sombre (régénérer : node scripts/gen-dark-theme.js)
-// const gen = spawnSync(process.execPath, [path.join(R, "scripts/gen-dark-theme.js"), "--check"], { encoding: "utf8" });
-// assert.equal(gen.status, 0, "css/*-dark.css obsolètes : lancer `node scripts/gen-dark-theme.js`\n" + gen.stderr);
+const gen = spawnSync(process.execPath, [path.join(R, "scripts/gen-dark-theme.js"), "--check"], { encoding: "utf8" });
+assert.equal(gen.status, 0, "css/*-dark.css obsolètes : lancer `node scripts/gen-dark-theme.js`\n" + gen.stderr);
 const darkFiles = fs.readdirSync(path.join(R, "css")).filter(f => /-dark\.css$/.test(f));
 assert.ok(darkFiles.length > 0, "aucune feuille css/*-dark.css trouvée");
 for (const f of darkFiles) {

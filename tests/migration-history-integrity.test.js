@@ -65,7 +65,9 @@ const pendingFiles = [
   // P0 paiements (2026-11-25) : garde-fou RLS (UPDATE direct interdit à l'API) — appliquée en production en SQL direct.
   '20261202000700_p0_rls_paiements.sql',
   // P0 paiements (2026-11-25) : retrait DELETE/TRUNCATE/REFERENCES/TRIGGER (authenticated) et de tout droit (anon) — appliquée en production en SQL direct.
-  '20261202000800_p0_revoke_paiements.sql'
+  '20261202000800_p0_revoke_paiements.sql',
+  // P0 machines à états (2026-11-25) : triggers votes_deliberations / deliberations / budgets / marches — PROPOSÉE, non appliquée en production.
+  '20261202000900_p0_triggers_machines_etats.sql'
 ];
 const actualSqlFiles = fs.readdirSync(migrationDir).filter(name => name.endsWith('.sql')).sort();
 const expectedSqlFiles = [...historicalFiles, ...pendingFiles].sort();
