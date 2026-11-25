@@ -9,3 +9,11 @@ e.respondWith(fetch(r).then(x=>{if(x.ok&&x.type==="basic"){const c=x.clone();cac
 /* Notifications push (charge utile minimale : t=titre, b=extrait, n=id notification, d=id dossier). Aucune donnée sensible. */
 self.addEventListener("push",e=>{let d={};try{d=e.data?e.data.json():{}}catch(x){}e.waitUntil(self.registration.showNotification(String(d.t||"Mairie").slice(0,80),{body:String(d.b||"").slice(0,120),icon:"/icon-defaut-192.png",badge:"/icon-defaut-192.png",tag:d.n||"mc",data:{d:d.d||""}}))});
 self.addEventListener("notificationclick",e=>{e.notification.close();e.waitUntil(self.clients.matchAll({type:"window",includeUncontrolled:true}).then(l=>{for(const c of l){if(c.url&&new URL(c.url).origin===location.origin&&"focus"in c)return c.focus()}return self.clients.openWindow("/")}))});
+/* Background Sync : le navigateur déclenche « sync » (tag mc-offline-queue) dès que le réseau revient, même si l'onglet a été mis en veille.
+   Le SW ne rejoue PAS lui-même les requêtes : la session Supabase (JWT, renouvelé automatiquement) vit dans la page, pas dans le SW.
+   Il réveille donc les fenêtres ouvertes (js/offline-queue.js) et attend leur accusé « done » (file vidée).
+   Sans fenêtre ouverte, ou file non vidée : on lève une erreur pour que le navigateur retente plus tard (il abandonne seul après quelques essais ;
+   dernier essai : aucune erreur, la file reste en IndexedDB et sera vidée à la prochaine ouverture de l'application). */
+const mcAsk=c=>new Promise(r=>{const m=new MessageChannel(),t=setTimeout(()=>r(false),25000);m.port1.onmessage=x=>{clearTimeout(t);r(!!(x.data&&x.data.done))};try{c.postMessage({type:"mc-flush-queue"},[m.port2])}catch(x){clearTimeout(t);r(false)}});
+self.addEventListener("sync",e=>{if(e.tag!=="mc-offline-queue")return;
+e.waitUntil(self.clients.matchAll({type:"window",includeUncontrolled:true}).then(l=>Promise.all(l.map(mcAsk))).then(a=>{if(!a.some(Boolean)&&!e.lastChance)throw new Error("mc-offline-queue: file non vidée")}))});
