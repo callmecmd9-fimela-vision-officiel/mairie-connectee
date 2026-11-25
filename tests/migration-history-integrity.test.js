@@ -79,7 +79,15 @@ const pendingFiles = [
   // P1 services territoriaux (2026-11-25) : latitude / longitude + budget_ligne_id — appliquée en production le 2026-11-25.
   '20261202001400_p1_services_geo.sql',
   // P1 paiements (2026-11-25) : FK paiements_taxes.citoyen_id -> auth.users (encaissement guichet) — appliquée en production le 2026-11-25.
-  '20261202001500_p1_fix_paiements_taxes_citoyen_fk.sql'
+  '20261202001500_p1_fix_paiements_taxes_citoyen_fk.sql',
+  // P1 suivi anonyme des demandes (2026-11-25) : num_suivi, suivi_tokens, v_suivi_public, RPC suivi_public — proposed (PROPOSÉE, non appliquée).
+  '20261202001600_p1_suivi_demandes.sql',
+  // P1 circuit des demandes (2026-11-25) : statuts, demandes_historique, registre_retraits, gardes de transition — proposed (PROPOSÉE, non appliquée).
+  '20261202001700_p1_workflow_demandes.sql',
+  // P1 circuit des demandes (2026-11-25) : RPC encaisser_demande (quittance QUIT-YYYY-NNNNNN) — proposed (PROPOSÉE, non appliquée).
+  '20261202001800_p1_rpc_encaisser_demande.sql',
+  // P1 circuit des demandes (2026-11-25) : RPC retirer_demande (registre des retraits) — proposed (PROPOSÉE, non appliquée).
+  '20261202001900_p1_rpc_retirer_demande.sql'
 ];
 const actualSqlFiles = fs.readdirSync(migrationDir).filter(name => name.endsWith('.sql')).sort();
 const expectedSqlFiles = [...historicalFiles, ...pendingFiles].sort();
