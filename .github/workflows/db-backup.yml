@@ -4,7 +4,10 @@ name: Sauvegarde chiffrée de la base (Supabase Free)
 # Lecture seule sur la base (pg_dump). Secrets à créer dans GitHub (Settings > Secrets and variables > Actions) :
 #   SUPABASE_DB_URL     chaîne de connexion « Session pooler » (Supabase > Connect), rôle en lecture suffisante
 #   BACKUP_PASSPHRASE   phrase secrète longue ; sans elle la sauvegarde est illisible — la conserver ailleurs (gestionnaire de mots de passe)
-# Voir docs/SAUVEGARDE.md (restauration, limites : les fichiers du Storage ne sont pas inclus).
+#   SUPABASE_URL                 https://<ref>.supabase.co (Settings > API)
+#   SUPABASE_SERVICE_ROLE_KEY    clé service_role (lecture des objets Storage via l'API REST ; ne jamais l'exposer côté navigateur)
+# Les fichiers du Storage (tous les buckets, y compris privés) sont sauvegardés via l'API REST (curl), sans identifiants S3,
+# puis archivés et chiffrés comme le dump SQL. Voir docs/SAUVEGARDE.md (restauration).
 on:
   schedule:
     - cron: '17 3 * * 0'
@@ -20,11 +23,13 @@ jobs:
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
       BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
     steps:
       - name: Vérifier les secrets
         run: |
-          if [ -z "${SUPABASE_DB_URL}" ] || [ -z "${BACKUP_PASSPHRASE}" ]; then
-            echo "::error::Secrets SUPABASE_DB_URL et BACKUP_PASSPHRASE requis (voir docs/SAUVEGARDE.md)"; exit 1
+          if [ -z "${SUPABASE_DB_URL}" ] || [ -z "${BACKUP_PASSPHRASE}" ] || [ -z "${SUPABASE_URL}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY}" ]; then
+            echo "::error::Secrets SUPABASE_DB_URL, BACKUP_PASSPHRASE, SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY requis (voir docs/SAUVEGARDE.md)"; exit 1
           fi
       - name: pg_dump (schémas public, auth et private) puis chiffrement
         run: |
@@ -35,11 +40,65 @@ jobs:
           gpg --batch --yes --pinentry-mode loopback --passphrase "${BACKUP_PASSPHRASE}" --symmetric --cipher-algo AES256 -o "fimela-$(date -u +%Y%m%d).sql.gpg" dump.sql
           shred -u dump.sql || rm -f dump.sql
           ls -l fimela-*.sql.gpg
+      - name: Sauvegarder les fichiers Storage (API REST) puis chiffrement
+        run: |
+          set -euo pipefail
+          umask 077
+          BASE="${SUPABASE_URL%/}/storage/v1"
+          AUTH=(-H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}")
+          OUT="storage-files"
+          rm -rf "$OUT"; mkdir -p "$OUT"
+          : > storage-manifest.txt
+          enc() { jq -rn --arg p "$1" '$p | split("/") | map(@uri) | join("/")'; }
+
+          # Parcourt récursivement un « dossier » (préfixe) d'un bucket, page par page (100 entrées).
+          walk() {
+            local bucket="$1" prefix="$2" offset=0 page n name id path
+            while :; do
+              page=$(curl -sS -f --retry 3 --retry-delay 5 "${AUTH[@]}" -H "Content-Type: application/json" \
+                -X POST "${BASE}/object/list/$(enc "$bucket")" \
+                -d "$(jq -cn --arg p "$prefix" --argjson o "$offset" '{prefix:$p,limit:100,offset:$o,sortBy:{column:"name",order:"asc"}}')")
+              n=$(jq 'length' <<<"$page")
+              [ "$n" -eq 0 ] && break
+              while IFS=$'\t' read -r name id; do
+                path="${prefix:+$prefix/}$name"
+                if [ "$id" = "null" ]; then
+                  walk "$bucket" "$path"
+                else
+                  mkdir -p "$OUT/$bucket/$(dirname "$path")"
+                  curl -sS -f --retry 3 --retry-delay 5 "${AUTH[@]}" \
+                    -o "$OUT/$bucket/$path" "${BASE}/object/$(enc "$bucket")/$(enc "$path")"
+                  echo "$bucket/$path" >> storage-manifest.txt
+                fi
+              done < <(jq -r '.[] | [.name, (.id // "null" | tostring)] | @tsv' <<<"$page")
+              [ "$n" -lt 100 ] && break
+              offset=$((offset + n))
+            done
+          }
+
+          buckets=$(curl -sS -f --retry 3 --retry-delay 5 "${AUTH[@]}" "${BASE}/bucket" | jq -r '.[].id')
+          [ -n "$buckets" ] || { echo "::error::Aucun bucket Storage listé (clé ou URL invalide ?)"; exit 1; }
+          for b in $buckets; do
+            echo "Bucket : $b"
+            mkdir -p "$OUT/$b"
+            walk "$b" ""
+          done
+
+          echo "Fichiers sauvegardés : $(wc -l < storage-manifest.txt)"
+          cp storage-manifest.txt "$OUT/MANIFEST.txt"
+          tar -czf storage.tar.gz -C "$OUT" .
+          test -s storage.tar.gz
+          gpg --batch --yes --pinentry-mode loopback --passphrase "${BACKUP_PASSPHRASE}" --symmetric --cipher-algo AES256 -o "fimela-storage-$(date -u +%Y%m%d).tar.gz.gpg" storage.tar.gz
+          rm -rf "$OUT" storage.tar.gz storage-manifest.txt
+          ls -l fimela-storage-*.tar.gz.gpg
       - name: Générer l'empreinte SHA256
         run: |
           set -euo pipefail
           for f in fimela-*.sql.gpg; do
             sha256sum "$f" > "${f%.sql.gpg}.sha256"
+          done
+          for f in fimela-storage-*.tar.gz.gpg; do
+            sha256sum "$f" > "${f%.tar.gz.gpg}.sha256"
           done
           ls -l fimela-*.sha256
       - name: Conserver 30 jours (artefact privé du dépôt)
@@ -48,8 +107,7 @@ jobs:
           name: fimela-db-backup
           path: |
             fimela-*.sql.gpg
+            fimela-storage-*.tar.gz.gpg
             fimela-*.sha256
           retention-days: 30
           if-no-files-found: error
-
-# TODO: Ajouter la sauvegarde des fichiers Storage (S3) ici
