@@ -102,3 +102,4 @@ label{display:block;font:700 12px 'Nunito Sans';color:var(--mut);margin:0 0 4px}
 .bdg-m{margin-top:1.5mm;font-size:8pt;color:#333}
 @media print{#prt .bdg-wrap{display:block;-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{size:auto;margin:10mm}}
 @media print{.bdg{background:#fff!important;color:#111!important}.bdg-ph{background:#E3F6E8!important;border-color:#bbb!important}.bdg-ini{color:#0b5a2e!important}.bdg-s{color:#444!important}.bdg-m{color:#333!important}}
+.ec-warning { color: red; font-weight: bold; text-align: center; border: 2px solid red; padding: 10px; margin: 20px 0; }
