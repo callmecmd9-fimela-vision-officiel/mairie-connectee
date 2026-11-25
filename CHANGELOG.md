@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-11-25 — Correctif : encaissement espèces refusé (FK `paiements_taxes_citoyen_id_fkey`)
+- **Cause** : `paiements_taxes.citoyen_id` référençait `profiles(id)` alors que `demandes.citoyen_id` référence `auth.users` ; les citoyens (comptes anonymes, sans profil) faisaient échouer `encaisser_demande` (23503). 8 demandes sur 13 concernées.
+- **SQL (APPLIQUÉE en production)** : `20261202001500_p1_fix_paiements_taxes_citoyen_fk.sql` — FK repointée vers `auth.users(id)` ON DELETE SET NULL (table `paiements_taxes` vide). Essai en transaction annulée : l'INSERT de la RPC passe. Aucun changement front.
+
+## 2026-11-25 — Redéploiement de l'Edge Function `sa-admin` (rôle `conseiller`)
+- `sa-admin` redéployée sur le projet de production (v17 → v18, `verify_jwt` = true). Le code du dépôt a été comparé à la version en production : seule la liste `ROLES` diffère (`conseiller` ajouté). Contrôle en base : `cloturer_deliberation` appartient à `postgres` (SECURITY DEFINER) ; migrations `000900` à `001400` toutes inscrites dans l'historique.
+
 ## 2026-11-25 — Application en production des migrations 20261202001300 et 001400
 - Appliquées sur le projet Supabase de production et inscrites sous leurs versions du dépôt : `20261202001300_p1_patrimoine_geolocalisation` (`patrimoine_biens.latitude` / `longitude` + CHECK) et `20261202001400_p1_services_geo` (`territoire_infrastructures.latitude` / `longitude` / `budget_ligne_id`, `territoire_actions.budget_ligne_id`, FK composites `ON DELETE SET NULL (budget_ligne_id)`, index partiels). Contrôles préalables : PostgreSQL 17, colonnes absentes, `budget_lignes unique (id, commune_id)` présent ; contrôles après : colonnes et contraintes présentes. Aucune donnée modifiée.
 
