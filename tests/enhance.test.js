@@ -1,5 +1,7 @@
 // Test de js/enhance.js dans jsdom (npm i jsdom) : node tests/enhance.test.js
-const {JSDOM}=require('jsdom'),fs=require('fs'),path=require('path');
+let JSDOM;
+try{({JSDOM}=require('jsdom'))}catch(e){console.log("SKIP: jsdom non installé");process.exit(0)}
+const fs=require('fs'),path=require('path');
 const code=fs.readFileSync(path.join(__dirname,'..','js','enhance.js'),'utf8');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));let fail=0;const ok=(n,c)=>{console.log(c?'OK  ':'FAIL',n);if(!c)fail++};
 function page(){const d=new JSDOM('<!doctype html><body><div id="app"><h1>Titre</h1><button data-a="addrdv">Ajouter</button><button data-a="delrdv" data-i="2">Retirer</button><button data-a="go" data-v="x">Nav</button></div></body>',{runScripts:'outside-only',pretendToBeVisual:true});

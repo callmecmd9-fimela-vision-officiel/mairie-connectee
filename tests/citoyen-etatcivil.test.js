@@ -40,7 +40,7 @@ async function boot({user=true,stat='pret_a_retirer'}={}){
  ok('envoi méthode 2 : pièce téléversée dans le dossier de la commune',t.ups.length==1&&t.ups[0].startsWith('cid1/')&&c2&&c2[1].p_pieces.length==1&&/Ancien extrait joint/.test(c2[1].p_message));
  // sans compte : anti-spam exigé
  t=await boot({user:false});await t.click({a:'cat',c:'État civil et documents'});await t.click({a:'rc',r:'Demander un extrait de mariage'});
- t.els['#ecp']={value:'A B'};t.els['#ecn']={value:'5'};t.els['#eca']={value:'2001'};t.els['#fn']={value:'Demandeur Test'};t.els['#ft']={value:''};
+ t.els['#ecp']={value:'A B'};t.els['#ecn']={value:'5'};t.els['#eca']={value:'2001'};t.els['#fn']={value:'Demandeur Test'};t.els['#ft']={value:'77 123 45 67'};
  await t.click({a:'ecrev'});ok('sans compte : récapitulatif avec widget anti-spam',/id="ts"/.test(t.H()));
  await t.click({a:'send'});ok('sans compte : envoi bloqué sans vérification anti-spam',/anti-spam/.test(t.H())&&!t.rpcs.some(x=>x[0]=='creer_demande'));
  // statut prêt à retirer

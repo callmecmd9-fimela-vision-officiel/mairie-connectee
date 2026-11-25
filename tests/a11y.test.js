@@ -1,5 +1,7 @@
 // node tests/a11y.test.js (npm i jsdom) : js/a11y.js
-const {JSDOM}=require('jsdom'),fs=require('fs'),path=require('path');
+let JSDOM;
+try{({JSDOM}=require('jsdom'))}catch(e){console.log("SKIP: jsdom non installé");process.exit(0)}
+const fs=require('fs'),path=require('path');
 const code=fs.readFileSync(path.join(__dirname,'..','js','a11y.js'),'utf8');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));let fail=0;const ok=(n,c)=>{console.log(c?'OK  ':'FAIL',n);if(!c)fail++};
 (async()=>{

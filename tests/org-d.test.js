@@ -6,7 +6,7 @@ function ctx(sbx){const s={console,setTimeout:()=>0,setInterval:()=>0,clearTimeo
  s.handlers=[];s.document={querySelector:()=>el(),getElementById:()=>el(),createElement:()=>el(),addEventListener:(n,fn)=>s.handlers.push(fn),body:el(),hidden:false,documentElement:el()};
  s.supabase={createClient:()=>sbx||chain()};s.window=s;s.self=s;s.addEventListener=()=>{};s.removeEventListener=()=>{};s.Promise=Promise;s.Date=Date;s.Math=Math;return vm.createContext(s)}
 const run=(c,l)=>l.forEach(x=>vm.runInContext(fs.readFileSync(path.join(R,'js',x+'.js'),'utf8'),c,{filename:x}));
-const FILES=['core','adjoints','secretariat','superadmin','maire','demarches','org','org-d','actions'];
+const FILES=['core','core-ui','adjoints','secretariat','superadmin','maire','demarches','org','org-d','actions'];
 (async()=>{
  const calls=[],from=[],tb={org_roles:[{code:'rrh',nom:'Responsable RH',actif:true}],org_postes:[{code:'rh1',nom:'Responsable RH',role_code:'rrh',service_code:'etat_civil',actif:true}],org_affectations:[{id:'a1',user_id:'u2',poste_code:'rh1',debut:'2026-01-01',actif:true}],
   org_role_droits:[{role_code:'rrh',module:'personnel',action:'consulter'}],
