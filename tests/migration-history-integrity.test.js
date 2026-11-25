@@ -61,7 +61,9 @@ const pendingFiles = [
   '20261202000400_lot12_patrimoine.sql',
   '20261202000500_lot13_services_territoriaux.sql',
   // P0 paiements (2026-11-25) : RPC valider_paiement_especes — appliquée en production en SQL direct (version à inscrire via `supabase migration repair`).
-  '20261202000600_p0_rpc_valider_paiement.sql'
+  '20261202000600_p0_rpc_valider_paiement.sql',
+  // P0 paiements (2026-11-25) : garde-fou RLS (UPDATE direct interdit à l'API) — appliquée en production en SQL direct.
+  '20261202000700_p0_rls_paiements.sql'
 ];
 const actualSqlFiles = fs.readdirSync(migrationDir).filter(name => name.endsWith('.sql')).sort();
 const expectedSqlFiles = [...historicalFiles, ...pendingFiles].sort();
