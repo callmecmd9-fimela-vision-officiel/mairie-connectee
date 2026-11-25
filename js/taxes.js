@@ -33,7 +33,7 @@ const taxes = () => {
         const s = x.statut;
         return rw(
           `<b>${esc(x.type_taxe || "Taxe")}</b> · ${esc(ptF(x.montant))}<div class="mut" data-sty="font-size:13px">${esc(ptD(x.created_at))} · Réf. ${esc(x.reference_paiement || "—")} · ${esc(PSR[x.source] || "")}</div>`,
-          `<span data-sty="display:grid;gap:6px;justify-items:end">${st2(PTS[s] || s || "—", PTC[s] || "rd")}${s == "en_attente" ? (S.role === 'finances' || S.role === 'comptable' ? `<button class="bt" data-m="ptval" data-id="${esc(x.id)}">Valider (espèces)</button>` : '') : ""}</span>`
+          `<span data-sty="display:grid;gap:6px;justify-items:end">${st2(PTS[s] || s || "—", PTC[s] || "rd")}${s == "en_attente" ? (S.pr === 'maire' || S.pr === 'finances' ? `<button class="bt" data-m="ptval" data-id="${esc(x.id)}">Valider (espèces)</button>` : '') : ""}</span>`
         );
       }).join("") || emp("Aucun paiement de taxe enregistré."),
       `<button class="bo" data-m="ptcsv">Exporter CSV (comptabilité)</button>`
@@ -61,7 +61,7 @@ document.addEventListener("click", e => {
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 });
 document.addEventListener("click", async e => {
-  if (!['finances', 'comptable'].includes(S.role)) return;
+  if (!['maire', 'finances'].includes(S.pr)) return;
   const t = e.target.closest("[data-m=ptval]");
   if (!t || S.sa) return;
   S.err = "";
