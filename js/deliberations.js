@@ -1,7 +1,7 @@
 /* Suivi du Conseil municipal (espace mairie > Conseil municipal > Suivi des sessions) :
    sessions du Conseil et délibérations associées (date, objet, statut de transmission), avec création rapide
    d'une session ou d'une délibération (maire, secrétariat).
-   Tables public.sessions_conseil et public.deliberations (colonnes de traçabilité : migration 20261203_lot11_gouvernance.sql).
+   Tables public.sessions_conseil et public.deliberations (colonnes de traçabilité : migration 20261202000300_lot11_gouvernance.sql).
    Données déjà chargées par core.js : D().se (sessions) et D().del (délibérations).
    Module encapsulé : aucun identifiant global déclaré.
    Dépend de core.js, core-ui.js, adjoints.js (fdd), secretariat.js (SES, SNAV, V), maire.js (st2) : à charger après maire.js. */

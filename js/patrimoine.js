@@ -1,5 +1,5 @@
 /* Biens communaux (espace mairie > Administration > Biens communaux) : liste filtrable par catégorie + ajout d'un bien.
-   Table public.patrimoine_biens (migration 20261204_lot12_patrimoine.sql), chargée par load() comme budget.js (E0 / LG).
+   Table public.patrimoine_biens (migration 20261202000400_lot12_patrimoine.sql), chargée par load() comme budget.js (E0 / LG).
    Distinct de l'écran « Patrimoine » de maire.js (table public.patrimoine), qui n'est pas modifié.
    Module encapsulé : aucun identifiant global déclaré, car maire.js déclare déjà `const patrimoine`.
    Dépend de core.js, core-ui.js, adjoints.js (fdd), maire.js (st2) : à charger après maire.js. */

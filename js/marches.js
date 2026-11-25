@@ -1,6 +1,6 @@
 /* Suivi des marchés (espace mairie > Administration > Marchés en cours) :
    tableau de bord des marchés non clos + formulaire d'ajout (maire, finances).
-   Table public.marches (colonnes reference et type_marche ajoutées par la migration 20261202_lot10_marches.sql).
+   Table public.marches (colonnes reference et type_marche ajoutées par la migration 20261202000200_lot10_marches.sql).
    Module encapsulé : aucun identifiant global déclaré, car maire.js déclare déjà `const marches` (écran Finances > Marchés publics).
    Dépend de core.js, core-ui.js, adjoints.js (ev), maire.js (MST, MTC, MMODE, st2) : à charger après maire.js. */
 (() => {

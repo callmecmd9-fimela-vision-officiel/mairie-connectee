@@ -1,7 +1,7 @@
 /* Services territoriaux (espace mairie > Administration > Services territoriaux) :
    onglets par domaine (Éducation, Santé, Environnement, Urbanisme, Développement) avec, pour chacun,
    les infrastructures communales et les actions en cours, + ajout d'une infrastructure ou d'une action (maire, secrétariat).
-   Tables public.territoire_infrastructures et public.territoire_actions (migration 20261205_lot13_services_territoriaux.sql),
+   Tables public.territoire_infrastructures et public.territoire_actions (migration 20261202000500_lot13_services_territoriaux.sql),
    chargées par load() comme patrimoine.js (E0 / LG).
    Module encapsulé : seul services_territoire() est exposée (window.services_territoire), aucun autre identifiant global.
    Dépend de core.js, core-ui.js (pn, rw, tabs, frm, sel, inp, emp, kp), adjoints.js (fdd), maire.js (st2) : à charger après maire.js. */

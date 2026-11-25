@@ -1,4 +1,4 @@
-/* Budget communal (espace mairie > Finances > Budgets) : tables budgets, budget_lignes (migration 20261201_lot9_budget.sql) */
+/* Budget communal (espace mairie > Finances > Budgets) : tables budgets, budget_lignes (migration 20261202000100_lot9_budget.sql) */
 E0.budgets = [];
 E0.budget_lignes = [];
 LG.budgets = [
