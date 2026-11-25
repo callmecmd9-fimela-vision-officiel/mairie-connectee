@@ -477,6 +477,8 @@ const SP = {
   adjoints: Object.assign({}, SP0.adjoints, { h: 1 }),
   secretariat: Object.assign({}, SP0.secretariat, { h: 1 })
 };
+SP.administration.subs.push(["marchestdb", "March\u00e9s en cours"]);
+SP.conseil.subs.push(["suiviconseil", "Suivi des sessions"]);
 const espAll = () =>
   Object.entries(SP)
     .filter(([k, x]) => (S.mod || {})[k] !== false && x.subs.some(y => can(y[0])))
