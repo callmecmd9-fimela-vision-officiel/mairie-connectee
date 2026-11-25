@@ -13,7 +13,7 @@ const vm=require('vm'),fs=require('fs'),path=require('path');let f=0;const ok=(n
  const typeq=q=>handlers.input.forEach(h=>h({target:{id:'q',value:q}}));
  const H=()=>app.innerHTML,SS=()=>vm.runInContext("S",ctx),ev=c=>vm.runInContext(c,ctx);
  ok('accueil : textes via tr() (français)',/Faire une demande/.test(H())&&/Nos services municipaux/.test(H())&&/placeholder="Numéro de suivi…"/.test(H()));
- ok('livré : seul le wolof (validé, 100 % des clés) est proposé ; sereer absent',ev('langsOk().join()')==='wo'&&/data-a="lang" data-l="wo"/.test(H())&&!/data-l="sr"/.test(H()));ok('wolof livré : toutes les clés du français traduites, aucune vide',ev('Object.keys(TX.fr).every(k=>typeof TX.wo[k]==="string"&&TX.wo[k].trim())'));
+ ok('livré : seules les langues « valide » (et complètes) sont proposées ; wolof (a_verifier) et sereer absents',ev('langsOk().every(c=>window.MC_LANGS[c].statut==="valide")')&&!ev('langsOk().includes("wo")')&&!ev('langsOk().includes("sr")')&&!/data-a="lang" data-l="wo"/.test(H())&&!/data-l="sr"/.test(H()));ok('wolof livré : toutes les clés du français traduites, aucune vide',ev('Object.keys(TX.fr).every(k=>typeof TX.wo[k]==="string"&&TX.wo[k].trim())'));
  // wolof « validé » mais incomplet : toujours refusé
  ev('window.MC_LANGS.wo.statut="valide";TX.wo={back:"x"}');ok('langue validée mais incomplète : refusée',ev('langsOk().length')===0);
  // wolof non validé mais complet : refusé
@@ -26,6 +26,6 @@ const vm=require('vm'),fs=require('fs'),path=require('path');let f=0;const ok=(n
  // clé absente : repli
  ev('delete TX.wo.h_req');SS().lang='wo';ok('clé manquante : repli sur le français',ev('tr("h_req")')==='Faire une demande');
  const csv=fs.readFileSync(path.join(__dirname,'..','docs','i18n','textes_a_valider.csv'),'utf8');ok('CSV linguistes couvre toutes les clés',ev('Object.keys(TX.fr)').every(k=>csv.includes('\n'+k+',')));
- const i18n=require('./_compact.js').compact(fs.readFileSync(path.join(__dirname,'..','js','i18n.js'),'utf8'));ok('livré : wo « valide », sr « a_valider » et sans texte',/wo:\{nom:"Wolof",statut:"valide"\}/.test(i18n)&&/sr:\{nom:"Sereer",statut:"a_valider"\}/.test(i18n)&&/sr:\{\}\}/.test(i18n));
+ const i18n=require('./_compact.js').compact(fs.readFileSync(path.join(__dirname,'..','js','i18n.js'),'utf8'));ok('livré : wo « a_verifier », sr « a_verifier » et sans texte',/wo:\{nom:"Wolof",statut:"a_verifier"\}/.test(i18n)&&/sr:\{nom:"Sereer",statut:"a_verifier"\}/.test(i18n)&&/sr:\{\}\}/.test(i18n));
  console.log(f?'ÉCHECS '+f:'TOUS OK');process.exit(f?1:0);
 })();
