@@ -479,6 +479,7 @@ const SP = {
 };
 SP.administration.subs.push(["marchestdb", "March\u00e9s en cours"]);
 SP.conseil.subs.push(["suiviconseil", "Suivi des sessions"]);
+SP.administration.subs.push(["patbiens", "Biens communaux"]);
 const espAll = () =>
   Object.entries(SP)
     .filter(([k, x]) => (S.mod || {})[k] !== false && x.subs.some(y => can(y[0])))
