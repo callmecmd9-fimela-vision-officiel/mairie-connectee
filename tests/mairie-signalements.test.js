@@ -7,7 +7,7 @@ function mk({rows=[],updRes={data:[{id:'s1'}]},withL=true}={}){const handlers=[]
   load:async k=>{loads.push(k)},
   sb:{from:t=>({update:u=>({eq:(a,b)=>({eq:(c,d)=>({select:async()=>{upd.push([t,u,a,b,c,d]);return updRes}})})})})},
   document:{addEventListener:(n,fn)=>handlers.push(fn)},setTimeout(fn){fn()},scrollTo(){},console};
- if(withL)ctx.L={map:()=>({setView(){return this},fitBounds(){},remove(){},invalidateSize(){}}),tileLayer:()=>({addTo(){}}),circleMarker:(p,o)=>({addTo(){return this},bindPopup(h){markers.push([p,o,h])}})};
+ ctx.mapbox3d=(el,o)=>{if(!withL){el.innerHTML='<p>Carte indisponible.</p>';return{remove(){}}}markers.push(...o.pts.map(p=>[[p.lat,p.lng],{fillColor:p.c},p.l1+' '+p.l2+' '+(p.l3==='Nid <b>de poule</b>')]));return{remove(){}}};
  ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','signalements.js'),'utf8'),ctx);
  const click=async(m,d={})=>{const t={dataset:Object.assign({m},d)};for(const h of handlers)await h({target:{closest:s=>s==`[data-m=${m}]`?t:null}})};
  return{ctx,upd,loads,markers,els,click,renders:()=>renders}}
@@ -31,7 +31,7 @@ function mk({rows=[],updRes={data:[{id:'s1'}]},withL=true}={}){const handlers=[]
  t=mk({rows:R});await t.click('sgst',{id:'s1',v:'nouveau'});ok('même statut : aucune écriture',t.upd.length==0);
  // carte
  t=mk({rows:R});t.els['#sigmap']={};t.ctx.render0();ok('carte : un marqueur par signalement géolocalisé, couleur du statut',t.markers.length==1&&t.markers[0][1].fillColor=='#2563EB'&&/Voirie/.test(t.markers[0][2])&&!/<b>de poule/.test(t.markers[0][2]));
- t=mk({rows:R,withL:false});t.els['#sigmap']={innerHTML:''};t.ctx.render0();ok('Leaflet absent : message sans erreur',/indisponible/.test(t.els['#sigmap'].innerHTML));
+ t=mk({rows:R,withL:false});t.els['#sigmap']={innerHTML:''};t.ctx.render0();ok('Carte indisponible : message sans erreur',/indisponible/.test(t.els['#sigmap'].innerHTML));
  await t.click('sgflt',{v:'nouveau'});ok('clic filtre : état + rendu',t.ctx.S.sgf=='nouveau'&&t.renders()==1);
  if(f){console.log(f+' échec(s)');process.exit(1)}console.log('PASS: mairie-signalements');
 })();
