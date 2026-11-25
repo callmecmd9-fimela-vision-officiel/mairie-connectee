@@ -2337,27 +2337,169 @@ setInterval(async () => {
   }
 }, 60000);
 
-/* Signalement citoyen : bouton flottant + modale + carte Leaflet (Leaflet local : CSP) */
+/* Signalement citoyen : bouton flottant + modale + carte 3D Mapbox GL JS.
+   Mapbox GL JS est chargé à la demande depuis api.mapbox.com (version épinglée, hôtes autorisés dans la CSP de _headers).
+   Jeton public (pk.…) lu dans <meta name="mc-mapbox"> de index.html. */
 const SIG_COMMUNE = "98002283-4fc0-4eff-8182-af1eec9a321d", SIG_SLUG = "fimela";
-const SIG = { map: null, mk: null, pos: null };
+const MBX = { v: "3.10.0", style: "mapbox://styles/mapbox/streets-v12", centre: [-16.95, 14.4], pitch: 45, bearing: -10, zoom: 15, cluster: 50, clusterMax: 15 };
+const SIG_COL = { nouveau: "#D91E18", en_cours: "#F59E0B", resolu: "#16A34A" };
+const SIG_LIB = { nouveau: "Nouveau", en_cours: "En cours", resolu: "Résolu" };
+const SIG = { map: null, mk: null, pos: null, rows: [], ready: false, lib: null, geo: false, fit: false };
+const sigCid = () => S.cid || SIG_COMMUNE, sigSlug = () => S.slug || SIG_SLUG;
 function sigMsg(t, k) { const m = $("#sig-msg"); if (m) { m.textContent = t; m.className = "sig-msg " + (k || ""); } }
+function sigToken() {
+  const m = document.querySelector('meta[name="mc-mapbox"]'), t = ((m && m.content) || "").trim();
+  return /^pk\.[\w.-]+$/.test(t) ? t : "";
+}
+/* Charge la feuille de style et le script Mapbox GL JS une seule fois. */
+function sigLib() {
+  if (window.mapboxgl) return Promise.resolve();
+  if (SIG.lib) return SIG.lib;
+  const base = "https://api.mapbox.com/mapbox-gl-js/v" + MBX.v + "/";
+  SIG.lib = new Promise((ok, ko) => {
+    const l = document.createElement("link"); l.rel = "stylesheet"; l.href = base + "mapbox-gl.css"; document.head.appendChild(l);
+    const s = document.createElement("script"); s.src = base + "mapbox-gl.js"; s.async = true;
+    s.onload = () => (window.mapboxgl ? ok() : ko(new Error("lib")));
+    s.onerror = () => { SIG.lib = null; ko(new Error("lib")); };
+    document.head.appendChild(s);
+  });
+  return SIG.lib;
+}
+/* Signalements de la commune : RPC publique sans description ni photo (20261202_signalements_carte_publique.sql) ; repli sur la table (agents connectés). */
+async function sigFetch() {
+  const r = await sb.rpc("signalements_carte", { p_commune: sigSlug() });
+  if (!r.error && Array.isArray(r.data)) return r.data;
+  const q = await sb.from("signalements_citoyens").select("id,categorie,statut,latitude,longitude,created_at").eq("commune_id", sigCid()).limit(1000);
+  return !q.error && Array.isArray(q.data) ? q.data : null;
+}
+function sigGeo(rows) {
+  const f = [];
+  (rows || []).forEach(x => {
+    if (!x || x.latitude == null || x.longitude == null) return;
+    const la = Number(x.latitude), lo = Number(x.longitude);
+    if (!isFinite(la) || !isFinite(lo) || Math.abs(la) > 90 || Math.abs(lo) > 180 || x.statut == "rejete") return;
+    f.push({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [lo, la] },
+      properties: { id: String(x.id || ""), statut: SIG_COL[x.statut] ? x.statut : "nouveau", categorie: String(x.categorie || "Autre"), date: x.created_at || "" }
+    });
+  });
+  return { type: "FeatureCollection", features: f };
+}
+function sigDraw(fit) {
+  const m = SIG.map, src = m && SIG.ready && m.getSource("sig-src");
+  if (!src) return;
+  const g = sigGeo(SIG.rows);
+  src.setData(g);
+  if (fit && !SIG.fit && !SIG.geo && g.features.length) {
+    SIG.fit = true;
+    const b = new mapboxgl.LngLatBounds();
+    g.features.forEach(x => b.extend(x.geometry.coordinates));
+    m.fitBounds(b, { padding: 50, maxZoom: 16, pitch: MBX.pitch, duration: 0 });
+  }
+}
+/* (Re)charge les signalements ; extra = point à ajouter si le serveur ne le renvoie pas encore (marqueur optimiste). */
+async function sigRefresh(extra) {
+  const rows = await sigFetch();
+  if (rows) SIG.rows = rows;
+  if (extra && !SIG.rows.some(x => extra.id && String(x.id) == extra.id)) SIG.rows = SIG.rows.concat([extra]);
+  sigDraw(true);
+}
+/* Bâtiments extrudés (couche « building » du style streets-v12), sous les étiquettes. */
+function sigBuildings(m) {
+  try {
+    const lab = m.getStyle().layers.find(l => l.type == "symbol" && l.layout && l.layout["text-field"]);
+    m.addLayer({
+      id: "sig-3d", type: "fill-extrusion", source: "composite", "source-layer": "building", filter: ["==", ["get", "extrude"], "true"], minzoom: 14,
+      paint: {
+        "fill-extrusion-color": "#c9d3cb",
+        "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 14, 0, 14.5, ["get", "height"]],
+        "fill-extrusion-base": ["interpolate", ["linear"], ["zoom"], 14, 0, 14.5, ["get", "min_height"]],
+        "fill-extrusion-opacity": 0.85
+      }
+    }, lab && lab.id);
+  } catch (e) {}
+}
+/* Source GeoJSON avec clustering natif Mapbox + couches : pastilles par statut, grappes avec compteur. */
+function sigLayers(m) {
+  const stat = ["get", "statut"], col = ["match", stat, "nouveau", SIG_COL.nouveau, "en_cours", SIG_COL.en_cours, "resolu", SIG_COL.resolu, SIG_COL.nouveau];
+  m.addSource("sig-src", {
+    type: "geojson", data: sigGeo([]), cluster: true, clusterRadius: MBX.cluster, clusterMaxZoom: MBX.clusterMax,
+    clusterProperties: { n: ["+", ["case", ["==", stat, "nouveau"], 1, 0]], e: ["+", ["case", ["==", stat, "en_cours"], 1, 0]] }
+  });
+  m.addLayer({
+    id: "sig-cl", type: "circle", source: "sig-src", filter: ["has", "point_count"],
+    paint: {
+      "circle-color": ["case", [">", ["get", "n"], 0], SIG_COL.nouveau, [">", ["get", "e"], 0], SIG_COL.en_cours, SIG_COL.resolu],
+      "circle-radius": ["step", ["get", "point_count"], 16, 10, 20, 50, 26], "circle-stroke-width": 3, "circle-stroke-color": "#ffffff", "circle-pitch-alignment": "map"
+    }
+  });
+  m.addLayer({
+    id: "sig-cl-n", type: "symbol", source: "sig-src", filter: ["has", "point_count"],
+    layout: { "text-field": ["get", "point_count_abbreviated"], "text-font": ["DIN Pro Bold", "Arial Unicode MS Bold"], "text-size": 13, "text-allow-overlap": true },
+    paint: { "text-color": "#ffffff" }
+  });
+  m.addLayer({
+    id: "sig-pt", type: "circle", source: "sig-src", filter: ["!", ["has", "point_count"]],
+    paint: { "circle-color": col, "circle-radius": 9, "circle-stroke-width": 3, "circle-stroke-color": "#ffffff", "circle-pitch-alignment": "map" }
+  });
+}
+/* Fenêtre d'information (texte uniquement, sans HTML injecté). */
+function sigPopup(m, f) {
+  const p = f.properties || {}, box = document.createElement("div"), b = document.createElement("b"), s = document.createElement("div"), d = document.createElement("div"), t = p.date ? new Date(p.date) : null;
+  b.textContent = p.categorie || "Autre";
+  s.textContent = SIG_LIB[p.statut] || SIG_LIB.nouveau;
+  box.appendChild(b); box.appendChild(s);
+  if (t && !isNaN(t)) { d.textContent = t.toLocaleDateString("fr-FR"); box.appendChild(d); }
+  new mapboxgl.Popup({ offset: 14, closeButton: false }).setLngLat(f.geometry.coordinates.slice()).setDOMContent(box).addTo(m);
+}
+/* Clic citoyen : coordonnées (lng, lat) → marqueur + formulaire pré-rempli. */
+function sigPick(lng, lat) {
+  SIG.pos = { lat, lng };
+  if (SIG.mk) SIG.mk.setLngLat([lng, lat]);
+  else {
+    const el = document.createElement("div"); el.className = "sig-pin";
+    SIG.mk = new mapboxgl.Marker({ element: el, anchor: "bottom" }).setLngLat([lng, lat]).addTo(SIG.map);
+  }
+  const f = $("#sig-form"), p = $("#sig-pos"), h = $("#sig-hint");
+  if (p) p.value = lat.toFixed(5) + ", " + lng.toFixed(5);
+  if (h) h.hidden = true;
+  if (f) { f.hidden = false; try { f.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) {} }
+  sigMsg("");
+}
+function sigInit() {
+  const tok = sigToken();
+  if (!tok) { sigMsg("Carte indisponible (jeton Mapbox absent).", "err"); return; }
+  mapboxgl.accessToken = tok;
+  const m = (SIG.map = new mapboxgl.Map({ container: "sig-map", style: MBX.style, center: MBX.centre, zoom: MBX.zoom, pitch: MBX.pitch, bearing: MBX.bearing, antialias: true }));
+  m.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), "top-right");
+  m.on("error", ev => { if (!SIG.ready && ev && ev.error && /40[13]/.test(String(ev.error.status || ev.error.message))) sigMsg("Carte indisponible (jeton Mapbox refusé).", "err"); });
+  m.on("load", () => {
+    sigBuildings(m); sigLayers(m);
+    SIG.ready = true;
+    sigRefresh().catch(() => {});
+  });
+  m.on("click", ev => {
+    const hit = m.queryRenderedFeatures(ev.point, { layers: ["sig-cl", "sig-pt"] })[0];
+    if (hit && hit.layer.id == "sig-cl") {
+      m.getSource("sig-src").getClusterExpansionZoom(hit.properties.cluster_id, (err, z) => { if (!err) m.easeTo({ center: hit.geometry.coordinates, zoom: z + 0.5 }); });
+    } else if (hit) sigPopup(m, hit);
+    else sigPick(ev.lngLat.lng, ev.lngLat.lat);
+  });
+  ["sig-cl", "sig-pt"].forEach(id => {
+    m.on("mouseenter", id, () => { m.getCanvas().style.cursor = "pointer"; });
+    m.on("mouseleave", id, () => { m.getCanvas().style.cursor = ""; });
+  });
+  if (navigator.geolocation) navigator.geolocation.getCurrentPosition(p => { SIG.geo = true; m.easeTo({ center: [p.coords.longitude, p.coords.latitude], zoom: 16, pitch: MBX.pitch }); }, () => {});
+}
 function sigOpen() {
   const d = $("#sig"); if (!d) return;
   d.hidden = false; document.body.style.overflow = "hidden"; sigMsg("");
-  setTimeout(() => {
-    if (!window.L) { sigMsg("Carte indisponible.", "err"); return; }
-    if (!SIG.map) {
-      SIG.map = L.map("sig-map").setView([14.4, -16.95], 13);
-      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 18, attribution: "Tiles © Esri" }).addTo(SIG.map);
-      SIG.map.on("click", ev => {
-        SIG.pos = ev.latlng;
-        if (SIG.mk) SIG.mk.setLatLng(ev.latlng);
-        else SIG.mk = L.circleMarker(ev.latlng, { radius: 10, color: "#fff", weight: 3, fillColor: "#D91E18", fillOpacity: 1 }).addTo(SIG.map);
-      });
-      if (navigator.geolocation) navigator.geolocation.getCurrentPosition(p => SIG.map.setView([p.coords.latitude, p.coords.longitude], 16), () => {});
-    }
-    SIG.map.invalidateSize();
-  }, 300);
+  setTimeout(async () => {
+    if (SIG.map) { SIG.map.resize(); if (SIG.ready) sigRefresh().catch(() => {}); return; }
+    try { await sigLib(); } catch (e) { sigMsg("Carte indisponible.", "err"); return; }
+    if (!SIG.map) sigInit();
+  }, 50);
 }
 function sigClose() { const d = $("#sig"); if (d) d.hidden = true; document.body.style.overflow = ""; }
 async function sigSend() {
@@ -2370,19 +2512,25 @@ async function sigSend() {
     const f = $("#sig-ph").files && $("#sig-ph").files[0];
     if (f) {
       if (!/^image\//.test(f.type)) throw new Error("Photo uniquement.");
-      const bl = await comp(f), p = SIG_COMMUNE + "/" + crypto.randomUUID() + "." + (bl.type == "image/webp" ? "webp" : "jpg"),
+      const bl = await comp(f), p = sigCid() + "/" + crypto.randomUUID() + "." + (bl.type == "image/webp" ? "webp" : "jpg"),
         u = await sb.storage.from("signalements-photos").upload(p, bl, { contentType: bl.type });
       if (u.error) throw new Error("Envoi de la photo impossible.");
       url = sb.storage.from("signalements-photos").getPublicUrl(p).data.publicUrl;
     }
     /* RPC verrouillée par commune (20261124_signalements_insertion_multitenant.sql) ; repli sur l'insertion directe tant qu'elle n'est pas déployée. */
-    let r = await sb.rpc("creer_signalement", { p_commune: SIG_SLUG, p_categorie: g("sig-cat"), p_description: txt, p_photo_url: url, p_latitude: SIG.pos.lat, p_longitude: SIG.pos.lng });
-    if (r.error) r = await sb.from("signalements_citoyens").insert({ commune_id: SIG_COMMUNE, categorie: g("sig-cat"), description: txt, photo_url: url, latitude: SIG.pos.lat, longitude: SIG.pos.lng });
+    const cat = g("sig-cat"), pos = SIG.pos;
+    let r = await sb.rpc("creer_signalement", { p_commune: sigSlug(), p_categorie: cat, p_description: txt, p_photo_url: url, p_latitude: pos.lat, p_longitude: pos.lng });
+    if (r.error) r = await sb.from("signalements_citoyens").insert({ commune_id: sigCid(), categorie: cat, description: txt, photo_url: url, latitude: pos.lat, longitude: pos.lng });
     if (r.error) throw new Error("Enregistrement impossible. Réessayez.");
     sigMsg("Signalement envoyé. Merci !", "ok");
     $("#sig-txt").value = ""; $("#sig-ph").value = ""; SIG.pos = null;
     if (SIG.mk) { SIG.mk.remove(); SIG.mk = null; }
-    setTimeout(sigClose, 1500);
+    const fm = $("#sig-form"), ht = $("#sig-hint");
+    if (fm) fm.hidden = true;
+    if (ht) ht.hidden = false;
+    /* La carte se rafraîchit et affiche le nouveau marqueur (ajouté localement si la lecture serveur ne le renvoie pas). */
+    await sigRefresh({ id: typeof r.data == "string" ? r.data : "", statut: "nouveau", categorie: cat, latitude: pos.lat, longitude: pos.lng, created_at: new Date().toISOString() }).catch(() => {});
+    if (SIG.map) SIG.map.easeTo({ center: [pos.lng, pos.lat], zoom: Math.max(SIG.map.getZoom(), 16) });
   } catch (e) { sigMsg(e.message || "Erreur réseau.", "err"); }
   b.disabled = false;
 }
