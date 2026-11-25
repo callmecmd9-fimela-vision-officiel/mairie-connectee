@@ -278,12 +278,12 @@ const ecDoc = (a, ref, dem) => {
     now = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
   return (
     `<article class="ecd" aria-label="Copie d’acte"><header class="ecd-h">${bl ? `<img class="ecd-bl" src="${ecE(bl)}" alt="Blason de la commune de ${ecE(com)}">` : `<span class="ecd-bl ecd-sh">${ic("shield", 64)}</span>`}<div><b>MAIRIE DE ${ecE(com.toUpperCase())}</b><span>Service de l’état civil</span></div></header>` +
-    `<div style="color: red; font-weight: bold; text-align: center; border: 2px solid red; padding: 10px; margin: 20px 0;">DOCUMENT PRÉPARATOIRE — NON VALIDE SANS SIGNATURE DE L'OFFICIER</div><h1 class="ecd-t">Copie d’acte de ${ecE(ECT[a.type_acte].toLowerCase())}</h1><p class="ecd-s">Registre des actes de ${ecE(ECT[a.type_acte].toLowerCase())} · Année ${ecE(a.annee_acte)}</p>` +
+    `<div class="ec-warning">DOCUMENT PRÉPARATOIRE — NON VALIDE SANS SIGNATURE DE L'OFFICIER</div><h1 class="ecd-t">Copie d’acte de ${ecE(ECT[a.type_acte].toLowerCase())}</h1><p class="ecd-s">Registre des actes de ${ecE(ECT[a.type_acte].toLowerCase())} · Année ${ecE(a.annee_acte)}</p>` +
     `<dl class="ecd-d">${ecRows(a)
       .map(x => `<dt>${ecE(x[0])}</dt><dd>${ecE(x[1])}</dd>`)
       .join("")}</dl>` +
     `<footer class="ecd-f"><div class="ecd-g"><p>Délivrée à ${ecE(com)}, le ${ecE(now)}${dem && dem.nom ? "<br>Demandeur : " + ecE(dem.nom) : ""}${dem && dem.numero ? "<br>Dossier n° " + ecE(dem.numero) : ""}</p><p class="ecd-o">L’officier de l’état civil</p><p class="ecd-sg"></p></div>` +
-    `<div class="ecd-q"><img src="${ecE(qr)}" alt="QR Code de vérification de la copie" width="130" height="130"><p>Scannez pour vérifier l’authenticité.<br><b>${ecE(ref)}</b></p></div></footer>` +
+    `<div class="ecd-q"><img src="${ecE(qr)}" alt="QR Code de vérification de la copie" width="130" height="130"><p>Vérifier la référence du dossier.<br><b>${ecE(ref)}</b></p></div></footer>` +
     `<p class="ecd-n">Ce document est un préparatoire. Il ne constitue pas une copie officielle tant qu'il n'est pas signé et cacheté par l'officier de l'état civil. Authenticité vérifiable en ligne sur ${ecE(location.origin)}/verifier.html avec la référence ci-dessus.</p></article>`
   );
 };

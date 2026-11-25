@@ -4,7 +4,7 @@
    Module encapsulé : aucun identifiant global déclaré, car maire.js déclare déjà `const patrimoine`.
    Dépend de core.js, core-ui.js, adjoints.js (fdd), maire.js (st2) : à charger après maire.js. */
 (() => {
-  const ROLES = ["maire", "secretariat", "finances"],
+  const ROLES = ["maire", "secretariat", "technique"],
     CATS = [
       ["terrain", "Terrain"],
       ["batiment", "Bâtiment"],

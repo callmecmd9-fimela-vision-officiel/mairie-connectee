@@ -3,7 +3,10 @@
    Rejeu : par le client Supabase de la page (`sb`, défini par core.js ou citoyen.js), donc avec la session et le JWT à jour, sous les règles RLS habituelles.
    Déclencheurs : événement `online`, retour au premier plan, démarrage de la page, message du service worker (Background Sync, tag « mc-offline-queue »),
    et nouvelle tentative avec délai croissant tant que le réseau ou la session ne sont pas prêts.
-   Module encapsulé : seuls `queueAction` et `offlineQueue` sont exposés sur window. Aucun autre fichier n'est modifié ni requis (sb est résolu à l'appel).
+   Sécurité (audit P1) : `queueAction` EXIGE `S.uid` et `S.cid` (sinon erreur, rien n'est enregistré). Chaque action porte `uid`, `cid` et une
+   `idempotency_key` (crypto.randomUUID). Avant tout envoi, la synchronisation vérifie que `S.uid` / `S.cid` sont inchangés : si le compte ou la
+   commune a changé, la file est VIDÉE et rien n'est envoyé. `getPendingActions()` liste les actions en attente, `clearQueue()` vide tout.
+   Module encapsulé : seuls `queueAction`, `getPendingActions`, `clearQueue` et `offlineQueue` sont exposés sur window. Aucun autre fichier n'est modifié ni requis (sb est résolu à l'appel).
 
    Usage :
      queueAction({ table: "signalements", op: "insert", data: {...}, autoId: true })
@@ -98,6 +101,13 @@
       o.items = o.items.map(x => (x.qid == rec.qid ? rec : x));
       lsWrite(o);
     },
+    async clear() {
+      await this.init();
+      if (mode == "idb") return idb("readwrite", s => s.clear());
+      const o = lsRead();
+      o.items = [];
+      lsWrite(o);
+    },
     async del(qid) {
       await this.init();
       if (mode == "idb") return idb("readwrite", s => s.delete(qid));
@@ -115,6 +125,16 @@
           const r = (Math.random() * 16) | 0;
           return (c == "x" ? r : (r & 3) | 8).toString(16);
         });
+  const ctx = () => {
+    /* S : état global déclaré par core.js / citoyen.js (let de premier niveau, donc non porté par window) */
+    let s = null;
+    try {
+      s = typeof S !== "undefined" && S ? S : null;
+    } catch (e) {}
+    return { uid: (s && s.uid) || null, cid: (s && s.cid) || null };
+  };
+  const rid = () =>
+    typeof crypto != "undefined" && crypto.randomUUID ? crypto.randomUUID() : uuid();
   const isObj = x => x && typeof x == "object" && !Array.isArray(x);
   const curUid = async c => {
     try {
@@ -171,19 +191,30 @@
   }
 
   async function queueAction(actionData) {
+    const x = ctx();
+    if (!x.uid) throw new Error("queueAction : S.uid (identifiant utilisateur) obligatoire, action non enregistrée.");
+    if (!x.cid) throw new Error("queueAction : S.cid (identifiant commune) obligatoire, action non enregistrée.");
     const o = valider(actionData);
     if ((await info()).pending >= MAX) throw new Error("File hors ligne pleine (" + MAX + " actions) : reconnectez-vous pour la vider.");
-    const c = client(),
-      uid = c
-        ? await Promise.race([curUid(c), new Promise(r => setTimeout(() => r(null), 3000))])
-        : null; /* compte propriétaire : le rejeu n'a lieu que sous la même session */
-    o.uid = uid;
+    const y = ctx();
+    if (y.uid !== x.uid || y.cid !== x.cid) throw new Error("queueAction : le compte ou la commune a changé, action non enregistrée.");
+    o.uid = x.uid; /* compte et commune propriétaires : le rejeu n'a lieu que sous les mêmes S.uid / S.cid */
+    o.cid = x.cid;
+    o.idempotency_key = rid();
     o.at = new Date().toISOString();
     const qid = await store.add(o);
     notify();
     syncReg();
     if (!offline()) setTimeout(flush, 0); /* navigator.onLine peut mentir : on tente tout de suite, le délai croissant prend le relais */
     return { queued: true, qid };
+  }
+
+  async function getPendingActions() {
+    return (await store.all()).filter(x => !x.failed).sort((a, b) => a.qid - b.qid);
+  }
+  async function clearQueue() {
+    await store.clear();
+    await notify();
   }
 
   /* ---------- Rejeu ---------- */
@@ -222,7 +253,18 @@
     if (offline()) return false;
     const c = client();
     if (!c) return false;
-    const items = (await store.all()).filter(x => !x.failed).sort((a, b) => a.qid - b.qid);
+    const all = await store.all();
+    if (!all.length) return true;
+    const x0 = ctx();
+    if (!x0.uid || !x0.cid) {
+      planifier();
+      return false; /* contexte utilisateur/commune indisponible (déconnexion, chargement) : rien n'est envoyé, on attend */
+    }
+    if (all.some(it => it.uid !== x0.uid || it.cid !== x0.cid)) {
+      await clearQueue(); /* changement de compte ou de commune : par sécurité on vide tout et on n'envoie rien */
+      return false;
+    }
+    const items = all.filter(x => !x.failed).sort((a, b) => a.qid - b.qid);
     if (!items.length) return true;
     const uid = await curUid(c);
     if (!uid) {
@@ -232,7 +274,12 @@
     let refreshed = false,
       stop = false;
     for (const it of items) {
-      if (it.uid && it.uid !== uid) continue; /* action d'un autre compte : jamais rejouée sous cette session */
+      const xn = ctx();
+      if (xn.uid !== x0.uid || xn.cid !== x0.cid) {
+        await clearQueue(); /* le compte a changé pendant la synchronisation : on arrête et on vide */
+        return false;
+      }
+      if (it.uid !== uid) continue; /* session Supabase différente du compte enregistré : jamais rejouée */
       for (let essai = 0; essai < 2; essai++) {
         let r;
         try {
@@ -305,9 +352,13 @@
   setTimeout(flush, 3000); /* démarrage : laisse à core.js / citoyen.js le temps de créer sb et de restaurer la session */
 
   window.queueAction = queueAction;
+  window.getPendingActions = getPendingActions;
+  window.clearQueue = clearQueue;
   window.offlineQueue = {
     flush,
     info,
+    getPendingActions,
+    clearQueue,
     list: () => store.all(),
     /* actions refusées définitivement : les relancer (retryFailed) ou les abandonner (discard) */
     retryFailed: async () => {
