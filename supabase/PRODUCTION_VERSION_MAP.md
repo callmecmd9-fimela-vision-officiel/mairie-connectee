@@ -29,6 +29,7 @@ Les migrations du dépôt sont **appliquées en production** (le ZIP MAJ16 les c
 | 20261202000500_lot13_services_territoriaux.sql | 20261202000500 | **appliquée** (`territoire_infrastructures`, `territoire_actions`) ; inscrite a posteriori |
 | 20261202000600_p0_rpc_valider_paiement.sql | — | **appliquée le 2026-11-25 en SQL direct** (RPC `valider_paiement_especes` + table `paiements_validations` + étape 2 : politique `ptx_staff_upd` supprimée et droit UPDATE direct retiré à `authenticated`). Version non encore inscrite dans l'historique : `supabase migration repair --status applied 20261202000600`. |
 | 20261202000700_p0_rls_paiements.sql | — | **appliquée le 2026-11-25 en SQL direct** (garde-fou : politique restrictive `ptx_update_interdit_api`, retrait des droits UPDATE niveau colonne, contrôle final). Version non inscrite dans l'historique : `supabase migration repair --status applied 20261202000700`. |
+| 20261202000800_p0_revoke_paiements.sql | — | **appliquée le 2026-11-25 en SQL direct** (`paiements_taxes` : DELETE, TRUNCATE, REFERENCES, TRIGGER retirés à `authenticated`, tout retiré à `anon` ; mêmes retraits d'écriture sur les autres tables financières si elles existent ; contrôle final). Version non inscrite dans l'historique : `supabase migration repair --status applied 20261202000800`. |
 
 Les instructions des migrations appliquées ont été compactées par l'outil d'application (tailles différentes) : ne pas comparer octet par octet.
 
