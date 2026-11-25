@@ -44,6 +44,14 @@ html[data-theme="dark"] .sh{border-left-color:var(--gtx)}
 html[data-theme="dark"] .tt{border:1px solid #424c3f}
 html[data-theme="dark"] .ico{background:#1e261b}
 html[data-theme="dark"] .ac{background:linear-gradient(#1d2718,#242f20);border:1px solid #485546}
+html[data-theme="dark"] .sig-box{background:#161d19;color:#ddebe3}
+html[data-theme="dark"] .sig-cl{background:#21271f}
+html[data-theme="dark"] #sig-map{background:#272f27}
+html[data-theme="dark"] .sig-d{border:2px solid #313f37}
+html[data-theme="dark"] .sig-pin{border:3px solid #313f37}
+html[data-theme="dark"] .sig-msg.err{color:#dc7373}
+html[data-theme="dark"] .sig-msg.ok{color:#aeebc5}
+html[data-theme="dark"] .pmb{border:2px solid var(--gtx);color:var(--gtx)}
 
 html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{background:var(--sur);color:var(--tx);border-color:#3a4f43}
 html[data-theme="dark"] input::placeholder,html[data-theme="dark"] textarea::placeholder{color:#8da095}
