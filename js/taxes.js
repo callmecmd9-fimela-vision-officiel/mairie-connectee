@@ -18,6 +18,17 @@ const ptF = n => (+n || 0).toLocaleString("fr-FR") + " FCFA",
     const d = x ? new Date(x) : null;
     return d && !isNaN(d) ? d.toLocaleDateString("fr-FR") + " " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "—";
   };
+// Messages clairs pour les erreurs renvoyées par la RPC valider_paiement_especes (les contrôles réels sont côté serveur)
+const ptE = e => {
+  const c = e && e.code,
+    m = (e && e.message) || "";
+  if (c === "PGRST202" || c === "42883") return "La validation des paiements n’est pas encore disponible sur le serveur. Contactez l’administrateur.";
+  if (c === "28000" || c === "PGRST301") return "Session expirée : reconnectez-vous puis réessayez.";
+  if (c === "P0002") return "Paiement introuvable pour votre commune. Actualisez la liste.";
+  if (c === "40001") return "Ce paiement a été modifié entre-temps. Actualisez la liste puis réessayez.";
+  if (c === "42501" || c === "22023" || c === "55000") return m || "Validation refusée.";
+  return m || "Erreur réseau.";
+};
 const taxes = () => {
   const L = D().paiements_taxes,
     ok = L.filter(x => x.statut == "paye"),
@@ -33,7 +44,7 @@ const taxes = () => {
         const s = x.statut;
         return rw(
           `<b>${esc(x.type_taxe || "Taxe")}</b> · ${esc(ptF(x.montant))}<div class="mut" data-sty="font-size:13px">${esc(ptD(x.created_at))} · Réf. ${esc(x.reference_paiement || "—")} · ${esc(PSR[x.source] || "")}</div>`,
-          `<span data-sty="display:grid;gap:6px;justify-items:end">${st2(PTS[s] || s || "—", PTC[s] || "rd")}${s == "en_attente" ? (S.pr === 'maire' || S.pr === 'finances' ? `<button class="bt" data-m="ptval" data-id="${esc(x.id)}">Valider (espèces)</button>` : '') : ""}</span>`
+          `<span data-sty="display:grid;gap:6px;justify-items:end">${st2(PTS[s] || s || "—", PTC[s] || "rd")}${s == "en_attente" && x.source == "guichet" ? (S.pr === 'finances' ? `<button class="bt" data-m="ptval" data-id="${esc(x.id)}">Valider (espèces)</button>` : '') : ""}</span>`
         );
       }).join("") || emp("Aucun paiement de taxe enregistré."),
       `<button class="bo" data-m="ptcsv">Exporter CSV (comptabilité)</button>`
@@ -61,23 +72,17 @@ document.addEventListener("click", e => {
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 });
 document.addEventListener("click", async e => {
-  if (!['maire', 'finances'].includes(S.pr)) return;
+  if (S.pr !== 'finances') return; // la RPC valider_paiement_especes n'accepte que le rôle finances
   const t = e.target.closest("[data-m=ptval]");
   if (!t || S.sa) return;
   S.err = "";
   try {
     const x = D().paiements_taxes.find(y => y.id == t.dataset.id);
     if (!x || x.statut != "en_attente") return;
+    if (x.source != "guichet") throw new Error("Validation refusée : seul un paiement enregistré au guichet (espèces) peut être validé ici.");
     if (!confirm("Confirmer que ce paiement de " + ptF(x.montant) + " a été reçu au guichet ?")) return;
-    const r = await sb
-      .from("paiements_taxes")
-      .update({ statut: "paye", quittance_url: x.quittance_url || "/quittance?ref=" + encodeURIComponent(x.reference_paiement || x.id) })
-      .eq("id", x.id)
-      .eq("commune_id", S.cid)
-      .eq("statut", "en_attente")
-      .select("id");
-    if (r.error) throw new Error(r.error.message);
-    if (!r.data || !r.data.length) throw new Error("Validation refusée : vos droits ne permettent pas de valider ce paiement.");
+    const r = await sb.rpc("valider_paiement_especes", { p_id: x.id, p_motif: "Validation guichet" });
+    if (r.error) throw new Error(ptE(r.error));
     await load(["paiements_taxes"]);
     S.err = "Paiement validé : la recette est comptabilisée.";
   } catch (x) {
