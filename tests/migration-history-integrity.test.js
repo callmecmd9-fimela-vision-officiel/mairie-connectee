@@ -52,11 +52,17 @@ const pendingFiles = [
   '20261123090000_politique_mot_de_passe_30_jours.sql',
   // Admins de mairie activés = super_admin de leur commune (2026-11-23) : appliquée en production (version 20261123084211).
   '20261123120000_admin_mairie_actif_vers_admin_commune.sql',
-  // LOT A (2026-12-02) : socle géographique des communes — NON encore appliquée en production.
-  '20261202000000_communes_geo.sql'
+  // LOT A (2026-12-02) : socle géographique des communes — appliquée en production (objets vérifiés), enregistrée dans l'historique sous cette version.
+  '20261202000000_communes_geo.sql',
+  // LOTS 9 à 13 (2026-12-02) : appliquées en production (objets vérifiés) et enregistrées dans l'historique Supabase sous ces mêmes versions.
+  '20261202000100_lot9_budget.sql',
+  '20261202000200_lot10_marches.sql',
+  '20261202000300_lot11_gouvernance.sql',
+  '20261202000400_lot12_patrimoine.sql',
+  '20261202000500_lot13_services_territoriaux.sql'
 ];
 const actualSqlFiles = fs.readdirSync(migrationDir).filter(name => name.endsWith('.sql')).sort();
 const expectedSqlFiles = [...historicalFiles, ...pendingFiles].sort();
 assert.deepEqual(actualSqlFiles, expectedSqlFiles, 'unexpected or missing SQL migration files');
 
-console.log(`PASS: ${manifest.count} recovered migration sources match Supabase history checksums; 8 post-capture migrations (all applied in production, see PRODUCTION_VERSION_MAP.md) remain separate.`);
+console.log(`PASS: ${manifest.count} recovered migration sources match Supabase history checksums; ${pendingFiles.length} post-capture migrations (applied in production or proposed, see PRODUCTION_VERSION_MAP.md) remain separate.`);
