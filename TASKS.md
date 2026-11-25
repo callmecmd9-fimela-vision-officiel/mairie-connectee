@@ -1,5 +1,14 @@
 # TASKS — état au 2026-11-25
 
+## P1 Parcours citoyen — suivi public et guichet (2026-11-25)
+- [ ] Déployer `suivi.html`, `js/suivi.js`, `js/guichet.js`, `mairie.html` (guichet v20261125.5), `index.html`, `.assetsignore` ; vider le cache/PWA.
+- [ ] **Vérifier en production que `20261202001600` à `001900` sont appliquées** (colonnes `num_suivi` / `montant_du` / `lieu_retrait`, RPC `suivi_public`, `encaisser_demande(uuid, numeric, text, text)`, `retirer_demande`). Sinon le guichet affiche « migration à appliquer ».
+- [ ] **Bloquant probable pour la Caisse** : la politique RLS `demandes_personnel` (catalogue du 2026-11-19) ne laisse `finances` voir que les demandes `service = 'finances'`. Une demande déposée au guichet est routée `secretariat` / `etat_civil` / `technique` : le rôle `finances` ne la verra pas, donc Caisse vide et recherche Retrait vide pour lui. À trancher : élargir la lecture de `finances` aux statuts `a_payer` / `paye` / `pret_a_retirer` (migration à proposer) ou fournir une RPC de lecture dédiée.
+- [ ] Tester : dépôt (secretariat / agent) → reçu imprimé ; `suivi.html` avec ce numéro + téléphone ; Caisse (finances) → quittance ; passage à `pret_a_retirer` (aucun écran ne le pose encore : à brancher dans le circuit de production) ; Retrait → registre.
+- [ ] Décision : une demande gratuite (tarif 0) reste `depose` ; il n'existe pas encore d'écran qui la fait avancer vers `pret_a_retirer`.
+- [ ] Rôle `comptable` : mentionné par la RPC mais absent de `profiles_role_check` ; onglet Caisse réservé à `finances`.
+- [ ] Reste : le suivi public ne propose ni code PIN ni QR ; pas de limitation de débit côté client (la RPC ralentit les échecs de 0,5 s).
+
 ## P1 Services territoriaux — modifier / supprimer / géo / budget (2026-11-25)
 - [x] `20261202001400` **appliquée en production le 2026-11-25** (PostgreSQL 17). Reste à déployer `js/services_territoire.js` + `mairie.html` (v20261205.2), vider le cache/PWA.
 - [ ] Tester `maire` / `secretariat` : modifier et supprimer une infrastructure et une action ; saisir lat/long ; lier une ligne budgétaire et vérifier le détail ; `adjoint` / `technique` : le serveur autorise l'écriture, l'interface non (périmètre boutons maire / secrétariat à confirmer).
@@ -15,7 +24,7 @@
 - [x] Migrations `20261202001000`, `001100` et `001200` **appliquées en production le 2026-11-25** (000900 y était déjà). Reste à déployer `js/deliberations.js` + `mairie.html` (v20261125.4), vider le cache/PWA.
 - [ ] Tester : compte `maire` → « Clôturer le vote » (adoptée / rejetée / aucun vote refusé) ; compte non maire → 42501 ; 2e clôture → 55000 « vote clos » ; vérifier la trace `audit_log` de la mise à jour.
 - [x] Propriétaire de `cloturer_deliberation` vérifié : `postgres`.
-- [ ] Déployer l'Edge Function `sa-admin` (rôle `conseiller` autorisé) : le changement est dans le dépôt, pas encore en production.
+- [x] Edge Function `sa-admin` **redéployée en production le 2026-11-25** (version 18, `verify_jwt` = true ; seul changement : `conseiller` dans `ROLES`).
 - [ ] Reste hors périmètre : `js/actions.js` (~l. 944) insère encore une délibération directement en `adoptee` (refusé par le trigger) ; voix prépondérante du maire en cas d'égalité non gérée (égalité = rejetée).
 
 ## P1 Gouvernance — clôture du vote et PV (2026-11-25)

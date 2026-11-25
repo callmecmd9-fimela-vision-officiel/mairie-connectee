@@ -33,6 +33,7 @@ CODEOWNERS
 !/saas.html
 !/verifier.html
 !/quittance.html
+!/suivi.html
 !/sw.js
 !/_headers
 !/manifest-*.webmanifest
