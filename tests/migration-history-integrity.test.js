@@ -77,7 +77,9 @@ const pendingFiles = [
   // P1 patrimoine (2026-11-25) : biens.latitude / longitude — appliquée en production le 2026-11-25.
   '20261202001300_p1_patrimoine_geolocalisation.sql',
   // P1 services territoriaux (2026-11-25) : latitude / longitude + budget_ligne_id — appliquée en production le 2026-11-25.
-  '20261202001400_p1_services_geo.sql'
+  '20261202001400_p1_services_geo.sql',
+  // P1 paiements (2026-11-25) : FK paiements_taxes.citoyen_id -> auth.users (encaissement guichet) — appliquée en production le 2026-11-25.
+  '20261202001500_p1_fix_paiements_taxes_citoyen_fk.sql'
 ];
 const actualSqlFiles = fs.readdirSync(migrationDir).filter(name => name.endsWith('.sql')).sort();
 const expectedSqlFiles = [...historicalFiles, ...pendingFiles].sort();
