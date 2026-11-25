@@ -1,7 +1,13 @@
 # TASKS — état au 2026-11-25
 
+## P1 Services territoriaux — modifier / supprimer / géo / budget (2026-11-25)
+- [x] `20261202001400` **appliquée en production le 2026-11-25** (PostgreSQL 17). Reste à déployer `js/services_territoire.js` + `mairie.html` (v20261205.2), vider le cache/PWA.
+- [ ] Tester `maire` / `secretariat` : modifier et supprimer une infrastructure et une action ; saisir lat/long ; lier une ligne budgétaire et vérifier le détail ; `adjoint` / `technique` : le serveur autorise l'écriture, l'interface non (périmètre boutons maire / secrétariat à confirmer).
+- [ ] À vérifier : lecture de `budget_lignes` par `secretariat` (sinon la liste déroulante est vide et le détail affiche « introuvable ou non accessible »).
+- [ ] Reste : lien avec les marchés ; pas de carte intégrée.
+
 ## P1 Patrimoine — modifier / supprimer / détail / entretiens (2026-11-25)
-- [ ] Appliquer `20261202001300_p1_patrimoine_geolocalisation.sql` (facultatif : sans elle, laisser latitude / longitude vides), puis déployer `js/patrimoine.js` + `mairie.html` (v20261125.2), vider le cache/PWA.
+- [x] `20261202001300` **appliquée en production le 2026-11-25**. Reste à déployer `js/patrimoine.js` + `mairie.html` (v20261125.2), vider le cache/PWA.
 - [ ] Tester avec `maire` / `secretariat` / `technique` : modifier un bien ; supprimer un bien sans entretien (OK) et avec entretien (message FK) ; Détail > Ajouter un entretien ; `adjoint` / `finances` : lecture seule, aucun bouton.
 - [ ] Reste : pas de modification / annulation d'un entretien dans l'interface (statut `annule` possible seulement en base) ; pas de carte intégrée (lien OpenStreetMap) ; `patrimoine_inventaires` sans écran.
 

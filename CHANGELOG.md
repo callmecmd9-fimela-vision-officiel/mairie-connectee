@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 2026-11-25 — Application en production des migrations 20261202001300 et 001400
+- Appliquées sur le projet Supabase de production et inscrites sous leurs versions du dépôt : `20261202001300_p1_patrimoine_geolocalisation` (`patrimoine_biens.latitude` / `longitude` + CHECK) et `20261202001400_p1_services_geo` (`territoire_infrastructures.latitude` / `longitude` / `budget_ligne_id`, `territoire_actions.budget_ligne_id`, FK composites `ON DELETE SET NULL (budget_ligne_id)`, index partiels). Contrôles préalables : PostgreSQL 17, colonnes absentes, `budget_lignes unique (id, commune_id)` présent ; contrôles après : colonnes et contraintes présentes. Aucune donnée modifiée.
+
+## 2026-11-25 — P1 Services territoriaux : modification, suppression, géolocalisation, lien budgétaire (point 6.5)
+- **Front** (`js/services_territoire.js`, `mairie.html` v20261205.2) : boutons **Détail / Modifier / Supprimer** sur chaque infrastructure et chaque action (maire, secrétariat ; `confirm`, détection « 0 ligne »). Vue **« Détail »** (retour à la liste). Infrastructures : **latitude / longitude** facultatives (les deux ou aucune, bornes ±90 / ±180, lien OpenStreetMap). Infrastructures et actions : **liste déroulante de lignes budgétaires** (`budget_lignes` de type dépense, libellé année · chapitre / article · montant prévu), liaison affichée dans le détail (prévu / réalisé).
+- **Compatibilité** : les nouveaux champs ne sont envoyés que s'ils sont renseignés ; message explicite si la migration n'est pas appliquée.
+- **SQL (PROPOSÉE — non appliquée)** : `supabase/migrations/20261202001400_p1_services_geo.sql` (colonnes `latitude`, `longitude`, `budget_ligne_id` ; FK composite par commune, `ON DELETE SET NULL (budget_ligne_id)`, CHECK géo, index partiels). RLS du lot 13 inchangées.
+- **Tests / doc** : `tests/migration-history-integrity.test.js`, `supabase/PRODUCTION_VERSION_MAP.md`.
+
 ## 2026-11-25 — P1 Patrimoine : modification, suppression, détail du bien et entretiens
 - **Front** (`js/patrimoine.js`, `mairie.html` v20261125.2) : boutons **Modifier** et **Supprimer** sur chaque bien (maire, secrétariat, technique ; `confirm` avant suppression, détection « 0 ligne » et message dédié si la clé étrangère (23503) bloque car le bien a des entretiens). Vue **« Détail du bien »** (bouton « Détail », retour à la liste) avec l'historique des entretiens (`patrimoine_entretiens`, coût total hors annulés) et bouton **« Ajouter un entretien »** (date, description, coût, prestataire, statut ; contrôles de saisie). Pas de suppression d'entretien (traçabilité, cf. lot 12).
 - **Géolocalisation** : champs latitude / longitude facultatifs (les deux ou aucun, bornes ±90 / ±180), lien « Voir sur la carte » (OpenStreetMap). Coordonnées envoyées seulement si saisies ; message clair si la migration n'est pas appliquée.
