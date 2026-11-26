@@ -1,18 +1,23 @@
--- LOT 17 : paiement mobile réel (Wave / Orange Money) et rapprochement des taxes. PROPOSÉE, non appliquée. Idempotente.
+-- LOT 17 : paiement mobile Wave / Orange Money — architecture multi-communes avec mode sandbox / production. PROPOSÉE, non appliquée. Idempotente.
 -- Prérequis : 20261203000200 (lot 15), 20261203000400 (lot 16) et 20261202001800 (quittances, séquence quittances_num_seq).
 --
 -- Principe de sécurité : le citoyen n'a JAMAIS le droit de marquer un paiement comme confirmé.
---   * initier_paiement_en_ligne (authenticated) : crée une ligne « en_attente » et renvoie le lien du fournisseur ;
+--   * initier_paiement_en_ligne (authenticated) : crée une ligne « en_attente » et renvoie le lien (factice en sandbox) ;
 --   * confirmer_paiement_mobile / echouer_paiement_mobile : exécutables UNIQUEMENT par service_role, c'est-à-dire par
---     l'Edge Function paiement-webhook, après vérification de la signature (ou du jeton secret) du fournisseur ;
---   * le statut « confirmé » reste la valeur historique 'paye' (utilisée par verifier_quittance, « Mes quittances »,
---     mes_roles_imposition, valider_paiement_especes…) : introduire une seconde valeur casserait ces lectures.
---     Statuts de paiement : en_attente, paye (= confirmé), echoue.
+--     l'Edge Function paiement-webhook, après authentification avec les paramètres PROPRES À LA COMMUNE
+--     (parametres_paiement_communes) : signature HMAC en production, jeton secret de la commune en sandbox ;
+--   * les clés des communes sont stockées chiffrées (pgcrypto, pgp_sym_encrypt) ; la clé maîtresse n'est JAMAIS en base :
+--     elle vit dans le secret PAIEMENT_ENC_KEY de l'Edge Function et n'est transmise qu'aux RPC réservées à service_role ;
+--   * deux colonnes de statut : `statut` (historique : en_attente, paye, echoue — lu par verifier_quittance, « Mes quittances »,
+--     valider_paiement_especes…) et `statut_paiement` (en_attente, confirme, echoue), recopie automatique par trigger.
+
+create extension if not exists pgcrypto with schema extensions;
 
 -- 1) Colonnes, contraintes, index d'idempotence ---------------------------------------------------------------------
 alter table public.paiements_taxes
   add column if not exists provider text,
-  add column if not exists provider_transaction_id text;
+  add column if not exists provider_transaction_id text,
+  add column if not exists statut_paiement text not null default 'en_attente';
 
 alter table public.paiements_taxes drop constraint if exists paiements_taxes_provider_check;
 alter table public.paiements_taxes add constraint paiements_taxes_provider_check
@@ -31,29 +36,124 @@ alter table public.paiements_taxes drop constraint if exists paiements_taxes_sou
 alter table public.paiements_taxes add constraint paiements_taxes_source_check
   check (source in ('taxe', 'en_ligne_simule', 'guichet', 'en_ligne')) not valid;
 
+alter table public.paiements_taxes drop constraint if exists paiements_taxes_statut_paiement_check;
+alter table public.paiements_taxes add constraint paiements_taxes_statut_paiement_check
+  check (statut_paiement in ('en_attente', 'confirme', 'echoue'));
+
+-- statut_paiement suit toujours statut (guichet, espèces, webhook : aucun chemin d'écriture ne peut les désynchroniser).
+create or replace function public.paiements_taxes_sync_statut_paiement() returns trigger
+language plpgsql set search_path = '' as $$
+begin
+  new.statut_paiement := case new.statut when 'paye' then 'confirme' when 'echoue' then 'echoue' else 'en_attente' end;
+  return new;
+end $$;
+revoke all on function public.paiements_taxes_sync_statut_paiement() from public, anon, authenticated;
+drop trigger if exists trg_ptx_statut_paiement on public.paiements_taxes;
+create trigger trg_ptx_statut_paiement before insert or update on public.paiements_taxes
+  for each row execute function public.paiements_taxes_sync_statut_paiement();
+update public.paiements_taxes
+   set statut_paiement = case statut when 'paye' then 'confirme' when 'echoue' then 'echoue' else 'en_attente' end
+ where statut_paiement is distinct from case statut when 'paye' then 'confirme' when 'echoue' then 'echoue' else 'en_attente' end;
+
 -- Un paiement en ligne confirmé porte toujours son fournisseur et son identifiant de transaction.
 alter table public.paiements_taxes drop constraint if exists paiements_taxes_en_ligne_confirme_check;
 alter table public.paiements_taxes add constraint paiements_taxes_en_ligne_confirme_check
-  check (source <> 'en_ligne' or statut <> 'paye' or (provider is not null and provider_transaction_id is not null)) not valid;
+  check (source not in ('en_ligne', 'en_ligne_simule') or statut <> 'paye' or (provider is not null and provider_transaction_id is not null)) not valid;
 
 -- Idempotence : une transaction du fournisseur ne peut être enregistrée qu'une seule fois.
 create unique index if not exists paiements_taxes_provider_tx_uidx
   on public.paiements_taxes(provider_transaction_id) where provider_transaction_id is not null;
 
--- 2) Liens de paiement par commune et par fournisseur (aucun accès API : service_role / SQL uniquement) --------------
--- url_template accepte {reference} (référence PAY-TAXE-AAAA-NNNNNN, à renvoyer en client_reference) et {montant} (FCFA).
-create table if not exists public.paiement_mobile_config(
+-- 2) Paramètres de paiement par commune (aucun accès API : service_role / SQL uniquement) ---------------------------
+-- api_key_encrypted / api_secret_encrypted : base64 de pgp_sym_encrypt (jamais de clé en clair).
+-- api_secret = secret de signature des webhooks (HMAC) en production ; en sandbox, jeton qui autorise la simulation.
+-- url_paiement_modele (production) accepte {reference} (à restituer par le fournisseur) et {montant} (FCFA).
+create table if not exists public.parametres_paiement_communes(
   id uuid primary key default gen_random_uuid(),
   commune_id uuid not null references public.communes(id) on delete cascade,
-  provider text not null check (provider in ('wave', 'orange_money')),
-  url_template text not null check (url_template ~ '^https://[A-Za-z0-9.-]+/' and char_length(url_template) <= 500),
-  actif boolean not null default true,
+  fournisseur text not null check (fournisseur in ('wave', 'orange_money')),
+  api_key_encrypted text,
+  api_secret_encrypted text,
+  mode text not null default 'sandbox' check (mode in ('sandbox', 'production')),
+  actif boolean not null default false,
+  url_paiement_modele text check (url_paiement_modele is null or (url_paiement_modele ~ '^https://[A-Za-z0-9.-]+/' and char_length(url_paiement_modele) <= 500)),
   created_at timestamptz not null default now(),
-  unique (commune_id, provider)
+  updated_at timestamptz not null default now(),
+  unique (commune_id, fournisseur),
+  -- une commune ne peut pas être active en production sans secret ni lien de paiement
+  check (not (actif and mode = 'production') or (api_secret_encrypted is not null and url_paiement_modele is not null)),
+  -- ... ni active en sandbox sans jeton de simulation
+  check (not (actif and mode = 'sandbox') or api_secret_encrypted is not null)
 );
-alter table public.paiement_mobile_config enable row level security;
-revoke all on public.paiement_mobile_config from public, anon, authenticated;
--- Aucune politique : l'API ne lit ni n'écrit cette table ; seule initier_paiement_en_ligne (SECURITY DEFINER) la lit.
+alter table public.parametres_paiement_communes enable row level security;
+revoke all on public.parametres_paiement_communes from public, anon, authenticated;
+-- Aucune politique : l'API ne lit ni n'écrit cette table.
+
+-- Écriture chiffrée (service_role) : la clé maîtresse p_cle vient du secret PAIEMENT_ENC_KEY, jamais d'une table.
+create or replace function public.definir_parametres_paiement(
+  p_commune uuid, p_fournisseur text, p_api_key text, p_api_secret text, p_mode text, p_actif boolean, p_url_modele text, p_cle text)
+returns uuid
+language plpgsql security definer set search_path = '' as $$
+declare v_id uuid;
+begin
+  if (select auth.uid()) is not null then
+    raise exception 'Accès refusé.' using errcode = '42501';
+  end if;
+  if p_cle is null or char_length(p_cle) < 16 then
+    raise exception 'Clé de chiffrement trop courte (16 caractères minimum).' using errcode = '22023';
+  end if;
+  insert into public.parametres_paiement_communes(commune_id, fournisseur, api_key_encrypted, api_secret_encrypted, mode, actif, url_paiement_modele)
+  values (p_commune, lower(p_fournisseur),
+          case when nullif(p_api_key, '') is not null then encode(extensions.pgp_sym_encrypt(p_api_key, p_cle), 'base64') end,
+          case when nullif(p_api_secret, '') is not null then encode(extensions.pgp_sym_encrypt(p_api_secret, p_cle), 'base64') end,
+          lower(p_mode), coalesce(p_actif, false), nullif(p_url_modele, ''))
+  on conflict (commune_id, fournisseur) do update
+     set api_key_encrypted = excluded.api_key_encrypted, api_secret_encrypted = excluded.api_secret_encrypted,
+         mode = excluded.mode, actif = excluded.actif, url_paiement_modele = excluded.url_paiement_modele, updated_at = now()
+  returning id into v_id;
+  return v_id;
+end $$;
+
+-- Lecture déchiffrée (service_role, Edge Function uniquement). Renvoie null si la commune n'a pas de paramètres actifs.
+create or replace function public.lire_parametres_paiement(p_commune uuid, p_fournisseur text, p_cle text)
+returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare v public.parametres_paiement_communes%rowtype;
+begin
+  if (select auth.uid()) is not null then
+    raise exception 'Accès refusé.' using errcode = '42501';
+  end if;
+  select * into v from public.parametres_paiement_communes
+   where commune_id = p_commune and fournisseur = lower(coalesce(p_fournisseur, '')) and actif;
+  if not found then return null; end if;
+  return jsonb_build_object('mode', v.mode,
+    'api_key', case when v.api_key_encrypted is not null then extensions.pgp_sym_decrypt(decode(v.api_key_encrypted, 'base64'), p_cle) end,
+    'api_secret', case when v.api_secret_encrypted is not null then extensions.pgp_sym_decrypt(decode(v.api_secret_encrypted, 'base64'), p_cle) end);
+end $$;
+
+-- Résolution commune / montant d'une référence de taxe (le webhook en tire la commune AVANT de choisir la clé à utiliser).
+create or replace function public.resoudre_reference_taxe(p_reference text)
+returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare v public.roles_imposition%rowtype;
+begin
+  if (select auth.uid()) is not null then
+    raise exception 'Accès refusé.' using errcode = '42501';
+  end if;
+  select * into v from public.roles_imposition where reference_avis = p_reference;
+  if not found then return null; end if;
+  return jsonb_build_object('commune_id', v.commune_id, 'montant_du', v.montant_du, 'statut', v.statut);
+end $$;
+
+-- Fournisseurs actifs de la commune ouverte et leur mode (le front affiche « Mode test » en sandbox). Aucun secret.
+create or replace function public.modes_paiement_commune(p_commune text)
+returns table(fournisseur text, mode text)
+language sql stable security definer set search_path = '' as $$
+  select p.fournisseur, p.mode
+    from public.parametres_paiement_communes p
+    join public.communes c on c.id = p.commune_id
+   where c.slug = p_commune and p.actif and (select auth.uid()) is not null
+$$;
 
 -- 3) Initiation par le citoyen ----------------------------------------------------------------------------------------
 create or replace function public.initier_paiement_en_ligne(p_role_id uuid, p_provider text default 'wave')
@@ -66,6 +166,7 @@ declare
   v_key text;
   v_p public.paiements_taxes%rowtype;
   v_tpl text;
+  v_mode text;
   v_url text;
   v_objet text;
   v_nom text;
@@ -99,9 +200,9 @@ begin
     raise exception 'Ce rôle n''est plus à payer.' using errcode = '55000';
   end if;
 
-  select u.url_template into v_tpl from public.paiement_mobile_config u
-   where u.commune_id = v_r.commune_id and u.provider = v_prov and u.actif;
-  if v_tpl is null then
+  select p.mode, p.url_paiement_modele into v_mode, v_tpl from public.parametres_paiement_communes p
+   where p.commune_id = v_r.commune_id and p.fournisseur = v_prov and p.actif;
+  if v_mode is null or (v_mode = 'production' and v_tpl is null) then
     raise exception 'Paiement en ligne indisponible pour cette commune.' using errcode = '55000';
   end if;
 
@@ -112,20 +213,25 @@ begin
       raise exception 'Ce rôle est déjà payé.' using errcode = '55000';
     end if;
     -- nouvelle tentative (autre fournisseur, ou reprise après échec) : on réutilise la même ligne
-    update public.paiements_taxes set provider = v_prov, statut = 'en_attente' where id = v_p.id returning * into v_p;
+    update public.paiements_taxes set provider = v_prov, statut = 'en_attente',
+           source = case v_mode when 'sandbox' then 'en_ligne_simule' else 'en_ligne' end
+     where id = v_p.id returning * into v_p;
   else
     select left(t.libelle || ' ' || v_r.annee, 150) into v_objet from public.taxes_locales t where t.id = v_r.taxe_id;
     select left(btrim(coalesce(c.prenom, '') || ' ' || c.nom), 120) into v_nom from public.contribuables c where c.id = v_r.contribuable_id;
     insert into public.paiements_taxes(commune_id, citoyen_id, type_taxe, montant, statut, nom, source, provider, ref_recu)
-    values (v_r.commune_id, v_uid, v_objet, v_r.montant_du, 'en_attente', v_nom, 'en_ligne', v_prov, v_key)
+    values (v_r.commune_id, v_uid, v_objet, v_r.montant_du, 'en_attente', v_nom, case v_mode when 'sandbox' then 'en_ligne_simule' else 'en_ligne' end, v_prov, v_key)
     returning * into v_p;
   end if;
 
-  v_url := replace(replace(v_tpl, '{reference}', v_r.reference_avis),
-                   '{montant}', trim_scale(v_r.montant_du)::text);
+  -- Sandbox : lien factice (jamais ouvert par le front) ; production : lien du fournisseur de la commune.
+  v_url := case v_mode
+    when 'sandbox' then 'https://sandbox.paiement.invalid/pay/' || v_prov || '/' || v_r.reference_avis
+    else replace(replace(v_tpl, '{reference}', v_r.reference_avis), '{montant}', trim_scale(v_r.montant_du)::text)
+  end;
 
   return jsonb_build_object('role_id', v_r.id, 'paiement_id', v_p.id, 'reference', v_r.reference_avis,
-                            'provider', v_prov, 'montant_du', v_r.montant_du, 'statut', v_p.statut,
+                            'provider', v_prov, 'mode', v_mode, 'montant_du', v_r.montant_du, 'statut', v_p.statut,
                             'payment_url', v_url);
 end $$;
 
@@ -165,6 +271,8 @@ declare
   v_r public.roles_imposition%rowtype;
   v_p public.paiements_taxes%rowtype;
   v_key text;
+  v_mode text;
+  v_src text;
   v_num text;
   v_date timestamptz := now();
   v_pid uuid;
@@ -209,6 +317,18 @@ begin
                               'quittance_url', v_p.quittance_url);
   end if;
 
+  -- Le fournisseur doit être actif pour la commune, et l'identifiant de transaction cohérent avec son mode :
+  -- SANDBOX-… uniquement en sandbox, jamais en production (une simulation ne peut pas passer pour un vrai paiement).
+  select p.mode into v_mode from public.parametres_paiement_communes p
+   where p.commune_id = v_r.commune_id and p.fournisseur = v_prov and p.actif;
+  if v_mode is null then
+    raise exception 'Paiement mobile non configuré pour cette commune.' using errcode = '55000';
+  end if;
+  if (v_mode = 'sandbox') <> (left(v_tx, 8) = 'SANDBOX-') then
+    raise exception 'Identifiant de transaction incompatible avec le mode de la commune.' using errcode = '22023';
+  end if;
+  v_src := case v_mode when 'sandbox' then 'en_ligne_simule' else 'en_ligne' end;
+
   if v_r.statut = 'payee' then
     -- Rôle déjà soldé (ex. encaissé au guichet entre-temps) : l'argent du fournisseur est à rembourser, à traiter à la main.
     insert into public.audit_log(commune_id, user_id, action, table_name, row_id)
@@ -233,7 +353,7 @@ begin
   select * into v_p from public.paiements_taxes where commune_id = v_r.commune_id and ref_recu = v_key for update;
   if found then
     update public.paiements_taxes
-       set statut = 'paye', source = 'en_ligne', provider = v_prov, provider_transaction_id = v_tx,
+       set statut = 'paye', source = v_src, provider = v_prov, provider_transaction_id = v_tx,
            num_quittance = v_num, date_paiement = v_date
      where id = v_p.id
      returning id, reference_paiement into v_pid, v_pref;
@@ -241,18 +361,18 @@ begin
     select left(t.libelle || ' ' || v_r.annee, 150) into v_objet from public.taxes_locales t where t.id = v_r.taxe_id;
     select left(btrim(coalesce(c.prenom, '') || ' ' || c.nom), 120) into v_nom from public.contribuables c where c.id = v_r.contribuable_id;
     insert into public.paiements_taxes(commune_id, type_taxe, montant, statut, nom, source, provider, provider_transaction_id, ref_recu, num_quittance)
-    values (v_r.commune_id, v_objet, v_r.montant_du, 'paye', v_nom, 'en_ligne', v_prov, v_tx, v_key, v_num)
+    values (v_r.commune_id, v_objet, v_r.montant_du, 'paye', v_nom, v_src, v_prov, v_tx, v_key, v_num)
     returning id, reference_paiement into v_pid, v_pref;
   end if;
   update public.paiements_taxes set quittance_url = '/quittance?ref=' || v_pref where id = v_pid;
 
   insert into public.quittances(commune_id, role_id, paiement_id, num_quittance, montant, source, ref_recu, emise_par)
-  values (v_r.commune_id, v_r.id, v_pid, v_num, v_r.montant_du, 'en_ligne', v_key, null);
+  values (v_r.commune_id, v_r.id, v_pid, v_num, v_r.montant_du, v_src, v_key, null);
 
   update public.roles_imposition set statut = 'payee' where id = v_r.id;
 
   insert into public.audit_log(commune_id, user_id, action, table_name, row_id)
-  values (v_r.commune_id, null, 'CONFIRMER_PAIEMENT_MOBILE', 'paiements_taxes', v_pid);
+  values (v_r.commune_id, null, case v_mode when 'sandbox' then 'CONFIRMER_PAIEMENT_MOBILE_SANDBOX' else 'CONFIRMER_PAIEMENT_MOBILE' end, 'paiements_taxes', v_pid);
 
   return jsonb_build_object('succes', true, 'deja_traite', false, 'num_quittance', v_num,
                             'reference_paiement', v_pref, 'quittance_url', '/quittance?ref=' || v_pref);
@@ -290,6 +410,14 @@ revoke all on function public.confirmer_paiement_mobile(text, text, text, numeri
 grant execute on function public.confirmer_paiement_mobile(text, text, text, numeric) to service_role;
 revoke all on function public.echouer_paiement_mobile(text, text) from public, anon, authenticated;
 grant execute on function public.echouer_paiement_mobile(text, text) to service_role;
+revoke all on function public.definir_parametres_paiement(uuid, text, text, text, text, boolean, text, text) from public, anon, authenticated;
+grant execute on function public.definir_parametres_paiement(uuid, text, text, text, text, boolean, text, text) to service_role;
+revoke all on function public.lire_parametres_paiement(uuid, text, text) from public, anon, authenticated;
+grant execute on function public.lire_parametres_paiement(uuid, text, text) to service_role;
+revoke all on function public.resoudre_reference_taxe(text) from public, anon, authenticated;
+grant execute on function public.resoudre_reference_taxe(text) to service_role;
+revoke all on function public.modes_paiement_commune(text) from public, anon;
+grant execute on function public.modes_paiement_commune(text) to authenticated;
 
 -- 6) Contrôle : la migration échoue si un utilisateur de l'API peut confirmer un paiement
 do $$
@@ -297,11 +425,15 @@ begin
   if has_function_privilege('authenticated', 'public.confirmer_paiement_mobile(text,text,text,numeric)', 'execute')
      or has_function_privilege('anon', 'public.confirmer_paiement_mobile(text,text,text,numeric)', 'execute')
      or has_function_privilege('authenticated', 'public.echouer_paiement_mobile(text,text)', 'execute')
-     or has_function_privilege('anon', 'public.echouer_paiement_mobile(text,text)', 'execute') then
+     or has_function_privilege('anon', 'public.echouer_paiement_mobile(text,text)', 'execute')
+     or has_function_privilege('authenticated', 'public.lire_parametres_paiement(uuid,text,text)', 'execute')
+     or has_function_privilege('anon', 'public.lire_parametres_paiement(uuid,text,text)', 'execute')
+     or has_function_privilege('authenticated', 'public.definir_parametres_paiement(uuid,text,text,text,text,boolean,text,text)', 'execute')
+     or has_function_privilege('authenticated', 'public.resoudre_reference_taxe(text)', 'execute') then
     raise exception 'Fermeture incomplète : la confirmation de paiement mobile est exécutable par l''API publique.';
   end if;
-  if has_table_privilege('authenticated', 'public.paiement_mobile_config', 'select')
-     or has_table_privilege('anon', 'public.paiement_mobile_config', 'select') then
-    raise exception 'Fermeture incomplète : paiement_mobile_config est lisible par l''API publique.';
+  if has_table_privilege('authenticated', 'public.parametres_paiement_communes', 'select')
+     or has_table_privilege('anon', 'public.parametres_paiement_communes', 'select') then
+    raise exception 'Fermeture incomplète : parametres_paiement_communes est lisible par l''API publique.';
   end if;
 end $$;
