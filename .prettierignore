@@ -4,3 +4,9 @@ js/qr.js
 js/*.test.js
 js/smoke.js
 js/mdp-policy.js
+# Fichiers analysés par regex dans tests/ (roles-admin-mairie, carte-et-activation) : leur mise en forme source est contractuelle.
+js/core.js
+js/carte3d.js
+js/citoyen.js
+js/communes-geo.js
+js/signalements.js
