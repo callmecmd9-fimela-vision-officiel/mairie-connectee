@@ -80,7 +80,10 @@
       "coins",
       D()
         .taxes_locales.map(t =>
-          rw(`<b>${esc(t.libelle)}</b>${sous(esc(TT[t.type] || t.type) + " · " + esc(PE[t.periodicite] || t.periodicite))}`, `<b>${argent(t.montant_base)}</b>`)
+          rw(
+            `<b>${esc(t.libelle)}</b>${sous(esc(TT[t.type] || t.type) + " · " + esc(PE[t.periodicite] || t.periodicite))}`,
+            `<b>${argent(t.montant_base)}</b>`
+          )
         )
         .join("") || emp("Aucune taxe définie.")
     );
@@ -102,8 +105,16 @@
             "doc",
             D().contribuables.length && D().taxes_locales.length
               ? frm(
-                  sel("fx_rco", "Contribuable", D().contribuables.map(c => [c.id, qui(c)])) +
-                    sel("fx_rta", "Taxe", D().taxes_locales.map(t => [t.id, t.libelle])) +
+                  sel(
+                    "fx_rco",
+                    "Contribuable",
+                    D().contribuables.map(c => [c.id, qui(c)])
+                  ) +
+                    sel(
+                      "fx_rta",
+                      "Taxe",
+                      D().taxes_locales.map(t => [t.id, t.libelle])
+                    ) +
                     inp("fx_ran", "Année", "number", an, "", 'min="2000" max="2100" step="1"')
                 ) + bouton("fxgen", "Générer un rôle")
               : emp("Ajoutez d’abord au moins un contribuable et une taxe.")
@@ -112,7 +123,10 @@
       pn(
         "Rôles d’imposition",
         "doc",
-        tabs("fisc_an", annees.map(a => [String(a), String(a)])) +
+        tabs(
+          "fisc_an",
+          annees.map(a => [String(a), String(a)])
+        ) +
           rw(`<span class="mut">À recouvrer / encaissé</span>`, `<b>${argent(total("emise"))} / ${argent(total("payee"))}</b>`) +
           (L.map(r => {
             const t = taxe(r.taxe_id);
