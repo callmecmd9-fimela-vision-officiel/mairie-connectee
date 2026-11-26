@@ -67,8 +67,18 @@
       const actifs = cons.filter(k => k.actif !== false),
         lie = actifs.find(k => k.user_id && S.uid && k.user_id == S.uid);
       if (lie) return lie.id;
-      const em = String(S.email || "").trim().toLowerCase(),
-        c = em && actifs.find(k => !k.user_id && String(k.contact || "").trim().toLowerCase() == em);
+      const em = String(S.email || "")
+          .trim()
+          .toLowerCase(),
+        c =
+          em &&
+          actifs.find(
+            k =>
+              !k.user_id &&
+              String(k.contact || "")
+                .trim()
+                .toLowerCase() == em
+          );
       return c ? c.id : null;
     },
     compte = () => {
@@ -188,7 +198,9 @@
       if (typeof sb.channel == "function")
         chan = sb
           .channel("gv_votes_" + id)
-          .on("postgres_changes", { event: "*", schema: "public", table: "votes_deliberations", filter: "deliberation_id=eq." + id }, () => rafraichir(id))
+          .on("postgres_changes", { event: "*", schema: "public", table: "votes_deliberations", filter: "deliberation_id=eq." + id }, () =>
+            rafraichir(id)
+          )
           .subscribe();
     } catch (x) {
       chan = null;
@@ -230,7 +242,8 @@
   const erreurCloture = er => {
     const c = String((er && er.code) || ""),
       m = String((er && er.message) || "");
-    if (c == "PGRST202" || /could not find the function/i.test(m)) return "Clôture indisponible : la fonction serveur « cloturer_deliberation » n’est pas déployée (migration 20261202001200).";
+    if (c == "PGRST202" || /could not find the function/i.test(m))
+      return "Clôture indisponible : la fonction serveur « cloturer_deliberation » n’est pas déployée (migration 20261202001200).";
     if (c == "42501") return "Clôture refusée : seul le maire peut clôturer le vote.";
     if (c == "P0002") return "Délibération introuvable ou hors de votre commune.";
     if (c == "55000" || c == "P0001") return m || "Clôture impossible dans l’état actuel de la délibération.";
@@ -250,18 +263,37 @@
       const st = n.pour > n.contre ? "adoptee" : "rejetee";
       if (
         !window.confirm(
-          "Clôturer le vote de la délibération n° " + x.numero + " ?\n\nPour : " + n.pour + " · Contre : " + n.contre + " · Abstention : " + n.abstention +
-            "\nRésultat : " + (st == "adoptee" ? "ADOPTÉE" : "REJETÉE") + ".\n\nCette décision est définitive."
+          "Clôturer le vote de la délibération n° " +
+            x.numero +
+            " ?\n\nPour : " +
+            n.pour +
+            " · Contre : " +
+            n.contre +
+            " · Abstention : " +
+            n.abstention +
+            "\nRésultat : " +
+            (st == "adoptee" ? "ADOPTÉE" : "REJETÉE") +
+            ".\n\nCette décision est définitive."
         )
       )
         return;
       const r = await sb.rpc("cloturer_deliberation", { p_id: x.id });
       if (r.error) throw new Error(erreurCloture(r.error));
       const o = r.data && typeof r.data == "object" ? r.data : {};
-      if (o.statut != "adoptee" && o.statut != "rejetee") throw new Error("Réponse inattendue du serveur : vérifiez l’état de la délibération.");
+      if (o.statut != "adoptee" && o.statut != "rejetee")
+        throw new Error("Réponse inattendue du serveur : vérifiez l’état de la délibération.");
       await load(["deliberations"]);
       await chargerVotes(x.id).catch(() => {});
-      S.err = "Vote clôturé : délibération " + (o.statut == "adoptee" ? "adoptée" : "rejetée") + " (Pour " + o.pour + ", Contre " + o.contre + ", Abstention " + o.abstention + ").";
+      S.err =
+        "Vote clôturé : délibération " +
+        (o.statut == "adoptee" ? "adoptée" : "rejetée") +
+        " (Pour " +
+        o.pour +
+        ", Contre " +
+        o.contre +
+        ", Abstention " +
+        o.abstention +
+        ").";
     } finally {
       enCours = false;
     }
@@ -321,7 +353,6 @@
   };
 
   const consulter = async (m, t) => {
-
     if (!lire()) return;
     S.err = "";
     try {

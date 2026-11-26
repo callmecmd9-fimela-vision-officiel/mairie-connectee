@@ -53,7 +53,9 @@ const dempay = () => {
         return rw(
           `<div${lt ? ' data-sty="border-left:4px solid #B91C1C;padding-left:8px"' : ""}><b>${esc(x.objet || x.type || "Demande")}</b> · ${esc(DPF(x.montant))}<div class="mut">${esc(x.nom || "")} · ${esc(x.telephone || "tél. non renseigné")} · N° ${esc(x.numero)}</div><div class="mut">Déposée le ${esc(DPD(x.created_at))} · Date limite : ${esc(DPD(x.date_limite))} ${lt ? st2("Délai dépassé", "rd") : ""}</div>${x.statut == "rejetee" && x.reponse ? `<div class="mut">Motif : ${esc(x.reponse)}</div>` : ""}</div>`,
           `<span data-sty="display:grid;gap:6px;justify-items:end">${st2(p[0], p[1])}${x.document_url ? st2("Document délivré", "ok") : ""}${
-            x.statut_paiement == "non_paye" && !closed ? `<button class="bt" data-m="dpenc" data-id="${esc(x.id)}">Encaisser espèces</button>` : ""
+            x.statut_paiement == "non_paye" && !closed
+              ? `<button class="bt" data-m="dpenc" data-id="${esc(x.id)}">Encaisser espèces</button>`
+              : ""
           }${
             closed
               ? ""
@@ -69,14 +71,31 @@ const dempay = () => {
 const TFS = () => {
   const T = D().tarifs_dem,
     have = new Set(T.map(x => String(x.type_service).toLowerCase())),
-    sug = [...new Set([].concat(typeof DMT != "undefined" ? DMT : [], (D().dmr || []).map(x => x.titre)).filter(Boolean))].filter(x => !have.has(String(x).toLowerCase()));
+    sug = [
+      ...new Set(
+        []
+          .concat(
+            typeof DMT != "undefined" ? DMT : [],
+            (D().dmr || []).map(x => x.titre)
+          )
+          .filter(Boolean)
+      )
+    ].filter(x => !have.has(String(x).toLowerCase()));
   const row = (ty, m, id) =>
     rw(
       `<b>${esc(ty)}</b>${id ? "" : '<div class="mut">Sans tarif : gratuit</div>'}`,
       `<span data-sty="display:flex;gap:6px;align-items:center"><input type="number" min="0" step="1" data-tfin="${esc(ty)}" value="${m == null ? "" : esc(m)}" placeholder="FCFA" data-sty="width:120px"><button class="bt" data-m="tfsave" data-ty="${esc(ty)}">Enregistrer</button>${id ? `<button class="bo" data-m="tfdel" data-id="${esc(id)}">Supprimer</button>` : ""}</span>`
     );
-  return pn("Tarifs des démarches", "coins", T.map(x => row(x.type_service, x.montant, x.id)).join("") + sug.map(x => row(x, null, "")).join("") || emp("Aucune démarche.")) +
-    emp("Le tarif d’une démarche précise l’emporte sur celui de sa rubrique ; sans tarif, la démarche est gratuite. Le montant est figé au dépôt de la demande.");
+  return (
+    pn(
+      "Tarifs des démarches",
+      "coins",
+      T.map(x => row(x.type_service, x.montant, x.id)).join("") + sug.map(x => row(x, null, "")).join("") || emp("Aucune démarche.")
+    ) +
+    emp(
+      "Le tarif d’une démarche précise l’emporte sur celui de sa rubrique ; sans tarif, la démarche est gratuite. Le montant est figé au dépôt de la demande."
+    )
+  );
 };
 SP.finances.subs.push(["tarifs", "Tarifs"], ["dempay", "Demandes payantes"]);
 RP.tarifs = ["maire", "finances", "secretariat"];
@@ -92,7 +111,14 @@ const dpDone = async (m, keys) => {
   window.scrollTo(0, 0);
 };
 document.addEventListener("click", async e => {
-  const t = e.target && e.target.closest && (e.target.closest("[data-m=dpf]") || e.target.closest("[data-m=dpenc]") || e.target.closest("[data-m=dprej]") || e.target.closest("[data-m=tfsave]") || e.target.closest("[data-m=tfdel]"));
+  const t =
+    e.target &&
+    e.target.closest &&
+    (e.target.closest("[data-m=dpf]") ||
+      e.target.closest("[data-m=dpenc]") ||
+      e.target.closest("[data-m=dprej]") ||
+      e.target.closest("[data-m=tfsave]") ||
+      e.target.closest("[data-m=tfdel]"));
   if (!t || S.sa) return;
   const m = t.dataset.m;
   S.err = "";

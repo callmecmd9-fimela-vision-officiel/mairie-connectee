@@ -40,13 +40,13 @@
       x.latitude != null && x.longitude != null
         ? ` · <a href="https://www.openstreetmap.org/?mlat=${encodeURIComponent(x.latitude)}&mlon=${encodeURIComponent(x.longitude)}#map=17/${encodeURIComponent(x.latitude)}/${encodeURIComponent(x.longitude)}" target="_blank" rel="noopener noreferrer">Voir sur la carte</a>`
         : "";
-  let ouvert = false, /* formulaire de bien ouvert */
-    edit = null, /* id du bien en cours de modification */
-    sel_ = null, /* id du bien dont le détail est affiché */
-    ent = [], /* entretiens du bien sélectionné */
+  let ouvert = false /* formulaire de bien ouvert */,
+    edit = null /* id du bien en cours de modification */,
+    sel_ = null /* id du bien dont le détail est affiché */,
+    ent = [] /* entretiens du bien sélectionné */,
     chg = false,
     errD = "",
-    fEn = false, /* formulaire entretien ouvert */
+    fEn = false /* formulaire entretien ouvert */,
     busy = false;
 
   E0.patrimoine_biens = [];
@@ -211,7 +211,7 @@
       if (m == "pbnew") {
         ouvert = true;
         edit = null;
-      } else if (m == "pbcancel") ouvert = false, edit = null;
+      } else if (m == "pbcancel") ((ouvert = false), (edit = null));
       else if (m == "pbedit") {
         edit = t.dataset.id;
         ouvert = true;

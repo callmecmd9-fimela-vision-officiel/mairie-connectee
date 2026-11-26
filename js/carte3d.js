@@ -17,7 +17,15 @@ function mbxGeo(sl) {
     const g = sl && typeof COMMUNES_GEO != "undefined" ? COMMUNES_GEO.get(sl) : null;
     if (!g) return null;
     const [[s, w], [n, e]] = g.maxBounds;
-    return { nom: g.nom, centre: [g.center[1], g.center[0]], zoom: g.zoom, maxBounds: [[w, s], [e, n]] };
+    return {
+      nom: g.nom,
+      centre: [g.center[1], g.center[0]],
+      zoom: g.zoom,
+      maxBounds: [
+        [w, s],
+        [e, n]
+      ]
+    };
   } catch (e) {
     return null;
   }

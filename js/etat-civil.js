@@ -36,7 +36,28 @@ const EC = { tab: "reg", ft: "all", q: "", draft: null, edit: null, pick: null }
     acceptee: "Acceptée",
     pret_a_retirer: "Prêt à retirer"
   },
-  ECF = ["type", "num", "an", "de", "lieu", "nom", "pre", "sexe", "dn", "ln", "prof", "pere", "mere", "cn", "cp", "cdn", "cpere", "cmere", "off", "obs"];
+  ECF = [
+    "type",
+    "num",
+    "an",
+    "de",
+    "lieu",
+    "nom",
+    "pre",
+    "sexe",
+    "dn",
+    "ln",
+    "prof",
+    "pere",
+    "mere",
+    "cn",
+    "cp",
+    "cdn",
+    "cpere",
+    "cmere",
+    "off",
+    "obs"
+  ];
 const ecE = x => esc(x == null ? "" : String(x)),
   ecNZ = s =>
     String(s || "")
@@ -121,20 +142,37 @@ const ecForm = () => {
     v = k => d[k] || "",
     ta = (id, l, x) => fl(id, l, `<textarea id="${id}" rows="2" maxlength="1000">${ecE(x)}</textarea>`);
   let b =
-    sel("ec_type", "Type d’acte", Object.keys(ECT).map(k => [k, ECT[k]]), t) +
+    sel(
+      "ec_type",
+      "Type d’acte",
+      Object.keys(ECT).map(k => [k, ECT[k]]),
+      t
+    ) +
     inp("ec_num", "N° de l’acte", "text", v("num"), "Ex. 125", 'maxlength="30" required') +
     inp("ec_an", "Année de l’acte", "text", v("an"), "AAAA", 'inputmode="numeric" maxlength="4" required') +
     inp("ec_nom", t == "mariage" ? "Nom de l’époux" : "Nom", "text", v("nom"), "NOM", 'maxlength="80" required') +
     inp("ec_pre", t == "mariage" ? "Prénom(s) de l’époux" : "Prénom(s)", "text", v("pre"), "Prénom(s)", 'maxlength="80" required') +
     inp("ec_de", lab, "date", v("de"), "", 'max="' + ecToday() + '" required') +
     inp("ec_lieu", lieu, "text", v("lieu"), "", 'maxlength="120"');
-  if (t == "naissance") b += sel("ec_sexe", "Sexe", [["", "—"], ["M", "Masculin"], ["F", "Féminin"]], v("sexe"));
+  if (t == "naissance")
+    b += sel(
+      "ec_sexe",
+      "Sexe",
+      [
+        ["", "—"],
+        ["M", "Masculin"],
+        ["F", "Féminin"]
+      ],
+      v("sexe")
+    );
   else
     b +=
       inp("ec_dn", t == "mariage" ? "Date de naissance de l’époux" : "Date de naissance", "date", v("dn"), "", 'max="' + ecToday() + '"') +
       inp("ec_ln", t == "mariage" ? "Lieu de naissance de l’époux" : "Lieu de naissance", "text", v("ln"), "", 'maxlength="120"') +
       inp("ec_prof", "Profession", "text", v("prof"), "", 'maxlength="120"');
-  b += inp("ec_pere", t == "mariage" ? "Père de l’époux" : "Père", "text", v("pere"), "Nom et prénom(s)", 'maxlength="120"') + inp("ec_mere", t == "mariage" ? "Mère de l’époux" : "Mère", "text", v("mere"), "Nom et prénom(s)", 'maxlength="120"');
+  b +=
+    inp("ec_pere", t == "mariage" ? "Père de l’époux" : "Père", "text", v("pere"), "Nom et prénom(s)", 'maxlength="120"') +
+    inp("ec_mere", t == "mariage" ? "Mère de l’époux" : "Mère", "text", v("mere"), "Nom et prénom(s)", 'maxlength="120"');
   if (t == "mariage")
     b +=
       inp("ec_cn", "Nom de l’épouse", "text", v("cn"), "NOM", 'maxlength="80" required') +
@@ -142,8 +180,13 @@ const ecForm = () => {
       inp("ec_cdn", "Date de naissance de l’épouse", "date", v("cdn"), "", 'max="' + ecToday() + '"') +
       inp("ec_cpere", "Père de l’épouse", "text", v("cpere"), "Nom et prénom(s)", 'maxlength="120"') +
       inp("ec_cmere", "Mère de l’épouse", "text", v("cmere"), "Nom et prénom(s)", 'maxlength="120"');
-  if (t == "deces") b += inp("ec_cn", "Nom du conjoint (si marié)", "text", v("cn"), "", 'maxlength="80"') + inp("ec_cp", "Prénom(s) du conjoint", "text", v("cp"), "", 'maxlength="80"');
-  b += inp("ec_off", "Officier de l’état civil", "text", v("off"), "Nom et prénom(s)", 'maxlength="120"') + ta("ec_obs", "Mentions marginales / observations", v("obs"));
+  if (t == "deces")
+    b +=
+      inp("ec_cn", "Nom du conjoint (si marié)", "text", v("cn"), "", 'maxlength="80"') +
+      inp("ec_cp", "Prénom(s) du conjoint", "text", v("cp"), "", 'maxlength="80"');
+  b +=
+    inp("ec_off", "Officier de l’état civil", "text", v("off"), "Nom et prénom(s)", 'maxlength="120"') +
+    ta("ec_obs", "Mentions marginales / observations", v("obs"));
   return pn(
     ed ? "Modifier l’acte" : "Enregistrer un nouvel acte",
     "doc",
@@ -156,7 +199,11 @@ const ecForm = () => {
 const ecList = () => {
   const L = D().actes_ec,
     q = ecNZ(EC.q),
-    V = L.filter(a => (EC.ft == "all" || a.type_acte == EC.ft) && (!q || ecNZ([a.nom, a.prenom, a.numero_acte, a.annee_acte, a.pere_nom, a.mere_nom].join(" ")).includes(q)));
+    V = L.filter(
+      a =>
+        (EC.ft == "all" || a.type_acte == EC.ft) &&
+        (!q || ecNZ([a.nom, a.prenom, a.numero_acte, a.annee_acte, a.pere_nom, a.mere_nom].join(" ")).includes(q))
+    );
   return (
     `<div class="tabs">${[["all", "Tous (" + L.length + ")"]]
       .concat(Object.keys(ECT).map(k => [k, ECT[k] + " (" + L.filter(a => a.type_acte == k).length + ")"]))
@@ -193,7 +240,8 @@ const ecPickBox = () => {
     `<p class="mut">Demande ${ecE(d.numero)} · ${ecE(d.nom || "")}. ${cand.length ? "Plusieurs actes correspondent : choisissez le bon." : "Aucun acte correspondant n’a été trouvé automatiquement : sélectionnez-le dans le registre."}</p>` +
       (L.length
         ? `<label for="ec_pick">Acte du registre</label><select id="ec_pick">${L.map(a => `<option value="${ecE(a.id)}">${ecE(ecFull(a) + " — acte n° " + a.numero_acte + "/" + a.annee_acte + (ids.has(a.id) ? " (correspond)" : ""))}</option>`).join("")}</select><p><button class="bt" data-m="ecpickgo" data-id="${ecE(d.id)}">Générer la copie</button> <button class="bo" data-m="ecpickx">Annuler</button></p>`
-        : emp("Le registre ne contient encore aucun acte de ce type : enregistrez-le d’abord.") + '<p><button class="bo" data-m="ecpickx">Fermer</button></p>')
+        : emp("Le registre ne contient encore aucun acte de ce type : enregistrez-le d’abord.") +
+          '<p><button class="bo" data-m="ecpickx">Fermer</button></p>')
   );
 };
 const ecCopies = () => {
@@ -217,7 +265,9 @@ const ecCopies = () => {
         return rw(
           `<div><b>${ecE(d.objet || "Copie d’acte")}</b><div class="mut">${ecE(d.nom || "")} · N° ${ecE(d.numero)} · déposée le ${ecE(ecD(d.created_at))}</div>${cp ? `<div class="mut">Copie n° ${ecE(cp.reference)}</div>` : ok ? `<div class="mut">${m.length == 1 ? "Acte trouvé dans le registre : " + ecE(ecFull(m[0])) : m.length > 1 ? m.length + " actes possibles dans le registre" : "Acte à sélectionner dans le registre"}</div>` : ""}</div>`,
           `<span class="ec-act">${st2(ECS[d.statut] || d.statut, ok ? "ok" : "")}${
-            ok ? `<button class="bt" data-m="ecgen" data-id="${ecE(d.id)}">${cp ? "Réimprimer la copie (PDF)" : "Générer la copie (PDF)"}</button>` : `<button class="bo" disabled>Disponible après validation</button>`
+            ok
+              ? `<button class="bt" data-m="ecgen" data-id="${ecE(d.id)}">${cp ? "Réimprimer la copie (PDF)" : "Générer la copie (PDF)"}</button>`
+              : `<button class="bo" disabled>Disponible après validation</button>`
           }</span>`
         );
       }).join("") || emp("Aucune demande de copie d’acte pour ce filtre.")
@@ -241,7 +291,15 @@ const registre = () => {
 const ecRows = a => {
   const r = [["N° de l’acte", a.numero_acte + " / " + a.annee_acte]];
   if (a.type_acte == "naissance") {
-    r.push(["Nom", (a.nom || "").toUpperCase()], ["Prénom(s)", a.prenom], ["Sexe", a.sexe == "M" ? "Masculin" : a.sexe == "F" ? "Féminin" : "—"], ["Né(e) le", ecD(a.date_evenement)], ["À", a.lieu_evenement || "—"], ["Père", a.pere_nom || "—"], ["Mère", a.mere_nom || "—"]);
+    r.push(
+      ["Nom", (a.nom || "").toUpperCase()],
+      ["Prénom(s)", a.prenom],
+      ["Sexe", a.sexe == "M" ? "Masculin" : a.sexe == "F" ? "Féminin" : "—"],
+      ["Né(e) le", ecD(a.date_evenement)],
+      ["À", a.lieu_evenement || "—"],
+      ["Père", a.pere_nom || "—"],
+      ["Mère", a.mere_nom || "—"]
+    );
   } else if (a.type_acte == "mariage") {
     r.push(
       ["Date du mariage", ecD(a.date_evenement)],
@@ -274,7 +332,9 @@ const ecRows = a => {
 const ecDoc = (a, ref, dem) => {
   const bl = typeof url == "function" && S.ind && S.ind.blason ? url("blason") : "",
     com = S.co || "",
-    qr = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(location.origin + "/verifier.html?ref=" + encodeURIComponent(ref)),
+    qr =
+      "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" +
+      encodeURIComponent(location.origin + "/verifier.html?ref=" + encodeURIComponent(ref)),
     now = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
   return (
     `<article class="ecd" aria-label="Copie d’acte"><header class="ecd-h">${bl ? `<img class="ecd-bl" src="${ecE(bl)}" alt="Blason de la commune de ${ecE(com)}">` : `<span class="ecd-bl ecd-sh">${ic("shield", 64)}</span>`}<div><b>MAIRIE DE ${ecE(com.toUpperCase())}</b><span>Service de l’état civil</span></div></header>` +
@@ -353,7 +413,14 @@ const ecDone = async (m, keys) => {
   render();
   window.scrollTo(0, 0);
 };
-SP.administration.subs.splice(Math.max(0, SP.administration.subs.findIndex(x => x[0] == "civil")) + 1, 0, ["registre", "Registre d’état civil"]);
+SP.administration.subs.splice(
+  Math.max(
+    0,
+    SP.administration.subs.findIndex(x => x[0] == "civil")
+  ) + 1,
+  0,
+  ["registre", "Registre d’état civil"]
+);
 RP.registre = ["maire", "adjoint", "secretariat", "agent", "etat_civil"];
 SPL.registre = "Registre d’état civil";
 SUB.registre = registre;
@@ -397,7 +464,12 @@ document.addEventListener("click", async e => {
       let r;
       if (ed) r = await sb.from("actes_etat_civil").update(p).eq("id", ed).eq("commune_id", S.cid);
       else r = await sb.from("actes_etat_civil").insert(Object.assign({ commune_id: S.cid }, p));
-      if (r.error) throw new Error(r.error.code == "23505" ? "Un acte portant ce numéro existe déjà pour ce type et cette année." : "Enregistrement refusé : " + r.error.message);
+      if (r.error)
+        throw new Error(
+          r.error.code == "23505"
+            ? "Un acte portant ce numéro existe déjà pour ce type et cette année."
+            : "Enregistrement refusé : " + r.error.message
+        );
       EC.edit = null;
       EC.draft = null;
       EC.tab = "reg";

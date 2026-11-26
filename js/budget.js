@@ -37,7 +37,10 @@ const bdF = n => fmt(n) + " FCFA",
   BDT = { recette: "Recette", depense: "Dépense" },
   /* Engagements d'une ligne (les engagements annulés ne consomment plus de crédit) */
   bdEngs = (EG, id) => EG.filter(e => e.budget_ligne_id == id),
-  bdEngSum = (EG, id) => bdEngs(EG, id).filter(e => e.statut != "annule").reduce((a, e) => a + (+e.montant || 0), 0),
+  bdEngSum = (EG, id) =>
+    bdEngs(EG, id)
+      .filter(e => e.statut != "annule")
+      .reduce((a, e) => a + (+e.montant || 0), 0),
   /* Crédit disponible = montant_prevu - (somme des engagements + montant_realise) */
   bdCredit = (x, EG) => (+x.montant_prevu || 0) - (bdEngSum(EG, x.id) + (+x.montant_realise || 0));
 let bdOuv = null /* id du budget dont on affiche le détail */,
@@ -72,7 +75,15 @@ const bdDetail = (b, LN, EG, peut, peutEg) => {
       frm(
         inp("bl_ch", "Chapitre", "text", "", "Ex. 011", 'maxlength="20" required') +
           inp("bl_ar", "Article", "text", "", "Ex. 6061", 'maxlength="20" required') +
-          sel("bl_ty", "Type", [["depense", "Dépense"], ["recette", "Recette"]], "depense") +
+          sel(
+            "bl_ty",
+            "Type",
+            [
+              ["depense", "Dépense"],
+              ["recette", "Recette"]
+            ],
+            "depense"
+          ) +
           inp("bl_pr", "Montant prévu (FCFA)", "number", 0, "", 'min="0" step="1"') +
           inp("bl_re", "Montant réalisé (FCFA)", "number", 0, "", 'min="0" step="1"')
       ) +
@@ -169,7 +180,10 @@ document.addEventListener("click", async e => {
     if (!/^\d{4}$/.test(an) || +an < 2000 || +an > 2100) throw new Error("Année invalide : indiquez quatre chiffres (ex. 2027).");
     if (D().budgets.some(b => b.annee == +an)) throw new Error("Un budget " + an + " existe déjà pour cette commune.");
     const r = await sb.from("budgets").insert({ commune_id: S.cid, annee: +an, statut: "brouillon" });
-    if (r.error) throw new Error(r.error.code == "23505" ? "Un budget " + an + " existe déjà pour cette commune." : "Création refusée : " + r.error.message);
+    if (r.error)
+      throw new Error(
+        r.error.code == "23505" ? "Un budget " + an + " existe déjà pour cette commune." : "Création refusée : " + r.error.message
+      );
     await load(["budgets", "budget_lignes", "engagements"]);
     S.err = "Budget " + an + " créé (brouillon).";
   } catch (x) {

@@ -22,14 +22,14 @@
     peut = () => !S.sa && ROLES.includes(S.pr),
     fdate = d => (d ? new Date(d + "T00:00").toLocaleDateString("fr-FR") : "—"),
     signe = v => (+v > 0 ? "+" : "") + fmt(v);
-  let ouvert = false, /* formulaire « Nouveau marché » */
-    sel = null, /* id du marché dont le détail est affiché */
-    av = [], /* avenants du marché sélectionné */
-    os = [], /* ordres de service du marché sélectionné */
-    chg = false, /* chargement du détail en cours */
-    errD = "", /* erreur de chargement du détail */
-    fAv = false, /* formulaire avenant ouvert */
-    fOs = false, /* formulaire ordre de service ouvert */
+  let ouvert = false /* formulaire « Nouveau marché » */,
+    sel = null /* id du marché dont le détail est affiché */,
+    av = [] /* avenants du marché sélectionné */,
+    os = [] /* ordres de service du marché sélectionné */,
+    chg = false /* chargement du détail en cours */,
+    errD = "" /* erreur de chargement du détail */,
+    fAv = false /* formulaire avenant ouvert */,
+    fOs = false /* formulaire ordre de service ouvert */,
     busy = false;
 
   const formulaire = () =>

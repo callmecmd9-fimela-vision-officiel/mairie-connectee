@@ -56,13 +56,34 @@
         BG = Object.fromEntries((d.budgets || []).map(b => [b.id, b]));
       return (d.budget_lignes || [])
         .filter(l => l.type_recette_depense == "depense")
-        .map(l => [l.id, (BG[l.budget_id] ? BG[l.budget_id].annee + " · " : "") + "Chap. " + l.chapitre + " / art. " + l.article + " (prévu " + fmt(l.montant_prevu) + " FCFA)"])
+        .map(l => [
+          l.id,
+          (BG[l.budget_id] ? BG[l.budget_id].annee + " · " : "") +
+            "Chap. " +
+            l.chapitre +
+            " / art. " +
+            l.article +
+            " (prévu " +
+            fmt(l.montant_prevu) +
+            " FCFA)"
+        ])
         .sort((x, y) => (x[1] < y[1] ? 1 : -1));
     },
     libLigne = id => {
       const l = (D().budget_lignes || []).find(x => x.id == id),
         b = l && (D().budgets || []).find(x => x.id == l.budget_id);
-      return l ? (b ? b.annee + " · " : "") + "Chap. " + l.chapitre + " / art. " + l.article + " (prévu " + fmt(l.montant_prevu) + " FCFA, réalisé " + fmt(l.montant_realise) + " FCFA)" : "Ligne budgétaire introuvable ou non accessible";
+      return l
+        ? (b ? b.annee + " · " : "") +
+            "Chap. " +
+            l.chapitre +
+            " / art. " +
+            l.article +
+            " (prévu " +
+            fmt(l.montant_prevu) +
+            " FCFA, réalisé " +
+            fmt(l.montant_realise) +
+            " FCFA)"
+        : "Ligne budgétaire introuvable ou non accessible";
     },
     selLigne = v => sel("ts_bl", "Ligne budgétaire liée (facultatif)", [["", "— Aucune —"]].concat(lignes()), v || "");
   let ouvert = null /* null | "choix" | "infra" | "action" */,
@@ -136,7 +157,10 @@
       `<div data-sty="display:grid;gap:4px;justify-items:end">${st2(EL[x.etat] || x.etat || "—", EC[x.etat] || "")}${btns("infra", x)}</div>`
     );
 
-  const dates = x => (x.date_debut || x.date_fin ? (x.date_debut ? fdd(x.date_debut) : "…") + " → " + (x.date_fin ? fdd(x.date_fin) : "…") : "Dates non précisées");
+  const dates = x =>
+    x.date_debut || x.date_fin
+      ? (x.date_debut ? fdd(x.date_debut) : "…") + " → " + (x.date_fin ? fdd(x.date_fin) : "…")
+      : "Dates non précisées";
 
   const action = x =>
     rw(
@@ -236,12 +260,12 @@
       if (m == "svtnew") ouvert = "choix";
       else if (m == "svtinfra") ouvert = "infra";
       else if (m == "svtaction") ouvert = "action";
-      else if (m == "svtcancel") (ouvert = null), (edit = null);
+      else if (m == "svtcancel") ((ouvert = null), (edit = null));
       else if (m == "svtdet") {
         if (!TB[t.dataset.t]) throw new Error("Élément inconnu.");
         det = { t: t.dataset.t, id: t.dataset.id };
         ouvert = edit = null;
-      } else if (m == "svtback") (det = null), (ouvert = edit = null);
+      } else if (m == "svtback") ((det = null), (ouvert = edit = null));
       else if (m == "svtedit") {
         if (!TB[t.dataset.t]) throw new Error("Élément inconnu.");
         ouvert = t.dataset.t;
@@ -323,7 +347,9 @@
         ouvert = edit = null;
         S.tab.svt_cat = ca;
         await load([tb]);
-        S.err = (was == "infra" ? "Infrastructure " : "Action ") + (mod ? (was == "infra" ? "modifiée." : "modifiée.") : was == "infra" ? "enregistrée." : "enregistrée.");
+        S.err =
+          (was == "infra" ? "Infrastructure " : "Action ") +
+          (mod ? (was == "infra" ? "modifiée." : "modifiée.") : was == "infra" ? "enregistrée." : "enregistrée.");
       }
     } catch (x) {
       S.err = x && x.message ? x.message : "Erreur réseau. Réessayez.";

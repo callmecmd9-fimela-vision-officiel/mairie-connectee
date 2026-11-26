@@ -39,12 +39,60 @@ const FAM = [
   STD = { actif: "Active", inactif: "Désactivée", archive: "Archivée" };
 /* Démarches types (LOT 2) : type = rubrique existante du portail citoyen, famille = catégorie du catalogue, modele = formulaire utilisé par « Choisir » */
 const DMX = [
-  ["Urbanisme", "Foncier et urbanisme", "foncier", "Déclaration de travaux", "Déclarer des travaux de construction, d’extension ou de rénovation sur votre terrain ou votre bâtiment.", "Pièce d’identité\nTitre foncier ou attestation d’attribution\nPlan de situation ou croquis des travaux", "technique"],
-  ["Urbanisme", "Foncier et urbanisme", "foncier", "Autorisation d’urbanisme", "Demander une autorisation avant de construire, de lotir ou de modifier l’usage d’un terrain.", "Pièce d’identité\nTitre foncier ou attestation d’attribution\nPlan de masse ou croquis du projet", "technique"],
-  ["Commerce", "Commerce et domaine public", "libre", "Occupation temporaire du domaine public", "Demander l’autorisation d’occuper temporairement un espace public (voie, place, trottoir, marché).", "Pièce d’identité\nDescription de l’activité et de l’emplacement souhaité\nDurée d’occupation demandée", "secretariat"],
-  ["Commerce", "Commerce et domaine public", "libre", "Kiosques et étals", "Demander un emplacement ou une autorisation pour installer un kiosque ou un étal.", "Pièce d’identité\nNature de l’activité\nEmplacement souhaité", "secretariat"],
-  ["Aide sociale", "Affaires sociales", "social", "Aides funéraires", "Demander une aide de la commune pour les frais d’obsèques d’un proche.", "Pièce d’identité du demandeur\nActe ou certificat de décès\nJustificatif de situation sociale", "secretariat"],
-  ["Aide sociale", "Affaires sociales", "social", "Accompagnement social", "Demander un accompagnement social (orientation, soutien, suivi de votre situation).", "Pièce d’identité\nBrève description de la situation", "secretariat"]
+  [
+    "Urbanisme",
+    "Foncier et urbanisme",
+    "foncier",
+    "Déclaration de travaux",
+    "Déclarer des travaux de construction, d’extension ou de rénovation sur votre terrain ou votre bâtiment.",
+    "Pièce d’identité\nTitre foncier ou attestation d’attribution\nPlan de situation ou croquis des travaux",
+    "technique"
+  ],
+  [
+    "Urbanisme",
+    "Foncier et urbanisme",
+    "foncier",
+    "Autorisation d’urbanisme",
+    "Demander une autorisation avant de construire, de lotir ou de modifier l’usage d’un terrain.",
+    "Pièce d’identité\nTitre foncier ou attestation d’attribution\nPlan de masse ou croquis du projet",
+    "technique"
+  ],
+  [
+    "Commerce",
+    "Commerce et domaine public",
+    "libre",
+    "Occupation temporaire du domaine public",
+    "Demander l’autorisation d’occuper temporairement un espace public (voie, place, trottoir, marché).",
+    "Pièce d’identité\nDescription de l’activité et de l’emplacement souhaité\nDurée d’occupation demandée",
+    "secretariat"
+  ],
+  [
+    "Commerce",
+    "Commerce et domaine public",
+    "libre",
+    "Kiosques et étals",
+    "Demander un emplacement ou une autorisation pour installer un kiosque ou un étal.",
+    "Pièce d’identité\nNature de l’activité\nEmplacement souhaité",
+    "secretariat"
+  ],
+  [
+    "Aide sociale",
+    "Affaires sociales",
+    "social",
+    "Aides funéraires",
+    "Demander une aide de la commune pour les frais d’obsèques d’un proche.",
+    "Pièce d’identité du demandeur\nActe ou certificat de décès\nJustificatif de situation sociale",
+    "secretariat"
+  ],
+  [
+    "Aide sociale",
+    "Affaires sociales",
+    "social",
+    "Accompagnement social",
+    "Demander un accompagnement social (orientation, soutien, suivi de votre situation).",
+    "Pièce d’identité\nBrève description de la situation",
+    "secretariat"
+  ]
 ];
 const demarches = () => {
   const d = D(),

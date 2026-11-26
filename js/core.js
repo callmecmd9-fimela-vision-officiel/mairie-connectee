@@ -1092,7 +1092,8 @@ const alerts = () => {
   const pv = d.posts.filter(p => p.st == "valider").length;
   if (pv) a.push({ i: "info", n: pv, t: `${pv} publication${pl(pv)} \u00e0 valider` });
   const dp = d.fin.reduce((s, r) => s + +r.depenses, 0);
-  if (I.budget_annuel && dp > I.budget_annuel) a.push({ i: "alert", n: 1, t: "Budget : les d\u00e9penses d\u00e9passent le budget annuel" });
+  if (I.budget_annuel && dp > I.budget_annuel)
+    a.push({ i: "alert", n: 1, t: "Budget : les d\u00e9penses d\u00e9passent le budget annuel" });
   const nx = d.rdv.filter(r => r.d >= T).sort(cmp)[0];
   if (nx) a.push({ i: "cal", t: `Prochain rendez-vous : ${nx.t} (${fd(nx.d)})` });
   return a;
@@ -1192,7 +1193,14 @@ function initMap() {
     zoom: I.zoom || 0,
     fitMax: 13,
     one: 13,
-    pts: ps.map(p => ({ lat: p.lat, lng: p.lng, c: PCOL[p.statut], l1: p.titre, l2: p.localite || "", l3: PSL[p.statut] + " : " + p.avancement + "%" }))
+    pts: ps.map(p => ({
+      lat: p.lat,
+      lng: p.lng,
+      c: PCOL[p.statut],
+      l1: p.titre,
+      l2: p.localite || "",
+      l3: PSL[p.statut] + " : " + p.avancement + "%"
+    }))
   });
 }
 /* coque */

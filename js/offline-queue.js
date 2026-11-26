@@ -133,8 +133,7 @@
     } catch (e) {}
     return { uid: (s && s.uid) || null, cid: (s && s.cid) || null };
   };
-  const rid = () =>
-    typeof crypto != "undefined" && crypto.randomUUID ? crypto.randomUUID() : uuid();
+  const rid = () => (typeof crypto != "undefined" && crypto.randomUUID ? crypto.randomUUID() : uuid());
   const isObj = x => x && typeof x == "object" && !Array.isArray(x);
   const curUid = async c => {
     try {
@@ -155,8 +154,7 @@
   };
   const syncReg = () => {
     try {
-      if ("serviceWorker" in navigator)
-        navigator.serviceWorker.ready.then(r => r.sync && r.sync.register(TAG)).catch(() => {});
+      if ("serviceWorker" in navigator) navigator.serviceWorker.ready.then(r => r.sync && r.sync.register(TAG)).catch(() => {});
     } catch (e) {}
   };
 
@@ -172,11 +170,13 @@
     if (!OPS.includes(a.op)) throw new Error("queueAction : op doit être " + OPS.join(", ") + ".");
     const o = { table: a.table, op: a.op };
     if (a.op != "delete") {
-      if (!(isObj(a.data) || (Array.isArray(a.data) && a.data.length && a.data.every(isObj)))) throw new Error("queueAction : data (objet ou tableau d’objets) requis.");
+      if (!(isObj(a.data) || (Array.isArray(a.data) && a.data.length && a.data.every(isObj))))
+        throw new Error("queueAction : data (objet ou tableau d’objets) requis.");
       o.data = JSON.parse(JSON.stringify(a.data));
     }
     if (a.op == "update" || a.op == "delete") {
-      if (!isObj(a.match) || !Object.keys(a.match).length) throw new Error("queueAction : match (filtre égalité) obligatoire pour update/delete.");
+      if (!isObj(a.match) || !Object.keys(a.match).length)
+        throw new Error("queueAction : match (filtre égalité) obligatoire pour update/delete.");
       o.match = JSON.parse(JSON.stringify(a.match));
     }
     if (a.op == "upsert" && a.onConflict) o.onConflict = String(a.onConflict);
@@ -232,7 +232,7 @@
   const classer = (r, a) => {
     const e = r && r.error;
     if (!e) return "ok";
-    const s = (r.status | 0) || 0,
+    const s = r.status | 0 || 0,
       code = String(e.code || "");
     if (a.autoId && code == "23505") return "ok";
     if (s == 401 || code == "PGRST301" || /jwt/i.test(e.message || "")) return "auth";
@@ -328,9 +328,11 @@
         });
     /* un seul onglet vide la file à la fois ; l'id client (autoId) protège des doublons si le verrou n'existe pas */
     cur = navigator.locks
-      ? navigator.locks.request("mc-offline-queue-flush", { ifAvailable: true }, l => (l ? go() : false)).finally(() => {
-          cur = null;
-        })
+      ? navigator.locks
+          .request("mc-offline-queue-flush", { ifAvailable: true }, l => (l ? go() : false))
+          .finally(() => {
+            cur = null;
+          })
       : go();
     return cur;
   };

@@ -23,7 +23,17 @@
         if (!x) return msg("ko", r && r.error ? "Vérification impossible pour le moment. Réessayez." : "Faux document");
         var d = new Date(x.date_delivrance),
           ds = isNaN(d) ? "—" : d.toLocaleDateString("fr-FR");
-        msg("ok", "Copie d’acte authentique : acte de " + (TY[x.type_acte] || x.type_acte) + " n° " + x.numero_acte + "/" + x.annee_acte + ", délivrée le " + ds);
+        msg(
+          "ok",
+          "Copie d’acte authentique : acte de " +
+            (TY[x.type_acte] || x.type_acte) +
+            " n° " +
+            x.numero_acte +
+            "/" +
+            x.annee_acte +
+            ", délivrée le " +
+            ds
+        );
         var p = document.createElement("p");
         p.className = "mut";
         p.textContent = (x.commune || "") + " · Titulaire : " + (x.titulaire || "—") + " · Réf. " + ref;
@@ -44,7 +54,12 @@
       msg("ok", "Quittance Valide : " + (x.nom || "—") + ", " + m + ", " + ds);
       var p = document.createElement("p");
       p.className = "mut";
-      p.textContent = (x.commune || "") + (x.objet ? " · " + x.objet : "") + " · Réf. " + ref + (x.source == "en_ligne_simule" ? " · paiement en ligne simulé (démonstration)" : "");
+      p.textContent =
+        (x.commune || "") +
+        (x.objet ? " · " + x.objet : "") +
+        " · Réf. " +
+        ref +
+        (x.source == "en_ligne_simule" ? " · paiement en ligne simulé (démonstration)" : "");
       box.appendChild(p);
     },
     function () {

@@ -920,7 +920,9 @@ const tfOf = () => {
   const dm = dmSel() || {},
     c = CATS.find(x => x[0] == S.cat) || [],
     ty = String(dm.type || S.d.ty || (c[3] || [])[0] || "").toLowerCase(),
-    ob = String(S.d.fo || dm.titre || "").trim().toLowerCase(),
+    ob = String(S.d.fo || dm.titre || "")
+      .trim()
+      .toLowerCase(),
     L = S.tf || [],
     f = k => k && L.find(x => String(x.type_service).toLowerCase() == k),
     t = f(ob) || f(ty);
@@ -928,7 +930,13 @@ const tfOf = () => {
 };
 /* Paiement mobile (Wave / Orange Money). simulation=true tant que les comptes marchands (Wave Business, Orange Money Business) n'existent pas :
    aucun argent n'est débité. À l'ouverture des comptes : renseigner "marchand", brancher l'API via une Edge Function, puis passer simulation à false. */
-const PAYCFG = { simulation: true, operateurs: [{ id: "wave", nom: "Wave", marchand: "" }, { id: "om", nom: "Orange Money", marchand: "" }] };
+const PAYCFG = {
+  simulation: true,
+  operateurs: [
+    { id: "wave", nom: "Wave", marchand: "" },
+    { id: "om", nom: "Orange Money", marchand: "" }
+  ]
+};
 const payOpNom = id => (PAYCFG.operateurs.find(o => o.id == id) || {}).nom || "";
 const payBlock = () => {
   const m = tfOf();
@@ -949,7 +957,13 @@ document.addEventListener("click", e => {
   const o = $("#pmo"),
     n = $("#pmn");
   if (o) o.hidden = S.pmod != "en_ligne";
-  if (n) n.textContent = S.pmod == "guichet" ? "Vous réglerez en espèces à la mairie." : S.pop ? "Paiement " + payOpNom(S.pop) + (PAYCFG.simulation ? " simulé : aucun argent n’est débité." : ".") : "Choisissez Wave ou Orange Money.";
+  if (n)
+    n.textContent =
+      S.pmod == "guichet"
+        ? "Vous réglerez en espèces à la mairie."
+        : S.pop
+          ? "Paiement " + payOpNom(S.pop) + (PAYCFG.simulation ? " simulé : aucun argent n’est débité." : ".")
+          : "Choisissez Wave ou Orange Money.";
 });
 const payOk = () => {
   const p = S.pm;
@@ -1822,7 +1836,9 @@ async function send() {
     return;
   }
   const payM = tfOf(),
-    payTel = String(S.d.ft || "").replace(/\s+/g, " ").trim(),
+    payTel = String(S.d.ft || "")
+      .replace(/\s+/g, " ")
+      .trim(),
     payMode = S.pmod == "en_ligne" ? "en_ligne" : "guichet",
     payOp = S.pop;
   if (!TELRE.test(payTel)) {
@@ -2340,26 +2356,57 @@ setInterval(async () => {
 /* Signalement citoyen : bouton flottant + modale + carte 3D Mapbox GL JS.
    Mapbox GL JS est chargé à la demande depuis api.mapbox.com (version épinglée, hôtes autorisés dans la CSP de _headers).
    Jeton public (pk.…) lu dans <meta name="mc-mapbox"> de index.html. */
-const SIG_COMMUNE = "98002283-4fc0-4eff-8182-af1eec9a321d", SIG_SLUG = "fimela";
-const MBX = { v: "3.10.0", style: "mapbox://styles/mapbox/streets-v12", centre: [-16.95, 14.4], pitch: 45, bearing: -10, zoom: 15, cluster: 50, clusterMax: 15 };
+const SIG_COMMUNE = "98002283-4fc0-4eff-8182-af1eec9a321d",
+  SIG_SLUG = "fimela";
+const MBX = {
+  v: "3.10.0",
+  style: "mapbox://styles/mapbox/streets-v12",
+  centre: [-16.95, 14.4],
+  pitch: 45,
+  bearing: -10,
+  zoom: 15,
+  cluster: 50,
+  clusterMax: 15
+};
 const SIG_COL = { nouveau: "#D91E18", en_cours: "#F59E0B", resolu: "#16A34A" };
 const SIG_LIB = { nouveau: "Nouveau", en_cours: "En cours", resolu: "Résolu" };
 const SIG = { map: null, mk: null, pos: null, rows: [], ready: false, lib: null, geo: false, fit: false };
-const sigCid = () => S.cid || SIG_COMMUNE, sigSlug = () => S.slug || SIG_SLUG;
+const sigCid = () => S.cid || SIG_COMMUNE,
+  sigSlug = () => S.slug || SIG_SLUG;
 /* Géographie de la commune active (LOT A : js/communes-geo.js, [lat,lng]) → format Mapbox [lng,lat]. */
 function sigGeo() {
   try {
     const g = typeof COMMUNES_GEO != "undefined" ? COMMUNES_GEO.get(sigSlug()) : null;
     if (!g) return null;
     const [[s, w], [n, e]] = g.maxBounds;
-    return { centre: [g.center[1], g.center[0]], zoom: g.zoom, maxBounds: [[w, s], [e, n]], bbox: g.bbox, localites: g.localites || [] };
-  } catch (e) { return null; }
+    return {
+      centre: [g.center[1], g.center[0]],
+      zoom: g.zoom,
+      maxBounds: [
+        [w, s],
+        [e, n]
+      ],
+      bbox: g.bbox,
+      localites: g.localites || []
+    };
+  } catch (e) {
+    return null;
+  }
 }
 /* Vrai si (lat, lng) est dans la bbox de la commune {south, west, north, east}. */
-function sigDansBbox(lat, lng, b) { return !b || (lat >= b.south && lat <= b.north && lng >= b.west && lng <= b.east); }
-function sigMsg(t, k) { const m = $("#sig-msg"); if (m) { m.textContent = t; m.className = "sig-msg " + (k || ""); } }
+function sigDansBbox(lat, lng, b) {
+  return !b || (lat >= b.south && lat <= b.north && lng >= b.west && lng <= b.east);
+}
+function sigMsg(t, k) {
+  const m = $("#sig-msg");
+  if (m) {
+    m.textContent = t;
+    m.className = "sig-msg " + (k || "");
+  }
+}
 function sigToken() {
-  const m = document.querySelector('meta[name="mc-mapbox"]'), t = ((m && m.content) || "").trim();
+  const m = document.querySelector('meta[name="mc-mapbox"]'),
+    t = ((m && m.content) || "").trim();
   return /^pk\.[\w.-]+$/.test(t) ? t : "";
 }
 /* Charge la feuille de style et le script Mapbox GL JS une seule fois. */
@@ -2368,10 +2415,18 @@ function sigLib() {
   if (SIG.lib) return SIG.lib;
   const base = "https://api.mapbox.com/mapbox-gl-js/v" + MBX.v + "/";
   SIG.lib = new Promise((ok, ko) => {
-    const l = document.createElement("link"); l.rel = "stylesheet"; l.href = base + "mapbox-gl.css"; document.head.appendChild(l);
-    const s = document.createElement("script"); s.src = base + "mapbox-gl.js"; s.async = true;
+    const l = document.createElement("link");
+    l.rel = "stylesheet";
+    l.href = base + "mapbox-gl.css";
+    document.head.appendChild(l);
+    const s = document.createElement("script");
+    s.src = base + "mapbox-gl.js";
+    s.async = true;
     s.onload = () => (window.mapboxgl ? ok() : ko(new Error("lib")));
-    s.onerror = () => { SIG.lib = null; ko(new Error("lib")); };
+    s.onerror = () => {
+      SIG.lib = null;
+      ko(new Error("lib"));
+    };
     document.head.appendChild(s);
   });
   return SIG.lib;
@@ -2380,25 +2435,36 @@ function sigLib() {
 async function sigFetch() {
   const r = await sb.rpc("signalements_carte", { p_commune: sigSlug() });
   if (!r.error && Array.isArray(r.data)) return r.data;
-  const q = await sb.from("signalements_citoyens").select("id,categorie,statut,latitude,longitude,created_at").eq("commune_id", sigCid()).limit(1000);
+  const q = await sb
+    .from("signalements_citoyens")
+    .select("id,categorie,statut,latitude,longitude,created_at")
+    .eq("commune_id", sigCid())
+    .limit(1000);
   return !q.error && Array.isArray(q.data) ? q.data : null;
 }
 function sigGeo(rows) {
   const f = [];
   (rows || []).forEach(x => {
     if (!x || x.latitude == null || x.longitude == null) return;
-    const la = Number(x.latitude), lo = Number(x.longitude);
+    const la = Number(x.latitude),
+      lo = Number(x.longitude);
     if (!isFinite(la) || !isFinite(lo) || Math.abs(la) > 90 || Math.abs(lo) > 180 || x.statut == "rejete") return;
     f.push({
       type: "Feature",
       geometry: { type: "Point", coordinates: [lo, la] },
-      properties: { id: String(x.id || ""), statut: SIG_COL[x.statut] ? x.statut : "nouveau", categorie: String(x.categorie || "Autre"), date: x.created_at || "" }
+      properties: {
+        id: String(x.id || ""),
+        statut: SIG_COL[x.statut] ? x.statut : "nouveau",
+        categorie: String(x.categorie || "Autre"),
+        date: x.created_at || ""
+      }
     });
   });
   return { type: "FeatureCollection", features: f };
 }
 function sigDraw(fit) {
-  const m = SIG.map, src = m && SIG.ready && m.getSource("sig-src");
+  const m = SIG.map,
+    src = m && SIG.ready && m.getSource("sig-src");
   if (!src) return;
   const g = sigGeo(SIG.rows);
   src.setData(g);
@@ -2420,48 +2486,93 @@ async function sigRefresh(extra) {
 function sigBuildings(m) {
   try {
     const lab = m.getStyle().layers.find(l => l.type == "symbol" && l.layout && l.layout["text-field"]);
-    m.addLayer({
-      id: "sig-3d", type: "fill-extrusion", source: "composite", "source-layer": "building", filter: ["==", ["get", "extrude"], "true"], minzoom: 14,
-      paint: {
-        "fill-extrusion-color": "#c9d3cb",
-        "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 14, 0, 14.5, ["get", "height"]],
-        "fill-extrusion-base": ["interpolate", ["linear"], ["zoom"], 14, 0, 14.5, ["get", "min_height"]],
-        "fill-extrusion-opacity": 0.85
-      }
-    }, lab && lab.id);
+    m.addLayer(
+      {
+        id: "sig-3d",
+        type: "fill-extrusion",
+        source: "composite",
+        "source-layer": "building",
+        filter: ["==", ["get", "extrude"], "true"],
+        minzoom: 14,
+        paint: {
+          "fill-extrusion-color": "#c9d3cb",
+          "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 14, 0, 14.5, ["get", "height"]],
+          "fill-extrusion-base": ["interpolate", ["linear"], ["zoom"], 14, 0, 14.5, ["get", "min_height"]],
+          "fill-extrusion-opacity": 0.85
+        }
+      },
+      lab && lab.id
+    );
   } catch (e) {}
 }
 /* Source GeoJSON avec clustering natif Mapbox + couches : pastilles par statut, grappes avec compteur. */
 function sigLayers(m) {
-  const stat = ["get", "statut"], col = ["match", stat, "nouveau", SIG_COL.nouveau, "en_cours", SIG_COL.en_cours, "resolu", SIG_COL.resolu, SIG_COL.nouveau];
+  const stat = ["get", "statut"],
+    col = ["match", stat, "nouveau", SIG_COL.nouveau, "en_cours", SIG_COL.en_cours, "resolu", SIG_COL.resolu, SIG_COL.nouveau];
   m.addSource("sig-src", {
-    type: "geojson", data: sigGeo([]), cluster: true, clusterRadius: MBX.cluster, clusterMaxZoom: MBX.clusterMax,
+    type: "geojson",
+    data: sigGeo([]),
+    cluster: true,
+    clusterRadius: MBX.cluster,
+    clusterMaxZoom: MBX.clusterMax,
     clusterProperties: { n: ["+", ["case", ["==", stat, "nouveau"], 1, 0]], e: ["+", ["case", ["==", stat, "en_cours"], 1, 0]] }
   });
   m.addLayer({
-    id: "sig-cl", type: "circle", source: "sig-src", filter: ["has", "point_count"],
+    id: "sig-cl",
+    type: "circle",
+    source: "sig-src",
+    filter: ["has", "point_count"],
     paint: {
       "circle-color": ["case", [">", ["get", "n"], 0], SIG_COL.nouveau, [">", ["get", "e"], 0], SIG_COL.en_cours, SIG_COL.resolu],
-      "circle-radius": ["step", ["get", "point_count"], 16, 10, 20, 50, 26], "circle-stroke-width": 3, "circle-stroke-color": "#ffffff", "circle-pitch-alignment": "map"
+      "circle-radius": ["step", ["get", "point_count"], 16, 10, 20, 50, 26],
+      "circle-stroke-width": 3,
+      "circle-stroke-color": "#ffffff",
+      "circle-pitch-alignment": "map"
     }
   });
   m.addLayer({
-    id: "sig-cl-n", type: "symbol", source: "sig-src", filter: ["has", "point_count"],
-    layout: { "text-field": ["get", "point_count_abbreviated"], "text-font": ["DIN Pro Bold", "Arial Unicode MS Bold"], "text-size": 13, "text-allow-overlap": true },
+    id: "sig-cl-n",
+    type: "symbol",
+    source: "sig-src",
+    filter: ["has", "point_count"],
+    layout: {
+      "text-field": ["get", "point_count_abbreviated"],
+      "text-font": ["DIN Pro Bold", "Arial Unicode MS Bold"],
+      "text-size": 13,
+      "text-allow-overlap": true
+    },
     paint: { "text-color": "#ffffff" }
   });
   m.addLayer({
-    id: "sig-pt", type: "circle", source: "sig-src", filter: ["!", ["has", "point_count"]],
-    paint: { "circle-color": col, "circle-radius": 9, "circle-stroke-width": 3, "circle-stroke-color": "#ffffff", "circle-pitch-alignment": "map" }
+    id: "sig-pt",
+    type: "circle",
+    source: "sig-src",
+    filter: ["!", ["has", "point_count"]],
+    paint: {
+      "circle-color": col,
+      "circle-radius": 9,
+      "circle-stroke-width": 3,
+      "circle-stroke-color": "#ffffff",
+      "circle-pitch-alignment": "map"
+    }
   });
 }
 /* Fenêtre d'information (texte uniquement, sans HTML injecté). */
 function sigPopup(m, f) {
-  const p = f.properties || {}, box = document.createElement("div"), b = document.createElement("b"), s = document.createElement("div"), d = document.createElement("div"), t = p.date ? new Date(p.date) : null;
+  const p = f.properties || {},
+    box = document.createElement("div"),
+    b = document.createElement("b"),
+    s = document.createElement("div"),
+    d = document.createElement("div"),
+    t = p.date ? new Date(p.date) : null;
   b.textContent = p.categorie || "Autre";
   s.textContent = SIG_LIB[p.statut] || SIG_LIB.nouveau;
-  box.appendChild(b); box.appendChild(s);
-  if (t && !isNaN(t)) { d.textContent = t.toLocaleDateString("fr-FR"); box.appendChild(d); }
+  box.appendChild(b);
+  box.appendChild(s);
+  if (t && !isNaN(t)) {
+    d.textContent = t.toLocaleDateString("fr-FR");
+    box.appendChild(d);
+  }
   new mapboxgl.Popup({ offset: 14, closeButton: false }).setLngLat(f.geometry.coordinates.slice()).setDOMContent(box).addTo(m);
 }
 /* Clic citoyen : coordonnées (lng, lat) → marqueur + formulaire pré-rempli. */
@@ -2469,117 +2580,247 @@ function sigPick(lng, lat) {
   SIG.pos = { lat, lng };
   if (SIG.mk) SIG.mk.setLngLat([lng, lat]);
   else {
-    const el = document.createElement("div"); el.className = "sig-pin";
+    const el = document.createElement("div");
+    el.className = "sig-pin";
     SIG.mk = new mapboxgl.Marker({ element: el, anchor: "bottom" }).setLngLat([lng, lat]).addTo(SIG.map);
   }
-  const f = $("#sig-form"), p = $("#sig-pos"), h = $("#sig-hint");
+  const f = $("#sig-form"),
+    p = $("#sig-pos"),
+    h = $("#sig-hint");
   if (p) p.value = lat.toFixed(5) + ", " + lng.toFixed(5);
   if (h) h.hidden = true;
-  if (f) { f.hidden = false; try { f.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) {} }
+  if (f) {
+    f.hidden = false;
+    try {
+      f.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    } catch (e) {}
+  }
   sigMsg("");
 }
 /* Menu « Aller à un village/quartier » au-dessus de la carte (DOM, texte uniquement). */
 function sigLocMenu(m, geo) {
-  const el = $("#sig-map"), old = $("#sig-loc-wrap");
+  const el = $("#sig-map"),
+    old = $("#sig-loc-wrap");
   if (old) old.remove();
   if (!el || !geo.localites.length) return;
-  const w = document.createElement("p"), l = document.createElement("label"), sl = document.createElement("select"), o0 = document.createElement("option");
-  w.id = "sig-loc-wrap"; l.htmlFor = sl.id = "sig-loc"; l.textContent = "Aller à un village/quartier "; o0.value = ""; o0.textContent = "— Choisir —"; sl.appendChild(o0);
+  const w = document.createElement("p"),
+    l = document.createElement("label"),
+    sl = document.createElement("select"),
+    o0 = document.createElement("option");
+  w.id = "sig-loc-wrap";
+  l.htmlFor = sl.id = "sig-loc";
+  l.textContent = "Aller à un village/quartier ";
+  o0.value = "";
+  o0.textContent = "— Choisir —";
+  sl.appendChild(o0);
   sl.style.maxWidth = "100%";
-  geo.localites.forEach((x, i) => { const o = document.createElement("option"); o.value = String(i); o.textContent = x.nom + (x.type ? " (" + x.type + ")" : ""); sl.appendChild(o); });
-  sl.addEventListener("change", () => { const x = geo.localites[+sl.value]; if (x && sl.value !== "") m.flyTo({ center: [x.lng, x.lat], zoom: 16, pitch: MBX.pitch }); });
-  w.appendChild(l); w.appendChild(sl); el.parentNode.insertBefore(w, el);
+  geo.localites.forEach((x, i) => {
+    const o = document.createElement("option");
+    o.value = String(i);
+    o.textContent = x.nom + (x.type ? " (" + x.type + ")" : "");
+    sl.appendChild(o);
+  });
+  sl.addEventListener("change", () => {
+    const x = geo.localites[+sl.value];
+    if (x && sl.value !== "") m.flyTo({ center: [x.lng, x.lat], zoom: 16, pitch: MBX.pitch });
+  });
+  w.appendChild(l);
+  w.appendChild(sl);
+  el.parentNode.insertBefore(w, el);
 }
 /* Contrôle « Recentrer sur ma commune » : fitBounds(maxBounds). */
 function sigRecentre(m, geo) {
   let box = null;
   return {
     onAdd() {
-      box = document.createElement("div"); box.className = "mapboxgl-ctrl mapboxgl-ctrl-group";
-      const b = document.createElement("button"); b.type = "button"; b.textContent = "◎ Recentrer sur ma commune";
-      b.title = "Recentrer sur ma commune"; b.setAttribute("aria-label", "Recentrer sur ma commune");
-      b.style.width = "auto"; b.style.padding = "0 10px"; b.style.fontSize = "13px";
+      box = document.createElement("div");
+      box.className = "mapboxgl-ctrl mapboxgl-ctrl-group";
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = "◎ Recentrer sur ma commune";
+      b.title = "Recentrer sur ma commune";
+      b.setAttribute("aria-label", "Recentrer sur ma commune");
+      b.style.width = "auto";
+      b.style.padding = "0 10px";
+      b.style.fontSize = "13px";
       b.addEventListener("click", () => m.fitBounds(geo.maxBounds, { padding: 20, pitch: MBX.pitch, duration: 600 }));
-      box.appendChild(b); return box;
+      box.appendChild(b);
+      return box;
     },
-    onRemove() { if (box && box.parentNode) box.parentNode.removeChild(box); box = null; }
+    onRemove() {
+      if (box && box.parentNode) box.parentNode.removeChild(box);
+      box = null;
+    }
   };
 }
 function sigInit() {
   const tok = sigToken();
-  if (!tok) { sigMsg("Carte indisponible (jeton Mapbox absent).", "err"); return; }
+  if (!tok) {
+    sigMsg("Carte indisponible (jeton Mapbox absent).", "err");
+    return;
+  }
   mapboxgl.accessToken = tok;
   const geo = sigGeo();
   SIG.slug = sigSlug();
-  const m = (SIG.map = new mapboxgl.Map({ container: "sig-map", style: MBX.style, center: geo ? geo.centre : MBX.centre, zoom: geo ? geo.zoom : MBX.zoom, pitch: MBX.pitch, bearing: MBX.bearing, antialias: true, ...(geo ? { maxBounds: geo.maxBounds } : {}) }));
+  const m = (SIG.map = new mapboxgl.Map({
+    container: "sig-map",
+    style: MBX.style,
+    center: geo ? geo.centre : MBX.centre,
+    zoom: geo ? geo.zoom : MBX.zoom,
+    pitch: MBX.pitch,
+    bearing: MBX.bearing,
+    antialias: true,
+    ...(geo ? { maxBounds: geo.maxBounds } : {})
+  }));
   m.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), "top-right");
-  if (geo) { sigLocMenu(m, geo); m.addControl(sigRecentre(m, geo), "top-left"); }
-  m.on("error", ev => { if (!SIG.ready && ev && ev.error && /40[13]/.test(String(ev.error.status || ev.error.message))) sigMsg("Carte indisponible (jeton Mapbox refusé).", "err"); });
+  if (geo) {
+    sigLocMenu(m, geo);
+    m.addControl(sigRecentre(m, geo), "top-left");
+  }
+  m.on("error", ev => {
+    if (!SIG.ready && ev && ev.error && /40[13]/.test(String(ev.error.status || ev.error.message)))
+      sigMsg("Carte indisponible (jeton Mapbox refusé).", "err");
+  });
   m.on("load", () => {
-    sigBuildings(m); sigLayers(m);
+    sigBuildings(m);
+    sigLayers(m);
     SIG.ready = true;
     sigRefresh().catch(() => {});
   });
   m.on("click", ev => {
     const hit = m.queryRenderedFeatures(ev.point, { layers: ["sig-cl", "sig-pt"] })[0];
     if (hit && hit.layer.id == "sig-cl") {
-      m.getSource("sig-src").getClusterExpansionZoom(hit.properties.cluster_id, (err, z) => { if (!err) m.easeTo({ center: hit.geometry.coordinates, zoom: z + 0.5 }); });
+      m.getSource("sig-src").getClusterExpansionZoom(hit.properties.cluster_id, (err, z) => {
+        if (!err) m.easeTo({ center: hit.geometry.coordinates, zoom: z + 0.5 });
+      });
     } else if (hit) sigPopup(m, hit);
     else sigPick(ev.lngLat.lng, ev.lngLat.lat);
   });
   ["sig-cl", "sig-pt"].forEach(id => {
-    m.on("mouseenter", id, () => { m.getCanvas().style.cursor = "pointer"; });
-    m.on("mouseleave", id, () => { m.getCanvas().style.cursor = ""; });
+    m.on("mouseenter", id, () => {
+      m.getCanvas().style.cursor = "pointer";
+    });
+    m.on("mouseleave", id, () => {
+      m.getCanvas().style.cursor = "";
+    });
   });
-  if (navigator.geolocation) navigator.geolocation.getCurrentPosition(p => { SIG.geo = true; m.easeTo({ center: [p.coords.longitude, p.coords.latitude], zoom: 16, pitch: MBX.pitch }); }, () => {});
+  if (navigator.geolocation)
+    navigator.geolocation.getCurrentPosition(
+      p => {
+        SIG.geo = true;
+        m.easeTo({ center: [p.coords.longitude, p.coords.latitude], zoom: 16, pitch: MBX.pitch });
+      },
+      () => {}
+    );
 }
 function sigOpen() {
-  const d = $("#sig"); if (!d) return;
-  d.hidden = false; document.body.style.overflow = "hidden"; sigMsg("");
+  const d = $("#sig");
+  if (!d) return;
+  d.hidden = false;
+  document.body.style.overflow = "hidden";
+  sigMsg("");
   /* Commune changée depuis la dernière ouverture : on reconstruit la carte (centre, limites, menu). */
   if (SIG.map && SIG.slug !== sigSlug()) {
-    try { SIG.map.remove(); } catch (e) {}
-    SIG.map = SIG.mk = SIG.pos = null; SIG.ready = false; SIG.fit = false;
+    try {
+      SIG.map.remove();
+    } catch (e) {}
+    SIG.map = SIG.mk = SIG.pos = null;
+    SIG.ready = false;
+    SIG.fit = false;
   }
   setTimeout(async () => {
-    if (SIG.map) { SIG.map.resize(); if (SIG.ready) sigRefresh().catch(() => {}); return; }
-    try { await sigLib(); } catch (e) { sigMsg("Carte indisponible.", "err"); return; }
+    if (SIG.map) {
+      SIG.map.resize();
+      if (SIG.ready) sigRefresh().catch(() => {});
+      return;
+    }
+    try {
+      await sigLib();
+    } catch (e) {
+      sigMsg("Carte indisponible.", "err");
+      return;
+    }
     if (!SIG.map) sigInit();
   }, 50);
 }
-function sigClose() { const d = $("#sig"); if (d) d.hidden = true; document.body.style.overflow = ""; }
+function sigClose() {
+  const d = $("#sig");
+  if (d) d.hidden = true;
+  document.body.style.overflow = "";
+}
 async function sigSend() {
-  const g = id => (($("#" + id) || {}).value || "").trim(), txt = g("sig-txt"), b = $("#sig-send");
-  if (txt.length < 5) { sigMsg("Décrivez le problème en quelques mots.", "err"); return; }
-  if (!SIG.pos) { sigMsg("Touchez la carte pour indiquer l’endroit.", "err"); return; }
+  const g = id => (($("#" + id) || {}).value || "").trim(),
+    txt = g("sig-txt"),
+    b = $("#sig-send");
+  if (txt.length < 5) {
+    sigMsg("Décrivez le problème en quelques mots.", "err");
+    return;
+  }
+  if (!SIG.pos) {
+    sigMsg("Touchez la carte pour indiquer l’endroit.", "err");
+    return;
+  }
   const gz = sigGeo();
-  if (gz && !sigDansBbox(SIG.pos.lat, SIG.pos.lng, gz.bbox) && !window.confirm("Vous êtes hors du périmètre de la commune, voulez-vous continuer ?")) return;
-  b.disabled = true; sigMsg("Envoi en cours…");
+  if (
+    gz &&
+    !sigDansBbox(SIG.pos.lat, SIG.pos.lng, gz.bbox) &&
+    !window.confirm("Vous êtes hors du périmètre de la commune, voulez-vous continuer ?")
+  )
+    return;
+  b.disabled = true;
+  sigMsg("Envoi en cours…");
   try {
     let url = null;
     const f = $("#sig-ph").files && $("#sig-ph").files[0];
     if (f) {
       if (!/^image\//.test(f.type)) throw new Error("Photo uniquement.");
-      const bl = await comp(f), p = sigCid() + "/" + crypto.randomUUID() + "." + (bl.type == "image/webp" ? "webp" : "jpg"),
+      const bl = await comp(f),
+        p = sigCid() + "/" + crypto.randomUUID() + "." + (bl.type == "image/webp" ? "webp" : "jpg"),
         u = await sb.storage.from("signalements-photos").upload(p, bl, { contentType: bl.type });
       if (u.error) throw new Error("Envoi de la photo impossible.");
       url = sb.storage.from("signalements-photos").getPublicUrl(p).data.publicUrl;
     }
     /* RPC verrouillée par commune (20261124_signalements_insertion_multitenant.sql) ; repli sur l'insertion directe tant qu'elle n'est pas déployée. */
-    const cat = g("sig-cat"), pos = SIG.pos;
-    let r = await sb.rpc("creer_signalement", { p_commune: sigSlug(), p_categorie: cat, p_description: txt, p_photo_url: url, p_latitude: pos.lat, p_longitude: pos.lng });
-    if (r.error) r = await sb.from("signalements_citoyens").insert({ commune_id: sigCid(), categorie: cat, description: txt, photo_url: url, latitude: pos.lat, longitude: pos.lng });
+    const cat = g("sig-cat"),
+      pos = SIG.pos;
+    let r = await sb.rpc("creer_signalement", {
+      p_commune: sigSlug(),
+      p_categorie: cat,
+      p_description: txt,
+      p_photo_url: url,
+      p_latitude: pos.lat,
+      p_longitude: pos.lng
+    });
+    if (r.error)
+      r = await sb
+        .from("signalements_citoyens")
+        .insert({ commune_id: sigCid(), categorie: cat, description: txt, photo_url: url, latitude: pos.lat, longitude: pos.lng });
     if (r.error) throw new Error("Enregistrement impossible. Réessayez.");
     sigMsg("Signalement envoyé. Merci !", "ok");
-    $("#sig-txt").value = ""; $("#sig-ph").value = ""; SIG.pos = null;
-    if (SIG.mk) { SIG.mk.remove(); SIG.mk = null; }
-    const fm = $("#sig-form"), ht = $("#sig-hint");
+    $("#sig-txt").value = "";
+    $("#sig-ph").value = "";
+    SIG.pos = null;
+    if (SIG.mk) {
+      SIG.mk.remove();
+      SIG.mk = null;
+    }
+    const fm = $("#sig-form"),
+      ht = $("#sig-hint");
     if (fm) fm.hidden = true;
     if (ht) ht.hidden = false;
     /* La carte se rafraîchit et affiche le nouveau marqueur (ajouté localement si la lecture serveur ne le renvoie pas). */
-    await sigRefresh({ id: typeof r.data == "string" ? r.data : "", statut: "nouveau", categorie: cat, latitude: pos.lat, longitude: pos.lng, created_at: new Date().toISOString() }).catch(() => {});
+    await sigRefresh({
+      id: typeof r.data == "string" ? r.data : "",
+      statut: "nouveau",
+      categorie: cat,
+      latitude: pos.lat,
+      longitude: pos.lng,
+      created_at: new Date().toISOString()
+    }).catch(() => {});
     if (SIG.map) SIG.map.easeTo({ center: [pos.lng, pos.lat], zoom: Math.max(SIG.map.getZoom(), 16) });
-  } catch (e) { sigMsg(e.message || "Erreur réseau.", "err"); }
+  } catch (e) {
+    sigMsg(e.message || "Erreur réseau.", "err");
+  }
   b.disabled = false;
 }
 document.addEventListener("click", e => {
@@ -2588,4 +2829,6 @@ document.addEventListener("click", e => {
   else if (id == "sig-x" || id == "sig") sigClose();
   else if (id == "sig-send") sigSend();
 });
-document.addEventListener("keydown", e => { if (e.key == "Escape") sigClose(); });
+document.addEventListener("keydown", e => {
+  if (e.key == "Escape") sigClose();
+});
