@@ -55,13 +55,21 @@ export async function verifyWave({ rawBody, headers, secret, tolerance = 0, now 
   return tok ? safeEqual(tok, secret) : false;
 }
 
-/* Orange Money : jeton secret partagé (Authorization: Bearer, x-api-key ou x-om-token) comparé à OM_API_KEY,
-   ou signature HMAC-SHA256 hex du corps brut (x-om-signature, préfixe « sha256= » toléré) avec la même clé. */
-export async function verifyOm({ rawBody, headers, secret }) {
+/* Orange Money : jeton partagé (Authorization: Bearer, x-api-key ou x-om-token) comparé à la clé API de la commune,
+   ou signature HMAC-SHA256 hex du corps brut (x-om-signature, préfixe « sha256= » toléré) avec hmacSecret (défaut : secret). */
+export async function verifyOm({ rawBody, headers, secret, hmacSecret }) {
   if (!secret) return false;
   const sig = (headers.get("x-om-signature") || "").replace(/^sha256=/i, "").trim().toLowerCase();
-  if (sig) return safeEqual(sig, await hmacHex(secret, rawBody));
+  if (sig) return safeEqual(sig, await hmacHex(hmacSecret || secret, rawBody));
   const tok = bearer(headers.get("authorization")) || headers.get("x-api-key") || headers.get("x-om-token") || "";
+  return tok ? safeEqual(tok, secret) : false;
+}
+
+/* Sandbox : aucune signature de fournisseur (rien n'est appelé chez lui), mais la simulation exige le jeton de la commune
+   (api_secret) en Authorization: Bearer : sans lui, n'importe qui pourrait « payer » une taxe d'une commune de test. */
+export async function verifySandbox({ headers, secret }) {
+  if (!secret) return false;
+  const tok = bearer(headers.get("authorization")) || headers.get("x-sandbox-token") || "";
   return tok ? safeEqual(tok, secret) : false;
 }
 
@@ -88,7 +96,7 @@ const OM_KO = new Set(["FAILED", "FAILURE", "CANCELLED", "CANCELED", "REJECTED",
 const WAVE_OK = new Set(["checkout.session.completed", "checkout.paid", "checkout.completed"]);
 const WAVE_KO = new Set(["checkout.session.payment_failed", "checkout.payment_failed"]);
 
-/* Normalise un événement fournisseur : { kind: "paid" | "failed" | "ignore" | "invalid", reference, txId, montant }. */
+/* Normalise un événement fournisseur : { kind: "paid" | "failed" | "ignore" | "invalid", reference, txId|null, montant|null }. */
 export function parseEvent(provider, body) {
   if (!body || typeof body !== "object") return { kind: "invalid" };
   let kind = "ignore", reference, txId, amount;
@@ -117,9 +125,8 @@ export function parseEvent(provider, body) {
   if (!REF_RE.test(reference)) return { kind: "invalid" };
   if (kind === "failed") return { kind, reference };
   txId = typeof txId === "string" || typeof txId === "number" ? String(txId).trim() : "";
-  const montant = parseAmount(amount);
-  if (!TX_RE.test(txId) || montant === null) return { kind: "invalid" };
-  return { kind, reference, txId, montant };
+  // null = absent ou mal formé : la production le refuse (422), la sandbox le complète (SANDBOX-<référence>, montant dû).
+  return { kind, reference, txId: TX_RE.test(txId) ? txId : null, montant: parseAmount(amount) };
 }
 
 export function providerFrom(url, headers) {
@@ -128,4 +135,18 @@ export function providerFrom(url, headers) {
   if (q === "orange_money" || q === "om" || q === "orange") return "orange_money";
   if (headers.get("wave-signature") || headers.get("x-wave-signature")) return "wave";
   return null;
+}
+
+// Identifiant de commune éventuellement porté par le payload (ou ?commune=) : sert uniquement de recoupement, la commune
+// de référence est toujours celle de la taxe en base.
+export function communeFromPayload(body, url) {
+  const q = new URL(url).searchParams.get("commune");
+  const v = q || pick(body || {}, ["commune_id", "data.commune_id", "metadata.commune_id", "data.metadata.commune_id"]);
+  return typeof v === "string" && v ? v.toLowerCase() : null;
+}
+
+// Identifiant de transaction de la sandbox : toujours préfixé SANDBOX- (la RPC l'exige en sandbox et l'interdit en production).
+export function sandboxTx(txId, reference) {
+  const t = txId || reference;
+  return (t.startsWith("SANDBOX-") ? t : "SANDBOX-" + t).slice(0, 100);
 }
