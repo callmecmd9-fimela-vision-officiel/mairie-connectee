@@ -2581,7 +2581,10 @@ document.addEventListener("keydown", e => { if (e.key == "Escape") sigClose(); }
 
 (function () {
   // En-tête compact au défilement. Le gain de hauteur est mesuré puis compensé (--tp-d) : pas de saut de mise en page.
-  const hdr = () => (document.querySelector ? document.querySelector(".tp") : null);
+  const hdr = () => {
+    const h = document.querySelector ? document.querySelector(".tp") : null;
+    return h && h.classList && h.style && h.style.setProperty ? h : null;
+  };
   const delta = (h, want) => {
     const had = h.classList.contains("is-scrolled");
     h.style.transition = "none";
