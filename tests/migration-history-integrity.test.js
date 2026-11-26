@@ -90,6 +90,8 @@ const pendingFiles = [
   '20261202001900_p1_rpc_retirer_demande.sql',
   // P1 guichet (2026-11-25) : politiques SELECT demandes_guichet / demandes_historique_guichet (finances, secretariat, agent, maire) — proposed (PROPOSÉE, non appliquée).
   '20261202002000_p1_rls_demandes_guichet.sql',
+  // LOT 15 : fiscalité locale et domaine public — PROPOSÉE, non appliquée.
+  '20261203000200_lot15_fiscalite_locale.sql',
   // P0 sécurité (2026-11-26) : RLS demandes — demandes_citoyen (citoyen_id = auth.uid()), anon sans accès, purge des politiques de lecture non prévues — PROPOSÉE, non appliquée.
   '20261203000300_fix_rls_demandes_citoyen.sql'
 ];
