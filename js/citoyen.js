@@ -2580,10 +2580,38 @@ document.addEventListener("click", e => {
 document.addEventListener("keydown", e => { if (e.key == "Escape") sigClose(); });
 
 (function () {
-  const onScroll = () => {
-    const h = document.querySelector(".tp");
-    if (h) h.classList.toggle("is-scrolled", window.scrollY > 10);
+  // En-tête compact au défilement. Le gain de hauteur est mesuré puis compensé (--tp-d) : pas de saut de mise en page.
+  const hdr = () => (document.querySelector ? document.querySelector(".tp") : null);
+  const delta = (h, want) => {
+    const had = h.classList.contains("is-scrolled");
+    h.style.transition = "none";
+    h.classList.remove("is-scrolled");
+    const full = h.offsetHeight;
+    h.classList.add("is-scrolled");
+    h.style.setProperty("--tp-d", "0px");
+    const small = h.offsetHeight;
+    h.classList.toggle("is-scrolled", had);
+    h.offsetHeight;
+    h.style.transition = "";
+    return Math.max(0, full - small);
   };
-  window.addEventListener("scroll", onScroll, { passive: true });
-  onScroll();
+  const sync = () => {
+    const h = hdr();
+    if (!h) return;
+    const want = window.scrollY > 10;
+    if (want === h.classList.contains("is-scrolled")) return;
+    h.style.setProperty("--tp-d", want ? delta(h) + "px" : "0px");
+    h.classList.toggle("is-scrolled", want);
+  };
+  let raf = 0;
+  const later = () => { if (!raf) raf = (window.requestAnimationFrame || setTimeout)(() => { raf = 0; sync(); }); };
+  if (!window.addEventListener) return;
+  window.addEventListener("scroll", later, { passive: true });
+  window.addEventListener("resize", () => {
+    const h = hdr();
+    if (h && h.classList.contains("is-scrolled")) h.style.setProperty("--tp-d", delta(h) + "px");
+  });
+  const app = document.getElementById ? document.getElementById("app") : null;
+  if (app && window.MutationObserver) new MutationObserver(later).observe(app, { childList: true, subtree: true });
+  sync();
 })();
