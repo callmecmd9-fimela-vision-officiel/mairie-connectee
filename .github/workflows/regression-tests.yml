@@ -76,8 +76,17 @@ jobs:
           deno-version: v2.x
 
       - name: Type-check all Supabase Edge Functions
+        env:
+          # Le package.json racine ferait passer Deno en mode node_modules manuel : on l'ignore pour les Edge Functions.
+          DENO_NO_PACKAGE_JSON: "1"
         run: |
+          set -euo pipefail
           for function_file in supabase/functions/*/index.ts; do
+            function_dir="$(dirname "$function_file")"
             echo "Type-check: $function_file"
-            deno check --no-lock "$function_file"
+            if [[ -f "$function_dir/deno.json" ]]; then
+              deno check --no-lock --config "$function_dir/deno.json" "$function_file"
+            else
+              deno check --no-lock "$function_file"
+            fi
           done
