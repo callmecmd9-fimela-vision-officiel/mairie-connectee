@@ -87,7 +87,9 @@ const pendingFiles = [
   // P1 circuit des demandes (2026-11-25) : RPC encaisser_demande (quittance QUIT-YYYY-NNNNNN) — proposed (PROPOSÉE, non appliquée).
   '20261202001800_p1_rpc_encaisser_demande.sql',
   // P1 circuit des demandes (2026-11-25) : RPC retirer_demande (registre des retraits) — proposed (PROPOSÉE, non appliquée).
-  '20261202001900_p1_rpc_retirer_demande.sql'
+  '20261202001900_p1_rpc_retirer_demande.sql',
+  // P1 guichet (2026-11-25) : politiques SELECT demandes_guichet / demandes_historique_guichet (finances, secretariat, agent, maire) — proposed (PROPOSÉE, non appliquée).
+  '20261202002000_p1_rls_demandes_guichet.sql'
 ];
 const actualSqlFiles = fs.readdirSync(migrationDir).filter(name => name.endsWith('.sql')).sort();
 const expectedSqlFiles = [...historicalFiles, ...pendingFiles].sort();
