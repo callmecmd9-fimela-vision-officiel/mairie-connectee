@@ -10,14 +10,14 @@ async function boot({user=true,prof={prenom:'Awa',nom:'Diop',village:'Mbodiène'
   rpc:async(n,a)=>{rpcs.push([n,a]);
    if(n=='commune_par_slug')return{data:[{id:'cid1',slug:'fimela',nom:'Fimela'}]};
    if(n=='infos_commune')return{data:[{nom:'Fimela'}]};
-   if(n=='mes_demandes_compte')return{data:[{numero:'FIM-0001-AAAA1111'}]};
+   if(n=='mes_demandes_par_tel')return{data:a.p_telephone=='+221771234567'?[{numero:'FIM-0001-AAAA1111',commune_slug:'fimela'}]:[]};if(n=='mes_demandes_compte')return{data:[{numero:'FIM-0001-AAAA1111'}]};
    if(n=='suivre_demandes')return{data:(a.p_numeros||[]).map(x=>dem[x]).filter(Boolean)};
    if(n=='suivre_demande')return{data:dem[a.p_numero]?[Object.assign({cree:'2026-11-17T09:00:00Z',service:'secretariat',historique:[]},dem[a.p_numero])]:[]};
    if(n=='creer_demande')return{data:'FIM-0003-NEW00000'};
    return{data:[]}}};
  const ctx={supabase:{createClient:()=>sb},document:{querySelector:s=>s=='#app'?app:els[s]||null,getElementById:()=>null,addEventListener:(n,fn)=>(handlers[n]=handlers[n]||[]).push(fn),createElement:()=>({}),head:{appendChild(){}},documentElement:{style:{setProperty(){},removeProperty(){}}},hidden:false},
   localStorage:{getItem:k=>store[k]??null,setItem:(k,v)=>store[k]=String(v),removeItem:k=>delete store[k]},location:{search:'',pathname:'/',origin:'https://m.x',hostname:'x.workers.dev'},history:{replaceState(){}},navigator:{onLine:true},URL,Blob,URLSearchParams,setInterval(){},setTimeout(){},addEventListener(){},scrollTo(){},console,Promise,JSON,Math,Date,crypto:{},matchMedia:()=>({matches:true})};
- ctx.window=ctx;vm.createContext(ctx);let source=fs.readFileSync(path.join(__dirname,'..','js','citoyen.js'),'utf8');if(smsEnabled)source=source.replace(/const SMS_ON\s*=\s*false;/,'const SMS_ON=true;');vm.runInContext(source,ctx);
+ ctx.window=ctx;vm.createContext(ctx);let source=fs.readFileSync(path.join(__dirname,'..','js','citoyen.js'),'utf8');if(!smsEnabled)source=source.replace(/const SMS_ON\s*=\s*true;/,'const SMS_ON=false;');vm.runInContext(source,ctx);
  await new Promise(r=>setTimeout(r,60));
  const click=async d=>{const t={dataset:d,textContent:''};for(const h of handlers.click)await h({target:{closest:s=>s=='[data-a]'?t:null}})};
  return{app,els,log,rpcs,store,click,H:()=>app.innerHTML,S:()=>vm.runInContext('S',ctx),ctx}}

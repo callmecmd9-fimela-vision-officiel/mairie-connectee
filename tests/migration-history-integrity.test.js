@@ -90,14 +90,16 @@ const pendingFiles = [
   '20261202001900_p1_rpc_retirer_demande.sql',
   // P1 guichet (2026-11-25) : politiques SELECT demandes_guichet / demandes_historique_guichet (finances, secretariat, agent, maire) — proposed (PROPOSÉE, non appliquée).
   '20261202002000_p1_rls_demandes_guichet.sql',
-  // LOT 15 : fiscalité locale et domaine public — PROPOSÉE, non appliquée.
+  // LOT 15 : fiscalité locale et domaine public — appliquée en production le 2026-11-26.
   '20261203000200_lot15_fiscalite_locale.sql',
-  // P0 sécurité (2026-11-26) : RLS demandes — demandes_citoyen (citoyen_id = auth.uid()), anon sans accès, purge des politiques de lecture non prévues — PROPOSÉE, non appliquée.
+  // P0 sécurité (2026-11-26) : RLS demandes — demandes_citoyen (citoyen_id = auth.uid()), anon sans accès, purge des politiques de lecture non prévues — appliquée en production le 2026-11-26.
   '20261203000300_fix_rls_demandes_citoyen.sql',
-  // LOT 16 : « Mes Taxes » citoyen — PROPOSÉE, non appliquée.
+  // LOT 16 : « Mes Taxes » citoyen — appliquée en production le 2026-11-26.
   '20261203000400_lot16_citoyen_taxes.sql',
-  // LOT 17 : paiement mobile Wave / Orange Money (webhook, RPC confirmer_paiement_mobile) — PROPOSÉE, non appliquée.
-  '20261203000500_lot17_paiement_mobile.sql'
+  // LOT 17 : paiement mobile Wave / Orange Money (webhook, RPC confirmer_paiement_mobile) — appliquée en production le 2026-11-26.
+  '20261203000500_lot17_paiement_mobile.sql',
+  // LOT 18 : « Mon Espace » — RPC mes_roles_imposition_par_tel / mes_demandes_par_tel (téléphone vérifié par SMS) — PROPOSÉE, non appliquée.
+  '20261204000100_lot18_citoyen_rpc_par_tel.sql'
 ];
 const actualSqlFiles = fs.readdirSync(migrationDir).filter(name => name.endsWith('.sql')).sort();
 const expectedSqlFiles = [...historicalFiles, ...pendingFiles].sort();
