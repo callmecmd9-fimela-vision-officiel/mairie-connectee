@@ -44,13 +44,25 @@ const fn = path.join(root, "supabase", "functions", "paiement-webhook");
   assert.equal(lib.parseEvent("wave", { type: "checkout.session.payment_failed", data: { client_reference: "PAY-TAXE-2026-000001" } }).kind, "failed");
   assert.equal(lib.parseEvent("wave", { type: "b2b.payment_received", data: {} }).kind, "ignore");
   assert.equal(lib.parseEvent("wave", { type: "checkout.session.completed", data: { client_reference: "x", transaction_id: "TCN123", amount: "5000", currency: "XOF" } }).kind, "invalid", "référence invalide");
-  assert.equal(lib.parseEvent("wave", { type: "checkout.session.completed", data: { client_reference: "PAY-TAXE-2026-000001", transaction_id: "TCN123", amount: "50.123", currency: "XOF" } }).kind, "invalid", "montant à 3 décimales");
+  assert.equal(lib.parseEvent("wave", { type: "checkout.session.completed", data: { client_reference: "PAY-TAXE-2026-000001", transaction_id: "TCN123", amount: "50.123", currency: "XOF" } }).montant, null, "montant à 3 décimales : refusé en production");
   assert.equal(lib.parseEvent("wave", { type: "checkout.session.completed", data: { client_reference: "PAY-TAXE-2026-000001", transaction_id: "TCN123", amount: "5000", currency: "EUR" } }).kind, "invalid", "devise");
   assert.equal(lib.parseEvent("wave", { type: "checkout.session.completed", data: { client_reference: "PAY-TAXE-2026-000001", transaction_id: "TCN123", amount: "5000", currency: "XOF", payment_status: "processing" } }).kind, "ignore", "paiement non abouti");
   assert.equal(lib.parseEvent("orange_money", { status: "SUCCESS", reference: "PAY-TAXE-2026-000002", transactionId: "MP2611.1234.A12345", amount: { value: 7000, unit: "XOF" } }).montant, 7000);
   assert.equal(lib.parseEvent("orange_money", { status: "FAILED", reference: "PAY-TAXE-2026-000002" }).kind, "failed");
   assert.equal(lib.parseEvent("orange_money", { status: "PENDING" }).kind, "ignore");
-  assert.equal(lib.parseEvent("orange_money", { status: "SUCCESS", reference: "PAY-TAXE-2026-000002", transactionId: "../../x", amount: 7000 }).kind, "invalid", "identifiant de transaction piégé");
+  assert.equal(lib.parseEvent("orange_money", { status: "SUCCESS", reference: "PAY-TAXE-2026-000002", transactionId: "../../x", amount: 7000 }).txId, null, "identifiant de transaction piégé");
+  // --- Sandbox
+  assert.equal(await lib.verifySandbox({ headers: H({ authorization: "Bearer jeton_commune" }), secret: "jeton_commune" }), true, "jeton sandbox");
+  assert.equal(await lib.verifySandbox({ headers: H({}), secret: "jeton_commune" }), false, "sandbox sans jeton");
+  assert.equal(await lib.verifySandbox({ headers: H({ authorization: "Bearer autre" }), secret: "jeton_commune" }), false, "sandbox mauvais jeton");
+  assert.equal(await lib.verifySandbox({ headers: H({ authorization: "Bearer x" }), secret: "" }), false, "sandbox sans secret : fermé");
+  assert.equal(lib.sandboxTx(null, "PAY-TAXE-2026-000001"), "SANDBOX-PAY-TAXE-2026-000001");
+  assert.equal(lib.sandboxTx("SANDBOX-A1", "PAY-TAXE-2026-000001"), "SANDBOX-A1");
+  assert.equal(lib.sandboxTx("TCN123", "PAY-TAXE-2026-000001"), "SANDBOX-TCN123", "une vraie transaction ne garde jamais son identifiant en sandbox");
+  assert.equal(lib.communeFromPayload({ data: { metadata: { commune_id: "ABC-1" } } }, "https://x/f"), "abc-1");
+  assert.equal(lib.communeFromPayload({}, "https://x/f?commune=Z9"), "z9");
+  assert.equal(lib.communeFromPayload({}, "https://x/f"), null);
+  assert.equal(await lib.verifyOm({ rawBody: body, headers: H({ "x-om-signature": hm("cle_hmac", body) }), secret: "jeton", hmacSecret: "cle_hmac" }), true, "OM HMAC avec clé distincte");
   assert.equal(lib.parseEvent("inconnu", {}).kind, "invalid");
   assert.equal(lib.parseAmount("-5"), null);
   assert.equal(lib.parseAmount("1e3"), null);
@@ -59,32 +71,49 @@ const fn = path.join(root, "supabase", "functions", "paiement-webhook");
   assert.equal(lib.providerFrom("https://x/f", H({ "wave-signature": "t=1,v1=2" })), "wave");
   assert.equal(lib.providerFrom("https://x/f", H({})), null);
 
-  // --- Edge Function : aucune clé en dur, authentification avant traitement, RPC de confirmation
+  // --- Edge Function : clés lues par commune en base, aucune clé en dur ni dans l'environnement
   const idx = fs.readFileSync(path.join(fn, "index.ts"), "utf8");
-  assert.match(idx, /Deno\.env\.get\("WAVE_WEBHOOK_SECRET"\) \|\| Deno\.env\.get\("WAVE_API_KEY"\)/);
-  assert.match(idx, /Deno\.env\.get\("OM_API_KEY"\)/);
+  assert.match(idx, /Deno\.env\.get\("PAIEMENT_ENC_KEY"\)/);
+  assert.doesNotMatch(idx, /Deno\.env\.get\("(WAVE_API_KEY|OM_API_KEY|WAVE_WEBHOOK_SECRET)"\)/, "pas de clé fournisseur globale");
+  assert.match(idx, /resoudre_reference_taxe/);
+  assert.match(idx, /lire_parametres_paiement/);
+  assert.match(idx, /param\.mode === "sandbox"/);
+  assert.match(idx, /verifySandbox/);
   assert.match(idx, /confirmer_paiement_mobile/);
-  assert.ok(idx.indexOf("await verifyWave(") > 0 && idx.indexOf("await verifyWave(") < idx.indexOf("rpc(\"confirmer_paiement_mobile\""), "la signature est vérifiée avant la RPC");
-  assert.ok(idx.indexOf("Accès refusé\" }, 401") > 0 && idx.indexOf("Paiement mobile non configuré") > 0, "401 si signature fausse, 503 si secret absent");
+  const iP = idx.indexOf('rpc("lire_parametres_paiement"'), iV = idx.indexOf("await verifyWave("), iC = idx.indexOf('rpc("confirmer_paiement_mobile"');
+  assert.ok(iP > 0 && iP < iV && iV < iC, "paramètres lus, signature vérifiée, puis seulement la RPC");
+  assert.ok(idx.indexOf("await verifySandbox(") > 0 && idx.indexOf("await verifySandbox(") < iC, "jeton sandbox vérifié avant la RPC");
+  assert.doesNotMatch(idx, /fetch\(/, "aucun appel sortant (ni sandbox, ni production)");
+  assert.match(idx, /Paiement mobile non configuré/);
   assert.doesNotMatch(idx, /(sk_|whsec_|wave_sn_)[A-Za-z0-9]{8,}/, "aucun secret en dur");
 
   // --- Migration lot 17
   const sql = fs.readFileSync(path.join(root, "supabase", "migrations", "20261203000500_lot17_paiement_mobile.sql"), "utf8");
+  assert.match(sql, /create table if not exists public\.parametres_paiement_communes\([\s\S]*?commune_id[\s\S]*?fournisseur[\s\S]*?api_key_encrypted[\s\S]*?api_secret_encrypted[\s\S]*?mode text[\s\S]*?actif boolean/);
+  assert.match(sql, /fournisseur in \('wave', 'orange_money'\)/);
+  assert.match(sql, /mode in \('sandbox', 'production'\)/);
+  assert.match(sql, /pgp_sym_encrypt/);
+  assert.doesNotMatch(sql, /alter table public\.parametres_paiement_communes[^;]*(enable|grant)[^;]*authenticated/i);
   assert.match(sql, /add column if not exists provider text/);
   assert.match(sql, /add column if not exists provider_transaction_id text/);
+  assert.match(sql, /add column if not exists statut_paiement text/);
+  assert.match(sql, /trg_ptx_statut_paiement/);
   assert.match(sql, /create unique index if not exists paiements_taxes_provider_tx_uidx[\s\S]*?\(provider_transaction_id\)/);
   assert.match(sql, /create or replace function public\.confirmer_paiement_mobile\(p_reference_taxe text, p_provider_tx_id text, p_provider text, p_montant numeric\)[\s\S]*?security definer/);
   assert.match(sql, /create or replace function public\.initier_paiement_en_ligne\(p_role_id uuid/);
+  assert.match(sql, /sandbox\.paiement\.invalid/, "lien factice en sandbox");
+  assert.match(sql, /\(v_mode = 'sandbox'\) <> \(left\(v_tx, 8\) = 'SANDBOX-'\)/, "SANDBOX- interdit en production, exigé en sandbox");
   assert.match(sql, /p_montant <> v_r\.montant_du/, "montant exact");
   assert.match(sql, /set statut = 'payee'/, "rôle passé à payee");
   assert.match(sql, /insert into public\.quittances/, "quittance émise");
   assert.match(sql, /'deja_traite', true/, "idempotence");
-  assert.match(sql, /revoke all on function public\.confirmer_paiement_mobile\(text, text, text, numeric\) from public, anon, authenticated;\s*grant execute on function public\.confirmer_paiement_mobile\(text, text, text, numeric\) to service_role;/);
-  assert.doesNotMatch(sql, /grant execute on function public\.confirmer_paiement_mobile[^;]*authenticated/);
-  assert.ok(!/grant (select|insert|update|delete)[^;]*paiement_mobile_config[^;]*authenticated/i.test(sql), "config illisible par l'API");
+  for (const f of ["confirmer_paiement_mobile\\(text, text, text, numeric\\)", "echouer_paiement_mobile\\(text, text\\)", "lire_parametres_paiement\\(uuid, text, text\\)", "definir_parametres_paiement\\(uuid, text, text, text, text, boolean, text, text\\)", "resoudre_reference_taxe\\(text\\)"]) {
+    assert.match(sql, new RegExp("revoke all on function public\\." + f + " from public, anon, authenticated;\\s*grant execute on function public\\." + f + " to service_role;"), f);
+    assert.doesNotMatch(sql, new RegExp("grant execute on function public\\." + f + "[^;]*authenticated"), f);
+  }
+  assert.match(sql, /grant execute on function public\.modes_paiement_commune\(text\) to authenticated/);
   assert.match(sql, /search_path = ''/);
-  for (const m of sql.match(/create or replace function public\.\w+/g)) assert.ok(m, m);
-  assert.ok((sql.match(/security definer set search_path = ''/g) || []).length >= 4, "toutes les fonctions : search_path vide");
+  assert.ok((sql.match(/set search_path = ''/g) || []).length >= 9, "toutes les fonctions : search_path vide");
 
   // --- Déploiement
   const cfg = fs.readFileSync(path.join(root, "supabase", "config.toml"), "utf8");
