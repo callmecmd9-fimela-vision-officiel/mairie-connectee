@@ -1,6 +1,6 @@
 :root{--g:#0B5A2E;--gold:#F2B705;--bg:#F3F6F1;--tx:#14231A;--mut:#566259;--ln:#E0E8DE;--r:16px;color-scheme:light}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font:400 16px/1.5 'Nunito Sans',system-ui,sans-serif}
+body{margin:0;padding-top:var(--header-height,80px);background:var(--bg);color:var(--tx);font:400 16px/1.5 'Nunito Sans',system-ui,sans-serif}
 button,input,select,textarea{font:inherit;color:inherit}
 h1,h2,h3,p{margin:0}p{margin:0 0 10px}
 :focus-visible{outline:3px solid #2563EB;outline-offset:2px}
@@ -29,7 +29,7 @@ label{display:block;font:700 13px 'Nunito Sans',system-ui,sans-serif;color:var(-
 .sk{position:absolute;left:-999px;top:0;background:#fff;color:var(--g);padding:10px 14px;font-weight:800;z-index:99}.sk:focus{left:8px;top:8px}
 .gl{color:var(--gold)}
 /* ---- En-tête (logo, navigation, Mon espace, menu mobile) ---- */
-.tp{background:#fff;border-bottom:3px solid var(--gold);position:sticky;top:0;z-index:1000;padding:8px 16px;transition:padding .3s ease,margin-bottom .3s ease,box-shadow .3s ease}
+.tp{background:#fff;border-bottom:3px solid var(--gold);position:fixed;top:0;left:0;width:100%;box-sizing:border-box;z-index:9999;padding:8px 16px;transition:padding .3s ease,margin-bottom .3s ease,box-shadow .3s ease}
 .hdr{display:flex;align-items:center;gap:12px}
 .hn{min-width:0;flex:1 1 auto}.tn{display:block;font:800 19px/1.15 'Nunito Sans',system-ui,sans-serif;color:var(--g);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ts{display:block;color:var(--mut);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tm{display:inline-grid;place-items:center;border-radius:99px;min-height:46px;padding:0 16px;flex:none;font-size:15px}
@@ -144,7 +144,7 @@ label{display:block;font:700 13px 'Nunito Sans',system-ui,sans-serif;color:var(-
 /* En-tête compact au défilement : la hauteur libérée est compensée par --tp-d (margin-bottom, posé par js/citoyen.js) pour que le contenu ne saute pas */
 .tp .hdr .bz,.tp .hdr>svg,.tp .tn,.tp .tm,.tp .mb{transition:width .3s ease,height .3s ease,min-height .3s ease,font-size .3s ease,padding .3s ease}
 .tn small{max-height:24px;transition:max-height .3s ease,opacity .3s ease}
-.tp.is-scrolled{padding-top:4px;padding-bottom:4px;margin-bottom:var(--tp-d,0px)}
+.tp.is-scrolled{padding-top:4px;padding-bottom:4px;}
 .tp.is-scrolled .hdr .bz,.tp.is-scrolled .hdr>svg{width:40px!important;height:40px!important}
 .tp.is-scrolled .tn{font-size:20px;line-height:1.05}
 .tp.is-scrolled .tn small,.tp.is-scrolled .ts{max-height:0;opacity:0;overflow:hidden;margin:0}
