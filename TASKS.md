@@ -1,6 +1,8 @@
 # TASKS — état au 2026-11-25
 
 ## P1 Parcours citoyen — suivi public et guichet (2026-11-25)
+- [ ] **Déploiement base** : appliquer `supabase/APPLY_ALL_MIGRATIONS.sql` (001600 à 002000, une transaction), lancer `supabase/VERIFY_ALL.sql`, suivre `supabase/DEPLOYMENT_STEPS.md`, puis noter ici la date d'application. `sa-admin` : déjà v18 avec `conseiller` (aucun changement de code) ; `bright-worker` conservé (inerte, référencé dans `config.toml`).
+- [ ] `20261202002000_p1_rls_demandes_guichet.sql` **proposée, non appliquée** (après 001700) : ajoute les politiques SELECT `demandes_guichet` et `demandes_historique_guichet`. Vérifier après application que l'écran Caisse (rôle finances) affiche bien les demandes en a_payer de toute la commune.
 - [ ] Déployer `suivi.html`, `js/suivi.js`, `js/guichet.js`, `mairie.html` (guichet v20261125.5), `index.html`, `.assetsignore` ; vider le cache/PWA.
 - [ ] **Vérifier en production que `20261202001600` à `001900` sont appliquées** (colonnes `num_suivi` / `montant_du` / `lieu_retrait`, RPC `suivi_public`, `encaisser_demande(uuid, numeric, text, text)`, `retirer_demande`). Sinon le guichet affiche « migration à appliquer ».
 - [ ] **Bloquant probable pour la Caisse** : la politique RLS `demandes_personnel` (catalogue du 2026-11-19) ne laisse `finances` voir que les demandes `service = 'finances'`. Une demande déposée au guichet est routée `secretariat` / `etat_civil` / `technique` : le rôle `finances` ne la verra pas, donc Caisse vide et recherche Retrait vide pour lui. À trancher : élargir la lecture de `finances` aux statuts `a_payer` / `paye` / `pret_a_retirer` (migration à proposer) ou fournir une RPC de lecture dédiée.

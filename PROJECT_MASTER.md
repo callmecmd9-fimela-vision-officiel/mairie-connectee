@@ -47,3 +47,8 @@ CHANGELOG.md, DECISIONS.md, TASKS.md, SETUP.md
 
 ## Session 2026-11-22 (MAJ18)
 - Production = toutes migrations appliquées (+ perf 20261122081303), Edge sa-admin v16 / saas-admin v4. JS formaté (Prettier, contrôlé en CI). ZIP de référence : SAAS_MUNICIPAL_MAJ18_COMPLET.zip.
+
+## Session 2026-11-24 (MAJ25) — Lots 1 à 8
+Lots 1–2 sécurité/isolation (RLS par commune, rôles, MFA) · 3 catalogue des démarches · 4–5 circuits administratifs, état civil et copies PDF avec QR · 6 notifications WhatsApp (WAHA, table `notifications_whatsapp`) · 7 fiscalité (tarifs, paiement simulé via RPC, `paiements_taxes`, quittances vérifiables, Tarifs/Recettes + CSV) · 8 QA, audit RLS, documentation, livraison.
+Migrations à la suite : … → 20261126_lot4_circuits → 20261127_lot5_etat_civil → 20261128_lot6_notifications → 20261129_lot7_portail_fiscal → 20261130_lot8_paiements_rls_durcissement (proposée). Détail : CHANGELOG.md (MAJ25), TASKS.md.
+Fichiers clés : `js/notifications.js`, `js/etat-civil.js`, `js/taxes.js`, `js/paiements-demandes.js`, `js/quittance.js`, `quittance.html`, `verifier.html`.
