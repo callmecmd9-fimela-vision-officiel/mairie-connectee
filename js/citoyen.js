@@ -232,7 +232,7 @@ const TX = {
     v_conservez_le_votre_dossier:
       "Conservez-le. Votre dossier est aussi dans votre espace, rubrique « Mes demandes », et vous serez notifié à chaque étape.",
     v_conservez_le_il_vous:
-      "Conservez-le : il vous permet de suivre votre dossier. Il est aussi enregistré dans « Mes demandes » sur cet appareil.",
+      "Conservez-le : il vous permet de suivre votre dossier. Connectez-vous pour le retrouver dans « Mes demandes ».",
     v_votre_mairie_a_votre: "Votre mairie à votre service",
     v_en_cours_d_orientation: "En cours d’orientation",
     v_retrait_lieu_et_modalites: "Retrait : lieu et modalités",
@@ -398,18 +398,10 @@ let S = {
   plan: null
 };
 const KM = () => "mc_d_" + S.slug,
-  getM = () => {
+  /* Anciennes versions : numéros de dossiers mémorisés sur l'appareil. Plus utilisés (P0 sécurité) : effacés pour qu'aucun autre utilisateur de l'appareil ne puisse les exploiter. */
+  purgeM = () => {
     try {
-      return JSON.parse(localStorage.getItem(KM()) || "[]");
-    } catch (e) {
-      return [];
-    }
-  },
-  addM = n => {
-    try {
-      const l = getM().filter(x => x != n);
-      l.unshift(n);
-      localStorage.setItem(KM(), JSON.stringify(l.slice(0, 30)));
+      localStorage.removeItem(KM());
     } catch (e) {}
   };
 /* --- Identité de la commune : thème, manifest PWA propre à la commune, cache hors-ligne --- */
@@ -610,19 +602,18 @@ const cacheGet = s => {
     return null;
   }
 };
-/* Lot 4 : les dossiers du compte sont lus côté serveur à chaque fois et ne sont JAMAIS recopiés dans le stockage de l'appareil (appareil partagé : après déconnexion, ils disparaissent). Seuls les dossiers déposés sans compte restent mémorisés sur l'appareil. */
+/* P0 sécurité (Loi 2008-12) : « Mes demandes » = uniquement les dossiers du compte connecté. La RPC mes_demandes_compte filtre côté serveur sur auth.uid() (citoyen_id) et ne renvoie que numero/type/statut ; suivre_demandes est appelée avec ces seuls numéros. Sans connexion : aucune liste, aucun appel serveur (le suivi d'un dossier précis passe par le numéro de suivi : suivre_demande / suivi_public). Les numéros mémorisés sur l'appareil ne sont plus fusionnés : sur un appareil partagé, un autre compte ne doit jamais les voir. */
 async function loadMine() {
   try {
-    let acc = [];
-    if (S.user && S.slug) {
-      const r = await sb.rpc("mes_demandes_compte", { p_commune: S.slug });
-      acc = (r.data || []).map(x => x.numero);
-    }
-    const l = [...new Set([...acc, ...getM()])];
-    S.mine = l.length ? (await sb.rpc("suivre_demandes", { p_commune: S.slug, p_numeros: l })).data || [] : [];
-    /* Lot 7 : « Mes quittances » (paiements du compte, RLS : citoyen_id = utilisateur) */
+    S.mine = [];
     S.quit = [];
-    if (S.user) {
+    if (S.slug) purgeM();
+    if (!S.user || !S.user.id || !S.slug) return;
+    const r = await sb.rpc("mes_demandes_compte", { p_commune: S.slug });
+    const acc = [...new Set((r.data || []).map(x => x.numero))];
+    S.mine = acc.length ? (await sb.rpc("suivre_demandes", { p_commune: S.slug, p_numeros: acc })).data || [] : [];
+    /* Lot 7 : « Mes quittances » (paiements du compte, RLS : citoyen_id = utilisateur) */
+    {
       const q = await sb
         .from("paiements_taxes")
         .select("reference_paiement,type_taxe,montant,date_paiement,created_at")
@@ -1620,7 +1611,7 @@ const home = () => {
   return `${head()}${hero()}${instCard()}${langSel()}<div class="in c3"><button class="a3 g" data-a="goto" data-t="services"><span class="ai">${ic("docp", 34)}</span><span class="at"><b>${tr("h_req")}</b><small>${tr("h_req_s")}</small></span><span class="ar">${ic("arr", 20)}</span></button><button class="a3 y" data-a="goto" data-t="suivi"><span class="ai">${ic("search", 34)}</span><span class="at"><b>${tr("h_trk")}</b><small>${tr("h_trk_s")}</small></span><span class="ar">${ic("arr", 20)}</span></button><button class="a3 g" data-a="rdv"><span class="ai">${ic("cal", 34)}</span><span class="at"><b>${tr("h_rdv")}</b><small>${tr("h_rdv_s")}</small></span><span class="ar">${ic("arr", 20)}</span></button></div>
 <main id="mc" class="mn hm">${msgs()}<section id="services" class="sw"><div><h2 class="sh">${tr("h_svc")}</h2><div class="tl" id="tl">${tiles()}</div></div>${acct()}</section>
 <div class="sv" id="suivi" data-f="tk"><div><b class="c-fs22">${tr("h_trk")}</b><br><span class="sm">${tr("h_trk_p")}</span></div><input id="tk" placeholder="${esc(tr("h_trk_ph"))}" aria-label="${tr("u_numero_de_suivi")}" autocapitalize="characters" value="${esc(S.tr)}"><button class="bg" data-a="track">${tr("h_go")}</button></div>
-<div class="g2c"><div class="cd" id="mes"><h2>${tr("h_mine")}</h2>${m.length ? `<div class="rw c-cdf"><span>${tr("h_dep")}</span><span class="nb b1">${m.length}</span></div><div class="rw c-cdf"><span>${tr("h_cur")}</span><span class="nb b2">${en}</span></div><div class="rw c-cdf"><span>${tr("h_done")}</span><span class="nb b3">${fi}</span></div>${m.map(x => `<button class="rw" data-a="open" data-n="${esc(x.numero)}"><span><b>${esc(x.type)}</b><br><span class="mu sm">${esc(x.numero)}</span></span>${bd(x.statut)}</button>`).join("")}` : `<p class="mu">${S.user ? "Aucune demande dans votre compte pour le moment." : tr("v_aucune_demande_deposee_sur")}</p>`}</div>
+<div class="g2c"><div class="cd" id="mes"><h2>${tr("h_mine")}</h2>${m.length ? `<div class="rw c-cdf"><span>${tr("h_dep")}</span><span class="nb b1">${m.length}</span></div><div class="rw c-cdf"><span>${tr("h_cur")}</span><span class="nb b2">${en}</span></div><div class="rw c-cdf"><span>${tr("h_done")}</span><span class="nb b3">${fi}</span></div>${m.map(x => `<button class="rw" data-a="open" data-n="${esc(x.numero)}"><span><b>${esc(x.type)}</b><br><span class="mu sm">${esc(x.numero)}</span></span>${bd(x.statut)}</button>`).join("")}` : `<p class="mu">${S.user ? "Aucune demande dans votre compte pour le moment." : "Connectez-vous pour voir vos demandes."}</p>`}</div>
 ${rvCard()}<div class="cd" id="infos"><h2><span class="ih">${ic("info", 24)}</span> ${tr("h_info")}</h2><p><b>Mairie de ${esc(cnm())}</b>${P.horaires ? `<br>Horaires : ${esc(P.horaires)}` : ""}${I.tel ? `<br>${tr("u_tel")} <a href="tel:${esc(tel())}">${esc(I.tel)}</a>` : ""}${adr(I).txt ? `<br>Adresse : ${esc(adr(I).txt)}` : ""}${adr(I).url ? `<br>${mapLk("lk c-cg", I)}` : ""}${P.email ? `<br>${tr("u_e_mail")} <a href="mailto:${esc(P.email)}">${esc(P.email)}</a>` : ""}</p><p class="mu sm">${tr("u_service_gratuit_certaines_demarches")}</p></div>
 <div class="cd" id="contact"><h2><span class="ih">${ic("phone", 24)}</span> ${tr("h_contact")}</h2>${I.tel || P.email || adr(I).url ? `<p class="mu">${tr("u_une_question_contactez_la")}</p><p class="ctb">${I.tel ? `<a class="bt cl" href="tel:${esc(tel())}">${tr("h_call")}</a>` : ""}${P.email ? `<a class="bo cl" href="mailto:${esc(P.email)}">${tr("h_mail")}</a>` : ""}${mapLk("bo cl", I)}</p>` : '<p class="mu">Les coordonnées de la mairie seront bientôt disponibles.</p>'}</div></div>
 <div class="cd" id="travaux"><h2><span class="ih">${ic("tools", 24)}</span> ${tr("h_works")}</h2>${(S.pj || []).length ? S.pj.map(x => `<p class="an"><b>${esc(x.titre)}</b><br><span class="mu sm">${esc([x.localite, PJL[x.statut] || x.statut, x.avancement != null ? x.avancement + " %" : "", x.date_fin ? "fin prévue " + fdj(x.date_fin) : ""].filter(Boolean).join(" · "))}</span></p>`).join("") : '<p class="mu">Aucun projet publié pour le moment.</p>'}</div>
@@ -1890,7 +1881,6 @@ async function send() {
       if (!q.error && q.data && q.data[0]) S.pm = Object.assign({}, q.data[0], payMode == "en_ligne" ? { op: payOp } : {});
       else if (payM > 0) S.pm = { statut_paiement: "non_paye", montant: payM };
     }
-    if (!S.user) addM(r.data);
     S.ok = r.data;
     S.cat = null;
     S.lst = false;
@@ -2228,7 +2218,6 @@ document.addEventListener("click", async e => {
         S.from = a == "open" && S.esp ? "esp" : "";
         S.esp = false;
         S.res = Object.assign({ numero: n }, r[0]);
-        if (!S.user) addM(n);
         await loadMine();
       } else S.err = tr("u_aucune_demande_avec_ce");
     }
