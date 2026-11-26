@@ -52,10 +52,9 @@ const signalements = () => {
     pn(
       "Carte des signalements",
       "map",
-      sgLocSel() +
-        `<div id="sigmap" class="map" role="img" aria-label="Carte des signalements de la commune"></div><div class="lgd">${Object.keys(SGS)
-          .map(k => `<span><i data-sty="background:${SGK[k]}"></i>${SGS[k]}</span>`)
-          .join("")}</div>`
+      sgLocSel() + `<div id="sigmap" class="map" role="img" aria-label="Carte des signalements de la commune"></div><div class="lgd">${Object.keys(SGS)
+        .map(k => `<span><i data-sty="background:${SGK[k]}"></i>${SGS[k]}</span>`)
+        .join("")}</div>`
     ) +
     pn(
       "Signalements des citoyens",
@@ -63,9 +62,7 @@ const signalements = () => {
       `<p data-sty="display:flex;flex-wrap:wrap;gap:8px">${flt}</p>` +
         (V.map(x => {
           const s = SGS[x.statut] ? x.statut : "nouveau";
-          return `<div class="rw" data-sty="flex-wrap:wrap;align-items:flex-start"><div class="rl"><b>${esc(x.categorie || "Autre")}</b> · <span class="mut">${esc(sgDate(x.created_at))}</span><div>${esc(x.description || "")}</div>${sgPhoto(x)}</div><div data-sty="display:grid;gap:6px;justify-items:end">${st2(SGS[s], SGC[s])}<span data-sty="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end">${Object.keys(
-            SGS
-          )
+          return `<div class="rw" data-sty="flex-wrap:wrap;align-items:flex-start"><div class="rl"><b>${esc(x.categorie || "Autre")}</b> · <span class="mut">${esc(sgDate(x.created_at))}</span><div>${esc(x.description || "")}</div>${sgPhoto(x)}</div><div data-sty="display:grid;gap:6px;justify-items:end">${st2(SGS[s], SGC[s])}<span data-sty="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end">${Object.keys(SGS)
             .filter(k => k != s)
             .map(
               k =>
