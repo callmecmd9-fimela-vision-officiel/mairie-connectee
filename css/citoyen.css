@@ -8,7 +8,7 @@ input,select,textarea{width:100%;min-height:46px;padding:10px 12px;border:1px so
 label{display:block;font:700 13px 'Nunito Sans',system-ui,sans-serif;color:var(--mut);margin:12px 0 4px}
 .bt,.bo,.bg{min-height:48px;padding:0 20px;border-radius:12px;font-weight:800;cursor:pointer;border:0}
 .bt{background:var(--g);color:#fff}.bg{background:var(--gold);color:var(--tx)}.bo{background:#fff;border:2px solid var(--g);color:var(--g)}
-.hd{background:linear-gradient(160deg,color-mix(in srgb,var(--g) 55%,#000),color-mix(in srgb,var(--g) 55%,#000));color:#fff;padding:26px 20px 64px;position:sticky;top:0;z-index:1000;transition:box-shadow .3s ease}
+.hd{background:linear-gradient(160deg,color-mix(in srgb,var(--g) 55%,#000),color-mix(in srgb,var(--g) 55%,#000));color:#fff;padding:26px 20px 64px;position:relative;transition:box-shadow .3s ease}
 .in{max-width:1100px;margin:0 auto}
 .pill{background:#DCFCE7;color:#166534;border-radius:99px;padding:4px 12px;font-weight:800;font-size:13px}
 .lk{background:none;border:0;color:#CFE6D5;text-decoration:underline;cursor:pointer;font-size:14px;min-height:44px}
