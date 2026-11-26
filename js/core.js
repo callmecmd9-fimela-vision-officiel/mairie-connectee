@@ -953,13 +953,18 @@ async function load(only) {
   }
   if (S.db === E0) S.db = Object.assign({}, E0);
   ks.forEach((k, i) => LG[k][1](R[i].data));
+  try {
+    S.myph = (await sb.rpc("mon_profil_photo")).data || "";
+  } catch (e) {
+    S.myph = "";
+  }
   const d = D(),
     I = S.ind;
   S.mine = (d.adj.find(a => a.user_id == S.uid) || {}).id || null;
   const mp = d.med
       .filter(x => x.ty == "photo")
       .map(x => x.p)
-      .concat([I.blason, I.photo_maire, I.bandeau].filter(Boolean)),
+      .concat([I.blason, I.photo_maire, I.bandeau, S.myph].filter(Boolean)),
     ap = []
       .concat(
         d.adj.map(a => a.photo),
@@ -1019,6 +1024,8 @@ const mt = p => {
     : "";
 };
 const url = k => S.urls[S.ind[k]] || "";
+/* Photo de la personne connectée (profiles.photo). Repli sur la photo de la commune uniquement pour le maire (fb) : jamais pour l'admin ni les autres rôles. */
+const mph = fb => (S.myph && S.urls[S.myph]) || (fb ? url("photo_maire") : "");
 /* alertes et activit\u00e9s */
 /* Demandes déjà ouvertes : mémorisées par utilisateur et par commune sur cet appareil (aucune donnée personnelle, seulement des identifiants) */
 const seenKey = () => "mc_vu_" + (S.uid || "") + "_" + (S.cid || "");
@@ -1249,8 +1256,8 @@ const dash = () => {
     bg = url("bandeau")
       ? `data-sty="background-image:linear-gradient(rgba(255,255,255,.1),rgba(243,246,241,.9)),url('${esc(url("bandeau"))}')"`
       : "",
-    ph = url("photo_maire")
-      ? `<img class="mp" src="${esc(url("photo_maire"))}" alt="Photo du responsable">`
+    ph = mph(S.pr == "maire")
+      ? `<img class="mp" src="${esc(mph(S.pr == "maire"))}" alt="Photo du responsable">`
       : `<div class="mp" aria-hidden="true">${esc((S.co || "M")[0])}</div>`;
   const al = alerts(),
     ac = acts(),

@@ -167,8 +167,8 @@ const mairieDash = () => {
     bg = url("bandeau")
       ? `data-sty="background-image:linear-gradient(rgba(255,255,255,.1),rgba(243,246,241,.9)),url('${esc(url("bandeau"))}')"`
       : "",
-    ph = url("photo_maire")
-      ? `<img class="mp" src="${esc(url("photo_maire"))}" alt="Photo du Maire">`
+    ph = mph(true)
+      ? `<img class="mp" src="${esc(mph(true))}" alt="Photo du Maire">`
       : `<div class="mp" aria-hidden="true">${esc((S.co || "M")[0])}</div>`,
     rq = RS.map((l, i) => [l, d.req.filter(r => r.st == l).length]);
   return `<div class="hero" ${bg}>${url("bandeau") ? "" : palms}${tb("")}<div class="gr">${ph}<div><h1>Bonjour, Monsieur le Maire</h1><i>Commune de ${esc(S.co)} : situation générale</i></div></div></div><div class="ct">${S.err ? `<div class="al" role="alert">${esc(S.err)}</div>` : ""}

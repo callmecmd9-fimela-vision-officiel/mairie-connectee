@@ -157,6 +157,17 @@ async function saLoad() {
     r(sb.from("incidents").select("*").eq("commune_id", c).order("created_at", { ascending: false }).limit(100)),
     r(sb.from("permissions_utilisateurs").select("user_id,cle,autorise").eq("commune_id", c))
   ]);
+  try {
+    const ph = await sb.rpc("sa_profils_photos", { p_commune: c });
+    const m = {};
+    (ph.data || []).forEach(x => (m[x.id] = x.photo));
+    S.uph = m;
+    const sg = Object.keys(m).length ? await sign("medias", Object.values(m)) : {};
+    S.uphu = Object.fromEntries(Object.entries(m).map(([id, p]) => [id, sg[p] || ""]));
+  } catch (e) {
+    S.uph = {};
+    S.uphu = {};
+  }
   const o = sd(),
     er = st.error || us.error;
   Object.assign(o, {
@@ -278,8 +289,8 @@ const hero = () => {
   const bg = url("bandeau")
       ? `data-sty="background-image:linear-gradient(rgba(255,255,255,.1),rgba(243,246,241,.9)),url('${esc(url("bandeau"))}')"`
       : "",
-    ph = url("photo_maire")
-      ? `<img class="mp" src="${esc(url("photo_maire"))}" alt="">`
+    ph = mph(false)
+      ? `<img class="mp" src="${esc(mph(false))}" alt="">`
       : `<div class="mp" aria-hidden="true">${esc((S.co || "A")[0])}</div>`;
   return `<div class="hero" ${bg}>${url("bandeau") ? "" : palms}${tb("")}<div class="gr">${ph}<div><h1>Administration Syst\u00e8me</h1><i>Gestion des utilisateurs et param\u00e8tres de l\u2019application</i></div></div></div>`;
 };
@@ -288,7 +299,7 @@ const urow = (u, i) => {
     off = u.actif === false;
   return rw(
     `<b>${esc(u.nom || u.email)}</b><div class="mut">${esc(u.email)}${u.service ? " \u00b7 " + esc(u.service) : ""}</div><div class="mut">Derni\u00e8re connexion : ${u.last_sign_in_at ? fdh(u.last_sign_in_at) : "jamais"}</div>`,
-    `${stg(RL[u.role] || u.role, sa ? "or" : "bl")} ${stg(off ? "D\u00e9sactiv\u00e9" : "Actif", off ? "rd" : "ok")}${acts2(satg("D\u00e9tails", "u_view", i) + (sa ? "" : satg("Modifier", "u_edit", i) + satg(off ? "R\u00e9activer" : "D\u00e9sactiver", "u_toggle", i, off ? "ok" : "or") + satg("Mot de passe", "u_pw", i)))}`
+    `${stg(RL[u.role] || u.role, sa ? "or" : "bl")} ${stg(off ? "D\u00e9sactiv\u00e9" : "Actif", off ? "rd" : "ok")}${acts2(satg("D\u00e9tails", "u_view", i) + satg("Photo", "u_photo", i) + (sa ? "" : satg("Modifier", "u_edit", i) + satg(off ? "R\u00e9activer" : "D\u00e9sactiver", "u_toggle", i, off ? "ok" : "or") + satg("Mot de passe", "u_pw", i)))}`
   );
 };
 const ufilt = () => {
@@ -356,6 +367,18 @@ const uforms = () => {
       "user",
       `<p><b>${esc(v.nom || "\u2014")}</b><br>${esc(v.email)}</p><p class="mut">R\u00f4le : ${esc(RL[v.role] || v.role)} \u00b7 Service : ${esc(v.service || "\u2014")}<br>Commune : ${esc(v.commune || "\u2014")}<br>Cr\u00e9\u00e9 le ${safdd(v.created_at)} \u00b7 Derni\u00e8re connexion : ${v.last_sign_in_at ? fdh(v.last_sign_in_at) : "jamais"}<br>Sessions actives : ${+v.sessions || 0}</p>` +
         acts2((v.role == "super_admin" ? "" : satg("R\u00e9voquer les sessions", "u_revoke", S.sv, "or")) + sbt("Fermer", "u_cancel", "bo"))
+    );
+  const ph = d.us[S.sp];
+  if (ph)
+    h += pn(
+      "Photo de " + esc(ph.nom || ph.email),
+      "user",
+      `<p>${(S.uphu || {})[ph.id] ? `<img class="th" src="${esc(S.uphu[ph.id])}" alt="Photo">` : '<span class="mut">Aucune photo</span>'}</p><input type="file" id="sa_uph" accept="image/*" aria-label="Photo de l\u2019utilisateur">` +
+        acts2(
+          sbt("Enregistrer la photo", "u_photosave", "bt", `data-i="${S.sp}"`) +
+            ((S.uph || {})[ph.id] ? sbt("Retirer", "u_photodel", "bo", `data-i="${S.sp}"`) : "") +
+            sbt("Fermer", "u_cancel", "bo")
+        )
     );
   if (e)
     h += pn(
@@ -895,18 +918,46 @@ const SAC = {
   },
   async u_view(t) {
     S.sv = +t.dataset.i;
-    S.se = S.spw = null;
+    S.sp = S.se = S.spw = null;
   },
   async u_edit(t) {
     S.se = +t.dataset.i;
-    S.sv = S.spw = null;
+    S.sp = S.sv = S.spw = null;
   },
   async u_pw(t) {
     S.spw = +t.dataset.i;
-    S.sv = S.se = null;
+    S.sp = S.sv = S.se = null;
     S.tok = "";
   },
+  async u_photo(t) {
+    S.sp = +t.dataset.i;
+    S.sv = S.se = S.spw = null;
+  },
+  async u_photosave(t) {
+    const u = sd().us[+t.dataset.i],
+      e = $("#sa_uph"),
+      f = e && e.files && e.files[0];
+    if (!u) throw new Error("Compte introuvable.");
+    if (!f) throw new Error("Choisissez d\u2019abord une image.");
+    const bl = await comp(f, 600, 150000),
+      pa = cs() + "/profils/" + u.id + "-" + crypto.randomUUID() + "." + (bl.type == "image/webp" ? "webp" : "jpg"),
+      up = await sb.storage.from("medias").upload(pa, bl, { contentType: bl.type });
+    if (up.error) throw new Error("Envoi impossible : " + up.error.message);
+    const old = await rpc("sa_set_profil_photo", { p_commune: cs(), p_user: u.id, p_chemin: pa });
+    if (old) await sb.storage.from("medias").remove([old]);
+    S.err = "Photo enregistr\u00e9e.";
+    S.reload = true;
+  },
+  async u_photodel(t) {
+    const u = sd().us[+t.dataset.i];
+    if (!u) throw new Error("Compte introuvable.");
+    const old = await rpc("sa_set_profil_photo", { p_commune: cs(), p_user: u.id, p_chemin: null });
+    if (old) await sb.storage.from("medias").remove([old]);
+    S.err = "Photo retir\u00e9e.";
+    S.reload = true;
+  },
   async u_cancel() {
+    S.sp = null;
     S.sv = S.se = S.spw = null;
     S.tok = "";
   },
