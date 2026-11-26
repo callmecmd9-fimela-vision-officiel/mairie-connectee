@@ -607,6 +607,8 @@ async function loadMine() {
   try {
     S.mine = [];
     S.quit = [];
+    S.taxes = [];
+    S.taxErr = "";
     if (S.slug) purgeM();
     if (!S.user || !S.user.id || !S.slug) return;
     const r = await sb.rpc("mes_demandes_compte", { p_commune: S.slug });
@@ -622,10 +624,55 @@ async function loadMine() {
         .limit(50);
       S.quit = q.data || [];
     }
+    await loadTaxes();
   } catch (e) {
     S.mine = S.mine || [];
   }
 }
+/* « Mes Taxes » : la RPC filtre sur le compte connecté ; on n'affiche que la commune ouverte. */
+async function loadTaxes() {
+  const uid = S.user && S.user.id,
+    slug = S.slug;
+  S.taxes = [];
+  S.taxErr = "";
+  if (!uid || !slug) return;
+  let r;
+  try {
+    r = await sb.rpc("mes_roles_imposition");
+  } catch (e) {
+    r = { error: e };
+  }
+  if (!S.user || S.user.id !== uid || S.slug !== slug) return;
+  if (r.error) S.taxErr = "Vos taxes sont indisponibles pour le moment.";
+  else S.taxes = (r.data || []).filter(x => x.commune_slug === slug);
+}
+async function payTaxe(id) {
+  const r = await sb.rpc("initier_paiement_taxe", { p_role_id: id });
+  if (r.error || !r.data) S.err = "Impossible de générer l’avis de paiement. Réessayez ou contactez la mairie.";
+  await loadTaxes();
+}
+const TXS = { emise: "À payer", en_attente_paiement: "En attente de paiement", payee: "Payée" };
+const taxCard = () =>
+  `<div class="cd" id="taxes"><h2>Mes Taxes</h2>${
+    S.taxErr
+      ? `<p class="mu" role="alert">${esc(S.taxErr)}</p>`
+      : (S.taxes || []).length
+        ? S.taxes
+            .map(
+              x =>
+                `<div class="c-m10"><p><b>${esc(x.libelle)}</b> · ${esc(x.annee)}<br>${esc(pfm(x.montant_du))} · ${esc(TXS[x.statut] || x.statut)}</p>${
+                  x.statut == "emise"
+                    ? `<button class="bt" data-a="txpay" data-id="${esc(x.id)}">Générer un avis de paiement</button>`
+                    : x.statut == "en_attente_paiement"
+                      ? `<p class="okb">Référence : <b>${esc(x.reference_avis)}</b><br>Présentez cette référence au guichet ou utilisez-la pour le paiement mobile.</p>`
+                      : x.statut == "payee" && x.quittance_ref
+                        ? `<button class="bo" data-a="txquit" data-ref="${esc(x.quittance_ref)}">Voir la quittance</button>`
+                        : ""
+                }</div>`
+            )
+            .join("")
+        : '<p class="mu">Aucune taxe à votre nom. En cas d’erreur, contactez la mairie.</p>'
+  }</div>`;
 async function choose(c) {
   S.slug = c.slug;
   S.err = "";
@@ -737,7 +784,7 @@ const NAVL = [
   ["infos", "Informations pratiques"],
   ["contact", "Contact"]
 ];
-const navb = c => NAVL.map(n => `<button class="${c}" data-a="goto" data-t="${n[0]}">${n[1]}</button>`).join("");
+const navb = c => NAVL.map(n => `<button class="${c}" data-a="goto" data-t="${n[0]}">${n[1]}</button>`).join("") + `<button class="${c}" data-a="mtx">Mes Taxes</button>`;
 const head = () =>
   `<header class="tp" id="top"><a class="sk" href="#mc">${tr("u_aller_au_contenu")}</a><div class="in hdr">${logo()}<div class="hn"><b class="tn"><small>Commune de</small> ${esc(cnm())}</b><i class="ts">${esc(S.info.slogan || tr("v_votre_mairie_a_votre"))}</i></div><nav class="nv" aria-label="${tr("u_menu_principal")}">${navb("nl")}</nav><button class="bt tm" data-a="esp">${btl()}</button><button class="mb" data-a="mnu" aria-label="${tr("u_menu")}" aria-expanded="${S.menu ? "true" : "false"}" aria-controls="mnav">${ic(S.menu ? "x" : "menu", 26)}</button></div>${S.menu ? `<nav id="mnav" class="mnv" aria-label="${tr("u_menu_principal")}">${navb("ml")}</nav>` : ""}</header>`;
 const bnP = () => {
@@ -1744,6 +1791,7 @@ const espace = () => {
     `</div>` +
     (u
       ? `<div class="cd"><h2>${tr("h_mine")}</h2>${m.length ? m.map(x => `<button class="rw" data-a="open" data-n="${esc(x.numero)}"><span><b>${esc(x.type)}</b><br><span class="mu sm">${esc(x.numero)}</span></span>${bd(x.statut)}</button>`).join("") : '<p class="mu">Aucune demande dans votre compte pour le moment.</p>'}</div><div class="cd"><h2>${tr("u_notifications")}</h2>${S.nt.length ? (unread() ? `<p><button class="bo" data-a="nrd">${tr("u_tout_marquer_comme_lu")}</button></p>` : "") + S.nt.map(n => `<p class="c-ntf"><b>${n.lu ? "" : "● "}${esc(n.titre)}</b><br>${esc(n.corps || "")}<br><span class="mu sm">${fdt(n.created_at)}</span>${nnum(n) ? `<br><button class="bo" data-a="nopen" data-i="${esc(n.id)}" data-n="${esc(nnum(n))}">${tr("u_voir_le_dossier")}</button>` : ""}</p>`).join("") : '<p class="mu">Aucune notification.</p>'}</div>` +
+        taxCard() +
         quitCard() +
         rvCard()
       : "") +
@@ -2103,7 +2151,9 @@ document.addEventListener("click", async e => {
         S.lst = false;
         S.ls = false;
       }
-    } else if (a == "esp") {
+    } else if (a == "esp" || a == "mtx") {
+      S.sc = a == "mtx" ? "taxes" : "";
+      if (a == "mtx" && S.user) await loadTaxes();
       S.rdv = false;
       S.esp = true;
       S.au = {};
@@ -2165,6 +2215,7 @@ document.addEventListener("click", async e => {
       S.prof = null;
       S.nt = [];
       S.quit = [];
+      S.taxes = [];
       S.esp = false;
       S.res = null;
       S.from = "";
@@ -2191,6 +2242,13 @@ document.addEventListener("click", async e => {
       if (r.error || !r.data) S.err = tr("u_annulation_impossible_ce_rendez");
       else S.rinf = tr("v_rendez_vous_annule_le");
       await loadRdv();
+    } else if (a == "txpay") {
+      t.disabled = true;
+      await payTaxe(t.dataset.id);
+    } else if (a == "txquit") {
+      const rf = String(t.dataset.ref || "");
+      if (/^[A-Z0-9-]{10,60}$/.test(rf)) location.assign("/quittance.html?ref=" + encodeURIComponent(rf));
+      return;
     } else if (a == "quit") {
       const rf = String(t.dataset.ref || "");
       if (/^[A-Z0-9-]{10,60}$/.test(rf)) window.open("/quittance?ref=" + encodeURIComponent(rf), "_blank", "noopener");

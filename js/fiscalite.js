@@ -6,8 +6,8 @@
   const TC = { particulier: "Particulier", entreprise: "Entreprise" },
     TT = { marche: "Marché", domaine_public: "Domaine public", patente: "Patente", autres: "Autres" },
     PE = { mensuel: "Mensuel", trimestriel: "Trimestriel", annuel: "Annuel" },
-    RS = { emise: "Émis", payee: "Payé", annulee: "Annulé" },
-    RC = { emise: "or", payee: "ok", annulee: "rd" },
+    RS = { emise: "Émis", en_attente_paiement: "En attente de paiement", payee: "Payé", annulee: "Annulé" },
+    RC = { emise: "or", en_attente_paiement: "or", payee: "ok", annulee: "rd" },
     TO = { etal: "Étal", terrasse: "Terrasse", enseigne: "Enseigne" },
     OS = { active: "Active", suspendue: "Suspendue", terminee: "Terminée" },
     TABLES = ["contribuables", "taxes_locales", "roles_imposition", "occupations_domaine_public"],
@@ -80,10 +80,7 @@
       "coins",
       D()
         .taxes_locales.map(t =>
-          rw(
-            `<b>${esc(t.libelle)}</b>${sous(esc(TT[t.type] || t.type) + " · " + esc(PE[t.periodicite] || t.periodicite))}`,
-            `<b>${argent(t.montant_base)}</b>`
-          )
+          rw(`<b>${esc(t.libelle)}</b>${sous(esc(TT[t.type] || t.type) + " · " + esc(PE[t.periodicite] || t.periodicite))}`, `<b>${argent(t.montant_base)}</b>`)
         )
         .join("") || emp("Aucune taxe définie.")
     );
@@ -105,16 +102,8 @@
             "doc",
             D().contribuables.length && D().taxes_locales.length
               ? frm(
-                  sel(
-                    "fx_rco",
-                    "Contribuable",
-                    D().contribuables.map(c => [c.id, qui(c)])
-                  ) +
-                    sel(
-                      "fx_rta",
-                      "Taxe",
-                      D().taxes_locales.map(t => [t.id, t.libelle])
-                    ) +
+                  sel("fx_rco", "Contribuable", D().contribuables.map(c => [c.id, qui(c)])) +
+                    sel("fx_rta", "Taxe", D().taxes_locales.map(t => [t.id, t.libelle])) +
                     inp("fx_ran", "Année", "number", an, "", 'min="2000" max="2100" step="1"')
                 ) + bouton("fxgen", "Générer un rôle")
               : emp("Ajoutez d’abord au moins un contribuable et une taxe.")
@@ -123,16 +112,13 @@
       pn(
         "Rôles d’imposition",
         "doc",
-        tabs(
-          "fisc_an",
-          annees.map(a => [String(a), String(a)])
-        ) +
-          rw(`<span class="mut">À recouvrer / encaissé</span>`, `<b>${argent(total("emise"))} / ${argent(total("payee"))}</b>`) +
+        tabs("fisc_an", annees.map(a => [String(a), String(a)])) +
+          rw(`<span class="mut">À recouvrer / encaissé</span>`, `<b>${argent(total("emise") + total("en_attente_paiement"))} / ${argent(total("payee"))}</b>`) +
           (L.map(r => {
             const t = taxe(r.taxe_id);
             return rw(
-              `<b>${esc(qui(contrib(r.contribuable_id)))}</b>${sous(esc(t ? t.libelle : "Taxe inconnue") + " · " + esc(r.annee))}`,
-              `<div data-sty="display:grid;gap:4px;justify-items:end"><b>${argent(r.montant_du)}</b>${st2(RS[r.statut] || r.statut, RC[r.statut] || "")}${r.statut == "emise" && peut("fxpay") ? `<button class="bt" data-m="fxpay" data-id="${esc(r.id)}">Encaisser</button>` : ""}</div>`
+              `<b>${esc(qui(contrib(r.contribuable_id)))}</b>${sous(esc(t ? t.libelle : "Taxe inconnue") + " · " + esc(r.annee) + (r.reference_avis ? " · " + esc(r.reference_avis) : ""))}`,
+              `<div data-sty="display:grid;gap:4px;justify-items:end"><b>${argent(r.montant_du)}</b>${st2(RS[r.statut] || r.statut, RC[r.statut] || "")}${["emise", "en_attente_paiement"].includes(r.statut) && peut("fxpay") ? `<button class="bt" data-m="fxpay" data-id="${esc(r.id)}">Encaisser</button>` : ""}</div>`
             );
           }).join("") || emp("Aucun rôle pour cette année."))
       )
@@ -246,7 +232,7 @@
         message = "Rôle d’imposition généré.";
       } else {
         const x = D().roles_imposition.find(r => r.id == t.dataset.id);
-        if (!x || x.statut != "emise") throw new Error("Ce rôle ne peut pas être encaissé. Actualisez la liste.");
+        if (!x || !["emise", "en_attente_paiement"].includes(x.statut)) throw new Error("Ce rôle ne peut pas être encaissé. Actualisez la liste.");
         if (!window.confirm("Confirmer la réception de " + fmt(x.montant_du) + " FCFA au guichet ?")) {
           busy = false;
           return;
