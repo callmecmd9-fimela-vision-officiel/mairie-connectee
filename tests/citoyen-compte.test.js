@@ -68,7 +68,7 @@ async function boot({user=true,prof={prenom:'Awa',nom:'Diop',village:'Mbodiène'
  ok('SMS désactivé : espace alternatif affiché sans promettre une connexion',/prépare son ouverture/.test(t.H())&&!/Se connecter ou créer un compte/.test(t.H()));
  // Le mode SMS activé est simulé uniquement pour tester le parcours OTP
  t=await boot({user:false,store:{mc_co:'fimela',mc_d_fimela:JSON.stringify(['FIM-0002-LOCAL000'])}});
- ok('sans compte : dossiers de l\'appareil visibles, aucun appel au compte',t.S().mine.length===1&&!t.rpcs.some(x=>x[0]=='mes_demandes_compte'));
+ ok('sans compte : aucune liste de demandes, aucun appel au compte ni au suivi, numéros d\'appareil effacés',t.S().mine.length===0&&!t.rpcs.some(x=>x[0]=='mes_demandes_compte'||x[0]=='suivre_demandes')&&!t.store.mc_d_fimela&&/Connectez-vous pour voir vos demandes/.test(t.H()));
  await t.click({a:'cat',c:'Sport, culture et associations'});
  ok('sans compte : dépôt libre conservé (nom + téléphone + anti-spam)',/id="fn"/.test(t.H())&&/id="ft"/.test(t.H())&&/id="ts"/.test(t.H()));
  await t.click({a:'back'});t=await boot({user:false,smsEnabled:true});await t.click({a:'esp'});
