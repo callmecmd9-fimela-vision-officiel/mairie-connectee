@@ -93,7 +93,9 @@ const pendingFiles = [
   // LOT 15 : fiscalité locale et domaine public — PROPOSÉE, non appliquée.
   '20261203000200_lot15_fiscalite_locale.sql',
   // P0 sécurité (2026-11-26) : RLS demandes — demandes_citoyen (citoyen_id = auth.uid()), anon sans accès, purge des politiques de lecture non prévues — PROPOSÉE, non appliquée.
-  '20261203000300_fix_rls_demandes_citoyen.sql'
+  '20261203000300_fix_rls_demandes_citoyen.sql',
+  // LOT 16 : « Mes Taxes » citoyen — PROPOSÉE, non appliquée.
+  '20261203000400_lot16_citoyen_taxes.sql'
 ];
 const actualSqlFiles = fs.readdirSync(migrationDir).filter(name => name.endsWith('.sql')).sort();
 const expectedSqlFiles = [...historicalFiles, ...pendingFiles].sort();
