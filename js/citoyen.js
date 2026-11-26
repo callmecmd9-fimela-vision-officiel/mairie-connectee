@@ -645,6 +645,15 @@ async function loadTaxes() {
   if (!S.user || S.user.id !== uid || S.slug !== slug) return;
   if (r.error) S.taxErr = "Vos taxes sont indisponibles pour le moment.";
   else S.taxes = (r.data || []).filter(x => x.commune_slug === slug);
+  /* Fournisseurs de paiement en ligne actifs pour la commune et leur mode (sandbox = test). Échec : pas de paiement en ligne. */
+  S.txm = {};
+  try {
+    const m = await sb.rpc("modes_paiement_commune", { p_commune: slug });
+    if (S.user && S.user.id === uid && S.slug === slug)
+      (m.data || []).forEach(z => {
+        if (TXP[z.fournisseur] && (z.mode == "sandbox" || z.mode == "production")) S.txm[z.fournisseur] = z.mode;
+      });
+  } catch (e) {}
 }
 async function payTaxe(id) {
   const r = await sb.rpc("initier_paiement_taxe", { p_role_id: id });
@@ -709,7 +718,10 @@ async function payEnLigne(id, prov) {
     r = { error: e };
   }
   const d = r && r.data;
-  if (r.error || !d || !d.payment_url || !TX_URL_OK.test(String(d.payment_url))) {
+  const sbx = !!d && d.mode == "sandbox";
+  /* Sandbox : lien factice, jamais ouvert. Production : uniquement un lien HTTPS d'un hôte de fournisseur autorisé. */
+  const bon = !!d && !!d.payment_url && (sbx || (d.mode == "production" && TX_URL_OK.test(String(d.payment_url))));
+  if (r.error || !bon) {
     S.err = "Le paiement en ligne est indisponible pour le moment. Payez au guichet ou réessayez plus tard.";
     return;
   }
@@ -718,8 +730,9 @@ async function payEnLigne(id, prov) {
   S.txw = {
     id,
     prov,
+    mode: d.mode,
     ref: String(d.reference || ""),
-    url: String(d.payment_url),
+    url: sbx ? "" : String(d.payment_url),
     etat: "attente",
     t0: Date.now(),
     uid: S.user && S.user.id,
@@ -731,8 +744,9 @@ async function payEnLigne(id, prov) {
 }
 function txOpen() {
   const w = S.txw;
-  if (w && w.url && TX_URL_OK.test(w.url)) window.open(w.url, "_blank", "noopener");
+  if (w && w.mode == "production" && w.url && TX_URL_OK.test(w.url)) window.open(w.url, "_blank", "noopener");
 }
+const TXTEST = "Mode test : le paiement sera simulé";
 const TXS = { emise: "À payer", en_attente_paiement: "En attente de paiement", payee: "Payée" };
 const txWait = w => {
   const pn = esc(TXP[w.prov] || "");
@@ -744,14 +758,23 @@ const txWait = w => {
     return `<p class="al" role="alert">Le paiement ${pn} a échoué ou a été annulé. Aucun montant n’est dû si vous n’avez pas été débité.</p><button class="bt" data-a="txol" data-id="${esc(w.id)}" data-p="${esc(w.prov)}">Réessayer</button> <button class="bo" data-a="txwx">Fermer</button>`;
   if (w.etat == "delai")
     return `<p class="mu" role="status">Confirmation pas encore reçue. Si vous avez payé, votre quittance apparaîtra ici dès que ${pn} nous aura confirmé le paiement (référence <b>${esc(w.ref)}</b>).</p><button class="bo" data-a="txwx">Fermer</button>`;
+  if (w.mode == "sandbox")
+    return `<div role="status" aria-live="polite"><p><b>En attente de confirmation…</b></p><p class="okb">${TXTEST}. Aucun argent réel n’est prélevé : la validation est simulée par l’équipe de test et cette page se met à jour automatiquement.<br>Référence : <b>${esc(w.ref)}</b></p><button class="bo" data-a="txwx">Annuler l’attente</button></div>`;
   return `<div role="status" aria-live="polite"><p><b>En attente de confirmation…</b></p><p class="mu">Ouvrez ${pn}, validez le paiement, puis revenez ici : cette page se met à jour automatiquement.<br>Référence : <b>${esc(w.ref)}</b></p><button class="bt" data-a="txopen">Ouvrir ${pn} pour payer</button> <button class="bo" data-a="txwx">Annuler l’attente</button></div>`;
 };
-const txChoix = x =>
-  `<div class="c-m10"><button class="bo" data-a="txpay" data-id="${esc(x.id)}">Payer au guichet</button> <button class="bt" data-a="txonl" data-id="${esc(x.id)}">Payer en ligne (Wave/OM)</button>${
-    S.txc == x.id
-      ? `<p class="mu">Choisissez votre moyen de paiement :</p><button class="bt" data-a="txol" data-id="${esc(x.id)}" data-p="wave">Wave</button> <button class="bt" data-a="txol" data-id="${esc(x.id)}" data-p="orange_money">Orange Money</button>`
+const txChoix = x => {
+  const fr = Object.keys(S.txm || {}).filter(k => TXP[k]);
+  const test = fr.filter(k => S.txm[k] == "sandbox").map(k => TXP[k]);
+  return `<div class="c-m10"><button class="bo" data-a="txpay" data-id="${esc(x.id)}">Payer au guichet</button>${
+    fr.length ? ` <button class="bt" data-a="txonl" data-id="${esc(x.id)}">Payer par Wave/OM</button>` : ""
+  }${
+    fr.length && S.txc == x.id
+      ? `<p class="mu">Choisissez votre moyen de paiement :</p>${fr
+          .map(k => `<button class="bt" data-a="txol" data-id="${esc(x.id)}" data-p="${esc(k)}">${esc(TXP[k])}</button>`)
+          .join(" ")}${test.length ? `<p class="okb">${TXTEST} (${esc(test.join(", "))}).</p>` : ""}`
       : ""
   }</div>`;
+};
 const taxCard = () =>
   `<div class="cd" id="taxes"><h2>Mes Taxes</h2>${
     S.taxErr
