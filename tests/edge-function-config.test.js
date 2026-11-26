@@ -14,6 +14,7 @@ const expected = {
   "push-send": false,
   "sms-dispatch": false,
   "manifest-commune": false,
+  "paiement-webhook": false,
 };
 
 for (const [slug, verifyJwt] of Object.entries(expected)) {
@@ -32,4 +33,4 @@ assert.match(iaSource, /ia_usage_finaliser/);
 assert.match(iaSource, /finalizeQuota\(false\)/);
 assert.match(iaSource, /finalizeQuota\(true\)/);
 
-console.log("OK   huit Edge Functions versionnées, JWT configuré et quota IA fail-closed");
+console.log("OK   dix Edge Functions versionnées, JWT configuré et quota IA fail-closed");

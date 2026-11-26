@@ -95,7 +95,9 @@ const pendingFiles = [
   // P0 sécurité (2026-11-26) : RLS demandes — demandes_citoyen (citoyen_id = auth.uid()), anon sans accès, purge des politiques de lecture non prévues — PROPOSÉE, non appliquée.
   '20261203000300_fix_rls_demandes_citoyen.sql',
   // LOT 16 : « Mes Taxes » citoyen — PROPOSÉE, non appliquée.
-  '20261203000400_lot16_citoyen_taxes.sql'
+  '20261203000400_lot16_citoyen_taxes.sql',
+  // LOT 17 : paiement mobile Wave / Orange Money (webhook, RPC confirmer_paiement_mobile) — PROPOSÉE, non appliquée.
+  '20261203000500_lot17_paiement_mobile.sql'
 ];
 const actualSqlFiles = fs.readdirSync(migrationDir).filter(name => name.endsWith('.sql')).sort();
 const expectedSqlFiles = [...historicalFiles, ...pendingFiles].sort();
