@@ -651,7 +651,107 @@ async function payTaxe(id) {
   if (r.error || !r.data) S.err = "Impossible de générer l’avis de paiement. Réessayez ou contactez la mairie.";
   await loadTaxes();
 }
+/* Paiement en ligne (Wave / Orange Money). Le citoyen n'a aucun pouvoir sur le statut : le lien est généré par la RPC
+   initier_paiement_en_ligne ; seule la confirmation du fournisseur (webhook → service_role) passe le rôle à « payée ».
+   L'écran d'attente interroge la RPC statut_paiement_en_ligne (polling) jusqu'à confirmation, échec ou délai dépassé. */
+const TXP = { wave: "Wave", orange_money: "Orange Money" };
+const TX_POLL_MS = 4000,
+  TX_MAX_MS = 600000;
+const TX_URL_OK = /^https:\/\/(?:[a-z0-9-]+\.)*(?:wave\.com|orange\.com|orange-sonatel\.com|sonatel\.com)(?:[/?#]|$)/i;
+let txTimer = null;
+const txRender = () => {
+  if (typeof render == "function") render();
+};
+function txStop() {
+  if (txTimer) clearInterval(txTimer);
+  txTimer = null;
+}
+function txReset() {
+  txStop();
+  S.txw = null;
+  S.txc = "";
+}
+async function txPoll() {
+  const w = S.txw;
+  if (!w || w.etat != "attente") return txStop();
+  if (!S.user || !S.user.id || S.user.id !== w.uid || S.slug !== w.slug) return txReset();
+  if (Date.now() - w.t0 > TX_MAX_MS) {
+    w.etat = "delai";
+    txStop();
+    return txRender();
+  }
+  let r;
+  try {
+    r = await sb.rpc("statut_paiement_en_ligne", { p_role_id: w.id });
+  } catch (e) {
+    return;
+  }
+  if (S.txw !== w || w.etat != "attente" || r.error || !r.data) return;
+  if (r.data.role_statut == "payee" || r.data.paiement_statut == "paye") {
+    w.etat = "ok";
+    w.qref = r.data.quittance_ref || "";
+    txStop();
+    await loadTaxes();
+    txRender();
+  } else if (r.data.paiement_statut == "echoue") {
+    w.etat = "echec";
+    txStop();
+    txRender();
+  }
+}
+async function payEnLigne(id, prov) {
+  if (!TXP[prov]) return;
+  S.err = "";
+  let r;
+  try {
+    r = await sb.rpc("initier_paiement_en_ligne", { p_role_id: id, p_provider: prov });
+  } catch (e) {
+    r = { error: e };
+  }
+  const d = r && r.data;
+  if (r.error || !d || !d.payment_url || !TX_URL_OK.test(String(d.payment_url))) {
+    S.err = "Le paiement en ligne est indisponible pour le moment. Payez au guichet ou réessayez plus tard.";
+    return;
+  }
+  txStop();
+  S.txc = "";
+  S.txw = {
+    id,
+    prov,
+    ref: String(d.reference || ""),
+    url: String(d.payment_url),
+    etat: "attente",
+    t0: Date.now(),
+    uid: S.user && S.user.id,
+    slug: S.slug,
+    qref: ""
+  };
+  txTimer = setInterval(txPoll, TX_POLL_MS);
+  await loadTaxes();
+}
+function txOpen() {
+  const w = S.txw;
+  if (w && w.url && TX_URL_OK.test(w.url)) window.open(w.url, "_blank", "noopener");
+}
 const TXS = { emise: "À payer", en_attente_paiement: "En attente de paiement", payee: "Payée" };
+const txWait = w => {
+  const pn = esc(TXP[w.prov] || "");
+  if (w.etat == "ok")
+    return `<div class="okb" role="status"><b>Paiement confirmé.</b> Merci !${
+      /^[A-Z0-9-]{10,60}$/.test(w.qref) ? `<br><button class="bo" data-a="txquit" data-ref="${esc(w.qref)}">Voir la quittance</button>` : ""
+    }</div><button class="bo" data-a="txwx">Fermer</button>`;
+  if (w.etat == "echec")
+    return `<p class="al" role="alert">Le paiement ${pn} a échoué ou a été annulé. Aucun montant n’est dû si vous n’avez pas été débité.</p><button class="bt" data-a="txol" data-id="${esc(w.id)}" data-p="${esc(w.prov)}">Réessayer</button> <button class="bo" data-a="txwx">Fermer</button>`;
+  if (w.etat == "delai")
+    return `<p class="mu" role="status">Confirmation pas encore reçue. Si vous avez payé, votre quittance apparaîtra ici dès que ${pn} nous aura confirmé le paiement (référence <b>${esc(w.ref)}</b>).</p><button class="bo" data-a="txwx">Fermer</button>`;
+  return `<div role="status" aria-live="polite"><p><b>En attente de confirmation…</b></p><p class="mu">Ouvrez ${pn}, validez le paiement, puis revenez ici : cette page se met à jour automatiquement.<br>Référence : <b>${esc(w.ref)}</b></p><button class="bt" data-a="txopen">Ouvrir ${pn} pour payer</button> <button class="bo" data-a="txwx">Annuler l’attente</button></div>`;
+};
+const txChoix = x =>
+  `<div class="c-m10"><button class="bo" data-a="txpay" data-id="${esc(x.id)}">Payer au guichet</button> <button class="bt" data-a="txonl" data-id="${esc(x.id)}">Payer en ligne (Wave/OM)</button>${
+    S.txc == x.id
+      ? `<p class="mu">Choisissez votre moyen de paiement :</p><button class="bt" data-a="txol" data-id="${esc(x.id)}" data-p="wave">Wave</button> <button class="bt" data-a="txol" data-id="${esc(x.id)}" data-p="orange_money">Orange Money</button>`
+      : ""
+  }</div>`;
 const taxCard = () =>
   `<div class="cd" id="taxes"><h2>Mes Taxes</h2>${
     S.taxErr
@@ -661,13 +761,15 @@ const taxCard = () =>
             .map(
               x =>
                 `<div class="c-m10"><p><b>${esc(x.libelle)}</b> · ${esc(x.annee)}<br>${esc(pfm(x.montant_du))} · ${esc(TXS[x.statut] || x.statut)}</p>${
-                  x.statut == "emise"
-                    ? `<button class="bt" data-a="txpay" data-id="${esc(x.id)}">Générer un avis de paiement</button>`
-                    : x.statut == "en_attente_paiement"
-                      ? `<p class="okb">Référence : <b>${esc(x.reference_avis)}</b><br>Présentez cette référence au guichet ou utilisez-la pour le paiement mobile.</p>`
-                      : x.statut == "payee" && x.quittance_ref
-                        ? `<button class="bo" data-a="txquit" data-ref="${esc(x.quittance_ref)}">Voir la quittance</button>`
-                        : ""
+                  S.txw && S.txw.id == x.id
+                    ? txWait(S.txw)
+                    : x.statut == "emise"
+                      ? txChoix(x)
+                      : x.statut == "en_attente_paiement"
+                        ? `<p class="okb">Référence : <b>${esc(x.reference_avis)}</b><br>Présentez cette référence au guichet ou payez en ligne ci-dessous.</p>${txChoix(x)}`
+                        : x.statut == "payee" && x.quittance_ref
+                          ? `<button class="bo" data-a="txquit" data-ref="${esc(x.quittance_ref)}">Voir la quittance</button>`
+                          : ""
                 }</div>`
             )
             .join("")
@@ -2210,6 +2312,7 @@ document.addEventListener("click", async e => {
         S.esp = false;
       } else S.err = tr("u_ce_dossier_n_est");
     } else if (a == "lout") {
+      txReset();
       await sb.auth.signOut();
       S.user = null;
       S.prof = null;
@@ -2245,6 +2348,17 @@ document.addEventListener("click", async e => {
     } else if (a == "txpay") {
       t.disabled = true;
       await payTaxe(t.dataset.id);
+    } else if (a == "txonl") {
+      S.txc = S.txc == t.dataset.id ? "" : t.dataset.id;
+    } else if (a == "txol") {
+      t.disabled = true;
+      await payEnLigne(t.dataset.id, t.dataset.p);
+    } else if (a == "txopen") {
+      txOpen();
+      return;
+    } else if (a == "txwx") {
+      txReset();
+      await loadTaxes();
     } else if (a == "txquit") {
       const rf = String(t.dataset.ref || "");
       if (/^[A-Z0-9-]{10,60}$/.test(rf)) location.assign("/quittance.html?ref=" + encodeURIComponent(rf));
