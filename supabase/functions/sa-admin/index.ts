@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 const ORIGIN=Deno.env.get("ALLOWED_ORIGIN")??"",SITE=Deno.env.get("SITE_URL")??ORIGIN;
-const ROLES=["admin_mairie","maire","adjoint","cabinet","secretariat","finances","rh","etat_civil","technique","agent"];
+const ROLES=["admin_mairie","maire","adjoint","cabinet","secretariat","finances","rh","etat_civil","technique","agent","conseiller"];
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS","Vary":"Origin","Content-Type":"application/json"};
 const out=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers});
 const fail=(message:string,status=400)=>out({error:message},status);
