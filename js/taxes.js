@@ -7,7 +7,7 @@ LG.paiements_taxes = [
   }
 ];
 const PTS = { en_attente: "En attente", paye: "Payé" },
-  PTC = { en_attente: "or", paye: "ok" };
+  PTXC = { en_attente: "or", paye: "ok" };
 const PSR = { en_ligne_simule: "en ligne (simulation)", guichet: "espèces au guichet", taxe: "taxe" },
   ptQ = v => {
     const t = String(v == null ? "" : v);
@@ -47,7 +47,7 @@ const taxes = () => {
         const s = x.statut;
         return rw(
           `<b>${esc(x.type_taxe || "Taxe")}</b> · ${esc(ptF(x.montant))}<div class="mut" data-sty="font-size:13px">${esc(ptD(x.created_at))} · Réf. ${esc(x.reference_paiement || "—")} · ${esc(PSR[x.source] || "")}</div>`,
-          `<span data-sty="display:grid;gap:6px;justify-items:end">${st2(PTS[s] || s || "—", PTC[s] || "rd")}${s == "en_attente" && x.source == "guichet" ? (S.pr === "finances" ? `<button class="bt" data-m="ptval" data-id="${esc(x.id)}">Valider (espèces)</button>` : "") : ""}</span>`
+          `<span data-sty="display:grid;gap:6px;justify-items:end">${st2(PTS[s] || s || "—", PTXC[s] || "rd")}${s == "en_attente" && x.source == "guichet" ? (S.pr === "finances" ? `<button class="bt" data-m="ptval" data-id="${esc(x.id)}">Valider (espèces)</button>` : "") : ""}</span>`
         );
       }).join("") || emp("Aucun paiement de taxe enregistré."),
       `<button class="bo" data-m="ptcsv">Exporter CSV (comptabilité)</button>`

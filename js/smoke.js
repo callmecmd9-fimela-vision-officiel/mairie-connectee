@@ -16,7 +16,7 @@ ok('citoyen: accueil sans commune',()=>vm.runInContext('render();$("#app").inner
 ok('citoyen: accueil/form/detail',()=>vm.runInContext(`S.co="Fimela";S.slug="fimela";S.cid="1";S.info={};S.pub=[{texte:"x"}];render();home().length>50&&(S.cat="Audiences et rendez-vous",form().length>50)&&(S.cat=null,S.res={type:"t",numero:"n",cree:"2026-01-01",statut:"nouvelle",historique:[{date:"2026-01-01",statut:"nouvelle"}]},detail().length>50)`,c));
 // mairie
 for(const [role,sa] of [['maire',0],['adjoint',0],['secretariat',0],['cabinet',0],['finances',0],['rh',0],['etat_civil',0],['technique',0],['agent',0],['super_admin',1]]){
- c=ctx();run(c,['core','core-ui','adjoints','secretariat','superadmin','maire','marches','deliberations','patrimoine','services_territoire','budget','actions']);
+ c=ctx();run(c,['core','core-ui','adjoints','secretariat','superadmin','maire','marches','deliberations','patrimoine','services_territoire','budget','taxes','fiscalite','actions']);
  ok('mairie '+role,()=>vm.runInContext(`S.role="cab";S.cid="c1";S.uid="u1";S.co="Fimela";S.pr="${role}";S.sa=${!!sa};S.email="a@b.c";S.pm={};S.pu={};S.mod={};
  S.db.proj=[{id:1,titre:"p",statut:"en_cours",avancement:10,budget:5,categorie:"Santé",lat:1,lng:1,date_fin:"2020-01-01"}];S.db.cr=[{id:1,sens:"in",statut:"recu",objet:"o",correspondant:"c",date_reception:T,priorite:"normale"}];
  let n=0,v=NAV().map(x=>x[0]);const tabsAll=Object.values(SP).flatMap(x=>x.subs.map(s=>[x.v,x.v==="s_admin"?s[0]:s[0]]));
@@ -36,7 +36,7 @@ ok('sw: réseau puis cache hors-ligne',()=>{const ls={},store={};let online=true
  return ev('https://x/js/core.js').then(()=>{online=false;return ev('https://x/js/core.js')}).then(r=>{if(r!=='CLONE')throw new Error('cache KO '+r);return ev('https://x/zz','GET','navigate')}).then(r=>{if(r!=='ERR'&&r!==undefined)throw new Error('nav '+r);if(ev('https://aiqegpijisspankpkwfj.supabase.co/rest','GET')!==undefined)throw new Error('cross-origin intercepté');if(ev('https://x/api','POST')!==undefined)throw new Error('POST intercepté');0})});
 setTimeout(()=>{console.log(fail?'ECHECS: '+fail:'TOUS OK');process.exit(fail?1:0)},300);
 // pagination : 2500 projets => 3 pages
-(async()=>{const c=ctx();run(c,['core','core-ui','adjoints','secretariat','superadmin','maire','marches','deliberations','patrimoine','services_territoire','budget','actions']);
+(async()=>{const c=ctx();run(c,['core','core-ui','adjoints','secretariat','superadmin','maire','marches','deliberations','patrimoine','services_territoire','budget','taxes','fiscalite','actions']);
  const r=await vm.runInContext(`(async()=>{const all=Array.from({length:2500},(_,i)=>({id:i,statut:"x",avancement:0,budget:0,titre:"t"}));
  const mk=(a,b)=>({order(){return this},range(x,y){return Promise.resolve({data:all.slice(x,y+1),error:null})},then(f){return Promise.resolve({data:all.slice(0,1000),error:null}).then(f)}});
  LG.projets=[()=>mk(),r=>{S.db.proj=r}];S.role="cab";S.cid="c";S.pr="maire";S.uid="u";S.ind={};
