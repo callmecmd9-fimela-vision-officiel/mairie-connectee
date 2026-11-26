@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2026-11-26 — Photo par utilisateur (correctif)
+- Bug : la photo « du responsable » (commune) s'affichait pour l'admin ET le maire. Désormais `profiles.photo` par personne : chacun voit SA photo ; seul le maire retombe sur la photo de la commune. Admin (super admin ou admin de la mairie) : bouton **Photo** sur chaque utilisateur (Utilisateurs). Toutes communes, sans valeur codée en dur.
+- SQL **PROPOSÉE, non appliquée** : `20261204000200_photo_profil_utilisateur.sql` (`sa_set_profil_photo`, `sa_profils_photos`, `mon_profil_photo`, garde `_garde_am`). Sans elle : aucune régression (repli silencieux). JS : `core.js`, `maire.js`, `superadmin.js`, `mairie.html` (`?v=20261204.2`).
+
 ## 2026-11-26 — Chantier 2 : réactivation de « Mon Espace » et « Payer en ligne » (sandbox)
 - `js/citoyen.js` (`?v=20261204.1`) : `SMS_ON = true` (espace réactivé) ; connexion **téléphone sénégalais (70/75/76/77/78) + code SMS** ; clé `tel_citoyen` = confort de pré-remplissage uniquement (jamais une preuve d'identité), écrite après un code valide ; « Se déconnecter » purge `tel_citoyen` et les caches personnels (`mc_d_*`, `mc_r_*`).
 - Données : appels à `mes_roles_imposition_par_tel` / `mes_demandes_par_tel` (repli sur les RPC historiques tant que la migration n'est pas appliquée). Numéro inconnu ou sans téléphone vérifié : liste vide, sans erreur.
