@@ -2,7 +2,7 @@
 // Secrets requis : PUSH_WEBHOOK_SECRET, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT (mailto:… ou https://…). Sans eux : 503, rien n'est envoyé.
 // Le contenu envoyé est volontairement minimal (titre + court extrait + n° de dossier) : aucune donnée personnelle sensible dans la charge utile.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
-import webpush from "npm:web-push@3.6.7";
+import webpush from "web-push";
 const J = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { "Content-Type": "application/json" } });
 const eq = (a: string, b: string) => { if (a.length !== b.length) return false; let d = 0; for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i); return d === 0; };
 Deno.serve(async (req) => {
