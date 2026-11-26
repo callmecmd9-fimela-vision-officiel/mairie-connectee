@@ -1,5 +1,12 @@
 # TASKS — état au 2026-11-25
 
+## Chantier 2 — « Mon Espace » et paiement des taxes (2026-11-26)
+- [ ] **Activer le fournisseur SMS** dans Supabase (Authentication > Providers > Phone) : sans lui l'écran affiche « pas encore disponible ».
+- [ ] Appliquer `supabase/migrations/20261204000100_lot18_citoyen_rpc_par_tel.sql`, puis tester : compte vérifié +221 77… → ses rôles ; autre numéro → liste vide ; `anon` → permission refusée.
+- [ ] Déployer `js/citoyen.js` + `index.html` (`?v=20261204.1`), vider le cache/PWA.
+- [ ] Tester en sandbox : rôle `emise` → Payer en ligne → référence + message Sandbox → encaissement guichet / webhook → rafraîchissement (quittance).
+- [ ] Reste : pas de limitation de débit propre aux RPC `*_par_tel` (protégées par l'authentification SMS).
+
 ## P1 Parcours citoyen — suivi public et guichet (2026-11-25)
 - [ ] **Déploiement base** : appliquer `supabase/APPLY_ALL_MIGRATIONS.sql` (001600 à 002000, une transaction), lancer `supabase/VERIFY_ALL.sql`, suivre `supabase/DEPLOYMENT_STEPS.md`, puis noter ici la date d'application. `sa-admin` : déjà v18 avec `conseiller` (aucun changement de code) ; `bright-worker` conservé (inerte, référencé dans `config.toml`).
 - [ ] `20261202002000_p1_rls_demandes_guichet.sql` **proposée, non appliquée** (après 001700) : ajoute les politiques SELECT `demandes_guichet` et `demandes_historique_guichet`. Vérifier après application que l'écran Caisse (rôle finances) affiche bien les demandes en a_payer de toute la commune.
