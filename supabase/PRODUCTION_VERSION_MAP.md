@@ -49,3 +49,5 @@ Les instructions des migrations appliquées ont été compactées par l'outil d'
 admin-comptes v10, bright-worker v4 (inerte, conservé), ia-texte v9, purge-pieces v2 (`verify_jwt=false`, secret vérifié par RPC), **sa-admin v18** (activation : e-mail confirmé par le super admin ; rôle `conseiller` autorisé, redéployée le 2026-11-25), **saas-admin v4**. `push-send` et `sms-dispatch` : non déployées. Les sources du dépôt de `sa-admin` et `saas-admin` portent les mêmes marqueurs fonctionnels que les versions déployées (admin_mairie, `affecter_admin_mairie`, `saas_preparer_admin_mairie`, `org_sync_user_affectations`).
 
 - `20261203000200_lot15_fiscalite_locale.sql` : **proposée, non appliquée** (à appliquer AVANT de publier `js/fiscalite.js`).
+
+- `20261203000400_lot16_citoyen_taxes.sql` : **proposée, non appliquée** (après le lot 15, AVANT de publier `js/citoyen.js` et `js/fiscalite.js`).
