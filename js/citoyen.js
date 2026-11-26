@@ -611,8 +611,8 @@ async function loadMine() {
     S.taxErr = "";
     if (S.slug) purgeM();
     if (!S.user || !S.user.id || !S.slug) return;
-    const r = await sb.rpc("mes_demandes_compte", { p_commune: S.slug });
-    const acc = [...new Set((r.data || []).map(x => x.numero))];
+    const r = await rpcTel("mes_demandes_par_tel", "mes_demandes_compte", { p_commune: S.slug });
+    const acc = [...new Set((r.data || []).filter(x => !x.commune_slug || x.commune_slug === S.slug).map(x => x.numero))];
     S.mine = acc.length ? (await sb.rpc("suivre_demandes", { p_commune: S.slug, p_numeros: acc })).data || [] : [];
     /* Lot 7 : « Mes quittances » (paiements du compte, RLS : citoyen_id = utilisateur) */
     {
@@ -630,6 +630,27 @@ async function loadMine() {
   }
 }
 /* « Mes Taxes » : la RPC filtre sur le compte connecté ; on n'affiche que la commune ouverte. */
+/* RPC « par téléphone » (mes_roles_imposition_par_tel, mes_demandes_par_tel) : on envoie le numéro du compte connecté ; le serveur le compare au téléphone vérifié par SMS du JWT et renvoie une liste VIDE (jamais une erreur, jamais le dossier d'un tiers) si le numéro est inconnu ou n'est pas celui du compte. Sans numéro vérifié : liste vide, aucun appel. Repli sur la RPC historique tant que la migration 20261204000100 n'est pas appliquée. */
+const telCompte = () => nph(S.user && S.user.phone);
+const RPC_ABSENTE = /PGRST202|42883|could not find the function|does not exist/i;
+async function rpcTel(nom, repli, argsRepli) {
+  const tel = telCompte();
+  if (!tel) return { data: [] };
+  let r;
+  try {
+    r = await sb.rpc(nom, { p_telephone: tel });
+  } catch (e) {
+    r = { error: e };
+  }
+  if (r && r.error && RPC_ABSENTE.test(String(r.error.code || "") + " " + String(r.error.message || ""))) {
+    try {
+      r = await sb.rpc(repli, argsRepli);
+    } catch (e) {
+      r = { error: e };
+    }
+  }
+  return r || { data: [] };
+}
 async function loadTaxes() {
   const uid = S.user && S.user.id,
     slug = S.slug;
@@ -638,13 +659,13 @@ async function loadTaxes() {
   if (!uid || !slug) return;
   let r;
   try {
-    r = await sb.rpc("mes_roles_imposition");
+    r = await rpcTel("mes_roles_imposition_par_tel", "mes_roles_imposition");
   } catch (e) {
     r = { error: e };
   }
   if (!S.user || S.user.id !== uid || S.slug !== slug) return;
   if (r.error) S.taxErr = "Vos taxes sont indisponibles pour le moment.";
-  else S.taxes = (r.data || []).filter(x => x.commune_slug === slug);
+  else S.taxes = (Array.isArray(r.data) ? r.data : []).filter(x => x && x.commune_slug === slug);
   /* Fournisseurs de paiement en ligne actifs pour la commune et leur mode (sandbox = test). Échec : pas de paiement en ligne. */
   S.txm = {};
   try {
@@ -655,10 +676,53 @@ async function loadTaxes() {
       });
   } catch (e) {}
 }
+/* « Payer en ligne » : génère (ou rappelle) la référence PAY-TAXE-AAAA-NNNNNN du rôle via initier_paiement_taxe, puis rafraîchit l'écran quelques secondes plus tard pour refléter une confirmation reçue par le webhook. */
+const TX_SBX_MSG = "Mode Sandbox : simulation de paiement. Présentez cette référence au guichet.";
+const TX_REF_OK = /^[A-Z0-9-]{10,60}$/;
+const TX_REF_FIRST_MS = 5000,
+  TX_REF_NEXT_MS = 10000,
+  TX_REF_MAX = 4;
+let txRefTimer = null;
+function txRefStop() {
+  if (txRefTimer) clearTimeout(txRefTimer);
+  txRefTimer = null;
+}
+function txRefreshLater(n) {
+  txRefStop();
+  n = n || 0;
+  if (n >= TX_REF_MAX) return;
+  txRefTimer = setTimeout(
+    async () => {
+      txRefTimer = null;
+      const w = S.txr;
+      if (!w || !S.user || S.user.id !== w.uid || S.slug !== w.slug) return;
+      await loadTaxes();
+      if (S.txr !== w) return;
+      const x = (S.taxes || []).find(z => z.id == w.id);
+      if (!x || x.statut != "en_attente_paiement") S.txr = null;
+      txRender();
+      if (S.txr) txRefreshLater(n + 1);
+    },
+    n ? TX_REF_NEXT_MS : TX_REF_FIRST_MS
+  );
+}
 async function payTaxe(id) {
-  const r = await sb.rpc("initier_paiement_taxe", { p_role_id: id });
-  if (r.error || !r.data) S.err = "Impossible de générer l’avis de paiement. Réessayez ou contactez la mairie.";
+  S.err = "";
+  let r;
+  try {
+    r = await sb.rpc("initier_paiement_taxe", { p_role_id: id });
+  } catch (e) {
+    r = { error: e };
+  }
+  const ref = r && r.data ? String(r.data.reference || "") : "";
+  if (!r || r.error || !TX_REF_OK.test(ref)) {
+    S.err = "Impossible de générer la référence de paiement. Réessayez ou contactez la mairie.";
+    await loadTaxes();
+    return;
+  }
+  S.txr = { id, ref, uid: S.user && S.user.id, slug: S.slug };
   await loadTaxes();
+  txRefreshLater(0);
 }
 /* Paiement en ligne (Wave / Orange Money). Le citoyen n'a aucun pouvoir sur le statut : le lien est généré par la RPC
    initier_paiement_en_ligne ; seule la confirmation du fournisseur (webhook → service_role) passe le rôle à « payée ».
@@ -677,8 +741,10 @@ function txStop() {
 }
 function txReset() {
   txStop();
+  txRefStop();
   S.txw = null;
   S.txc = "";
+  S.txr = null;
 }
 async function txPoll() {
   const w = S.txw;
@@ -765,7 +831,7 @@ const txWait = w => {
 const txChoix = x => {
   const fr = Object.keys(S.txm || {}).filter(k => TXP[k]);
   const test = fr.filter(k => S.txm[k] == "sandbox").map(k => TXP[k]);
-  return `<div class="c-m10"><button class="bo" data-a="txpay" data-id="${esc(x.id)}">Payer au guichet</button>${
+  return `<div class="c-m10">${x.statut == "emise" ? `<button class="bt" data-a="txpay" data-id="${esc(x.id)}">Payer en ligne</button>` : ""}${
     fr.length ? ` <button class="bt" data-a="txonl" data-id="${esc(x.id)}">Payer par Wave/OM</button>` : ""
   }${
     fr.length && S.txc == x.id
@@ -775,6 +841,8 @@ const txChoix = x => {
       : ""
   }</div>`;
 };
+/* Sandbox = aucun fournisseur actif en production pour cette commune : la référence se présente au guichet. */
+const txSandbox = () => !Object.keys(S.txm || {}).some(k => S.txm[k] == "production");
 const taxCard = () =>
   `<div class="cd" id="taxes"><h2>Mes Taxes</h2>${
     S.taxErr
@@ -789,7 +857,7 @@ const taxCard = () =>
                     : x.statut == "emise"
                       ? txChoix(x)
                       : x.statut == "en_attente_paiement"
-                        ? `<p class="okb">Référence : <b>${esc(x.reference_avis)}</b><br>Présentez cette référence au guichet ou payez en ligne ci-dessous.</p>${txChoix(x)}`
+                        ? `<p class="okb" role="status">Référence : <b>${esc(x.reference_avis)}</b><br>${esc(txSandbox() ? TX_SBX_MSG : "Présentez cette référence au guichet ou payez en ligne ci-dessous.")}</p>${txChoix(x)}`
                         : x.statut == "payee" && x.quittance_ref
                           ? `<button class="bo" data-a="txquit" data-ref="${esc(x.quittance_ref)}">Voir la quittance</button>`
                           : ""
@@ -1612,8 +1680,8 @@ ${
 <label for="ff">${tr("u_pieces_justificatives_3_maximum")}</label><input id="ff" type="file" multiple accept="image/*,application/pdf">
 <p class="mu sm c-mt12">${tr("u_toutes_les_demandes_ne")}</p>${S.user ? "" : '<div id="ts"></div>'}${payBlock()}<p><button class="bt" id="sd" data-a="send">${tr("u_envoyer_ma_demande")}</button></p></div></main>`;
 };
-/* Passer à true quand le fournisseur SMS est actif */
-const SMS_ON = false;
+/* Connexion « Mon Espace » par téléphone + code SMS (OTP). Si le fournisseur SMS de Supabase n'est pas activé, otp() affiche « pas encore disponible » (aucun faux succès). Mettre false pour fermer l'espace. */
+const SMS_ON = true;
 const espaceOff = () =>
   `${head()}<main id="mc" class="mn nh">${msgs()}<div class="cd c-tac"><button class="lk c-cgb" data-a="espx">${tr("back")}</button><span class="ico big">${ic("user", 30)}</span><h1>${tr("u_mon_espace_citoyen")}</h1><p class="mu">${tr("u_votre_espace_personnel_prepare")}</p><p><button class="bt" data-a="espx">${tr("u_continuer_mes_demarches")}</button></p></div></main>`;
 /* Notifications push (Web Push/VAPID) : activées seulement si la clé publique est fournie (<meta name="mc-vapid">) et que le navigateur les gère. */
@@ -1791,12 +1859,46 @@ ${rvCard()}<div class="cd" id="infos"><h2><span class="ih">${ic("info", 24)}</sp
 };
 const PCL = lk("pcl_"),
   PJL = lk("pjl_");
+/* Numéro sénégalais : mobiles 70, 75, 76, 77, 78 (9 chiffres), avec ou sans +221 / 00221. Autre format : "" (refusé côté client ET côté serveur). */
 const nph = v => {
-  v = String(v || "").replace(/[\s.-]/g, "");
-  if (/^7\d{8}$/.test(v)) return "+221" + v;
-  if (/^221\d{9}$/.test(v)) return "+" + v;
-  return /^\+\d{8,15}$/.test(v) ? v : "";
+  v = String(v == null ? "" : v)
+    .replace(/[\s.()-]/g, "")
+    .replace(/^\+/, "")
+    .replace(/^00/, "");
+  if (/^7[05678]\d{7}$/.test(v)) return "+221" + v;
+  if (/^2217[05678]\d{7}$/.test(v)) return "+" + v;
+  return "";
 };
+/* tel_citoyen : simple confort (pré-remplir le champ). Ce n'est JAMAIS une preuve d'identité : l'accès aux données repose sur le téléphone vérifié par SMS du compte. */
+const TEL_KEY = "tel_citoyen";
+const telSave = p => {
+  try {
+    if (nph(p)) localStorage.setItem(TEL_KEY, nph(p));
+  } catch (e) {}
+};
+const telPref = () => {
+  try {
+    const p = nph(localStorage.getItem(TEL_KEY));
+    return p ? p.slice(4, 6) + " " + p.slice(6, 9) + " " + p.slice(9, 11) + " " + p.slice(11, 13) : "";
+  } catch (e) {
+    return "";
+  }
+};
+/* Déconnexion : efface le numéro et tout ce qui est propre à la personne sur l'appareil (numéros de dossiers, de rendez-vous). Le choix de la commune et la langue sont conservés. */
+function purgeLocal() {
+  try {
+    const k = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const n = localStorage.key(i);
+      if (n == TEL_KEY || /^mc_(d|r)_/.test(n || "")) k.push(n);
+    }
+    k.forEach(n => localStorage.removeItem(n));
+  } catch (e) {
+    try {
+      localStorage.removeItem(TEL_KEY);
+    } catch (x) {}
+  }
+}
 async function loadNt() {
   const r = await sb
     .from("citoyen_notifications")
@@ -1837,12 +1939,14 @@ async function vfy() {
     S.err = tr("u_code_invalide");
     return;
   }
-  const r = await sb.auth.verifyOtp({ phone: S.au.phone, token: c, type: "sms" });
+  const ph = S.au.phone;
+  const r = await sb.auth.verifyOtp({ phone: ph, token: c, type: "sms" });
   if (r.error || !r.data.user) {
     S.err = tr("u_code_incorrect_ou_expire");
     return;
   }
   S.user = r.data.user;
+  telSave(ph);
   S.au = {};
   await loadAcc();
   if (!S.prof || !Object.keys(S.prof).length) {
@@ -1911,7 +2015,7 @@ const espace = () => {
       ? `<p class="mu">${tr("u_entrez_votre_numero_de")}</p>` +
         (a.step == "code"
           ? `<label for="cd">Code reçu par SMS (${esc(a.phone)})</label><input id="cd" inputmode="numeric" autocomplete="one-time-code" maxlength="8"><p class="c-mt12"><button class="bt" data-a="vfy">${tr("u_valider")}</button> <button class="bo" data-a="otpx">${tr("u_changer_de_numero")}</button></p>`
-          : `<label for="ph">${tr("u_numero_de_telephone")}</label><input id="ph" type="tel" autocomplete="tel" placeholder="77 123 45 67"><div id="ts"></div><p><button class="bt" data-a="otp">${tr("u_recevoir_le_code")}</button></p>`)
+          : `<label for="ph">${tr("u_numero_de_telephone")}</label><input id="ph" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="77 123 45 67" value="${esc(telPref())}"><p class="mu sm">Un code SMS confirme que ce numéro est le vôtre : vos taxes et vos demandes restent privées.</p><div id="ts"></div><p><button class="bt" data-a="otp">${tr("u_recevoir_le_code")}</button></p>`)
       : `<p class="mu">Téléphone vérifié : +${esc(String(u.phone || "").replace(/^\+/, ""))}</p><label for="pp">${tr("u_prenom")}</label><input id="pp" autocomplete="given-name" maxlength="120" value="${esc((S.prof || {}).prenom)}"><label for="pn">${tr("u_nom")}</label><input id="pn" autocomplete="family-name" maxlength="120" value="${esc((S.prof || {}).nom)}"><label for="pv">${tr("u_village_quartier_ou_adresse")}</label><input id="pv" autocomplete="street-address" maxlength="120" value="${esc((S.prof || {}).village)}"><p class="c-mt12"><button class="bt" data-a="psave">${tr("u_enregistrer")}</button> <button class="bo" data-a="lout">${tr("u_se_deconnecter")}</button></p>`) +
     `</div>` +
     (u
@@ -2336,6 +2440,7 @@ document.addEventListener("click", async e => {
       } else S.err = tr("u_ce_dossier_n_est");
     } else if (a == "lout") {
       txReset();
+      purgeLocal();
       await sb.auth.signOut();
       S.user = null;
       S.prof = null;
