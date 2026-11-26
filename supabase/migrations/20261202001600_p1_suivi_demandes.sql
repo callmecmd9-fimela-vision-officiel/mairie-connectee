@@ -1,4 +1,4 @@
--- P1 Suivi anonyme des demandes citoyennes (loi 2008-12 : aucun compte obligatoire) — PROPOSÉE, non appliquée.
+-- P1 Suivi anonyme des demandes citoyennes (loi 2008-12 : aucun compte obligatoire) — APPLIQUÉE en production (2026-11-26).
 -- Version 001600 : la version 20261202001500 est déjà utilisée (p1_fix_paiements_taxes_citoyen_fk, appliquée en production).
 -- Socle : numéro de suivi FIM-YYYY-NNNNNN, jetons de suivi, vue publique sans donnée personnelle, RPC de consultation (numéro + téléphone).
 -- Les numéros existants (colonne `numero`) ne sont pas modifiés ; les demandes déjà en base n'ont pas de num_suivi (pas de rétro-remplissage ici).

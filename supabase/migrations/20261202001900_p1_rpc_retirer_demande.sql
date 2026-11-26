@@ -1,4 +1,4 @@
--- P1 Circuit des demandes : RPC de retrait du document avec inscription au registre des retraits — PROPOSÉE, non appliquée.
+-- P1 Circuit des demandes : RPC de retrait du document avec inscription au registre des retraits — APPLIQUÉE en production (2026-11-26).
 -- Dépend de 20261202001700 (registre_retraits, statut « retire », garde « retrait enregistré »).
 -- Retourne l'identifiant de la ligne du registre. Idempotente : peut être rejouée sans erreur.
 

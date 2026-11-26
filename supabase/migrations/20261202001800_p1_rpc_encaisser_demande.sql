@@ -1,4 +1,4 @@
--- P1 Circuit des demandes : RPC d'encaissement avec quittance numérotée (QUIT-YYYY-NNNNNN) — PROPOSÉE, non appliquée.
+-- P1 Circuit des demandes : RPC d'encaissement avec quittance numérotée (QUIT-YYYY-NNNNNN) — APPLIQUÉE en production (2026-11-26).
 -- Nouvelle surcharge encaisser_demande(uuid, numeric, text, text) : l'ancienne encaisser_demande(uuid) reste en place (utilisée par js/paiements-demandes.js).
 -- Prérequis : 20261202001600 (colonne demandes.montant_du lue par encaisser_demande, version 001800).
 -- Dépend de 20261202001700 (statuts a_payer / paye, garde « paiement tracé »).
