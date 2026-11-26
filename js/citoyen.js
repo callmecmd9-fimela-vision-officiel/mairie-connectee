@@ -2578,3 +2578,12 @@ document.addEventListener("click", e => {
   else if (id == "sig-send") sigSend();
 });
 document.addEventListener("keydown", e => { if (e.key == "Escape") sigClose(); });
+
+(function () {
+  const onScroll = () => {
+    const h = document.querySelector(".tp");
+    if (h) h.classList.toggle("is-scrolled", window.scrollY > 10);
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+})();
