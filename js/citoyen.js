@@ -2598,9 +2598,15 @@ document.addEventListener("keydown", e => { if (e.key == "Escape") sigClose(); }
     h.style.transition = "";
     return Math.max(0, full - small);
   };
+  const setH = h => {
+    if (h.classList.contains("is-scrolled")) return;
+    const v = h.offsetHeight;
+    if (v > 0) document.documentElement.style.setProperty("--header-height", v + "px");
+  };
   const sync = () => {
     const h = hdr();
     if (!h) return;
+    setH(h);
     const want = window.scrollY > 10;
     if (want === h.classList.contains("is-scrolled")) return;
     h.style.setProperty("--tp-d", want ? delta(h) + "px" : "0px");
@@ -2612,7 +2618,11 @@ document.addEventListener("keydown", e => { if (e.key == "Escape") sigClose(); }
   window.addEventListener("scroll", later, { passive: true });
   window.addEventListener("resize", () => {
     const h = hdr();
-    if (h && h.classList.contains("is-scrolled")) h.style.setProperty("--tp-d", delta(h) + "px");
+    if (!h) return;
+    const was = h.classList.contains("is-scrolled");
+    if (was) { h.style.transition = "none"; h.classList.remove("is-scrolled"); }
+    setH(h);
+    if (was) { h.classList.add("is-scrolled"); h.offsetHeight; h.style.transition = ""; }
   });
   const app = document.getElementById ? document.getElementById("app") : null;
   if (app && window.MutationObserver) new MutationObserver(later).observe(app, { childList: true, subtree: true });
