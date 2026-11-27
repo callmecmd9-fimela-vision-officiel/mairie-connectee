@@ -56,7 +56,9 @@ const dempay = () => {
         return rw(
           `<div${lt ? ' data-sty="border-left:4px solid #B91C1C;padding-left:8px"' : ""}><b>${esc(x.objet || x.type || "Demande")}</b> · ${esc(DPF(x.montant))}<div class="mut">${esc(x.nom || "")} · ${esc(x.telephone || "tél. non renseigné")} · N° ${esc(x.numero)}</div><div class="mut">Déposée le ${esc(DPD(x.created_at))} · Date limite : ${esc(DPD(x.date_limite))} ${lt ? st2("Délai dépassé", "rd") : ""}</div>${x.statut == "rejetee" && x.reponse ? `<div class="mut">Motif : ${esc(x.reponse)}</div>` : ""}</div>`,
           `<span data-sty="display:grid;gap:6px;justify-items:end">${st2(p[0], p[1])}${x.document_url ? st2("Document délivré", "ok") : ""}${
-            x.statut_paiement == "non_paye" && (!closed || x.statut == "pret_a_retirer") && !["rejetee", "cloturee", "retire"].includes(x.statut)
+            x.statut_paiement == "non_paye" &&
+            (!closed || x.statut == "pret_a_retirer") &&
+            !["rejetee", "cloturee", "retire"].includes(x.statut)
               ? `<button class="bt" data-m="dpenc" data-id="${esc(x.id)}">Encaisser espèces</button>`
               : ""
           }${
@@ -185,7 +187,15 @@ document.addEventListener("change", async e => {
     if (f.type != "application/pdf") throw new Error("Le document final doit être un fichier PDF.");
     if (f.size > 5242880) throw new Error("PDF trop volumineux (5 Mo maximum).");
     if (x.statut_paiement == "non_paye") {
-      if (!confirm("Paiement non enregistré. Encaisser " + DPF(x.montant) + " en espèces pour le dossier " + x.numero + " puis délivrer le document ?")) {
+      if (
+        !confirm(
+          "Paiement non enregistré. Encaisser " +
+            DPF(x.montant) +
+            " en espèces pour le dossier " +
+            x.numero +
+            " puis délivrer le document ?"
+        )
+      ) {
         i.value = "";
         return;
       }
