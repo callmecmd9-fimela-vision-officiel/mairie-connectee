@@ -12,7 +12,7 @@ ok("signature : rpc signer_acte + badge Signé / Non signé", () => {
 ok("acte signé : Modifier masqué, Rectifier (jugement) via rpc rectifier_acte", () => {
   assert.match(ec, /sb\.rpc\("rectifier_acte"/); assert.match(ec, /Rectifier \(jugement\)/);
   assert.match(ec, /sg\s*\?\s*`<button[^`]*data-m="ecrect"[\s\S]*?:\s*`<button[^`]*data-m="ecedit"/);
-  ["p_juridiction", "p_jugement_numero", "p_jugement_date", "p_motif"].forEach(k => assert.ok(ec.includes(k), k));
+  ["p_champs", "p_juridiction", "p_jugement_numero", "p_jugement_date", "p_motif"].forEach(k => assert.ok(ec.includes(k), k));
 });
 ok("saisie : mode ordinaire / jugement supplétif dans ecPayload", () => {
   assert.match(ec, /jugement_suppletif/);
