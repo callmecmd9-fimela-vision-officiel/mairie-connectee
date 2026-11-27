@@ -381,3 +381,7 @@ Production : **lecture seule uniquement** (aucune écriture, aucun déploiement)
 ## 2026-11-22 — Styles inline supprimés (espace mairie, SaaS)
 - 316 `style=""` des modules mairie/SaaS convertis en `data-sty=""`, appliqués via CSSOM par `js/dstyle.js` (rendu identique, compatible CSP). `style-src-attr 'unsafe-inline'` retiré de `_headers`. SW `mc-v11`.
 - Retour arrière si besoin : remettre ` style-src-attr 'unsafe-inline';` dans `_headers`.
+
+## 2026-11-27 — Recherche mairie et notifications en direct
+- Recherche (Ctrl+K, « / », bouton) : js/recherche.js. Notifications mairie / citoyen / SaaS : js/notif-live.js, css/fv.css.
+- Migration à appliquer : 20261209000100_notifications_realtime.sql (sans elle : relève toutes les 30 s).
