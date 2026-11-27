@@ -22,7 +22,9 @@ const MST = {
     receptionne: "ok",
     annule: "rd"
   };
-const MMODE = ["Appel d'offres ouvert", "Appel d'offres restreint", "Demande de renseignements et de prix", "Gré à gré", "Autre"],
+/* Mode de passation : enum PostgreSQL mode_passation_marche (migration 20261208_marches_fiscalite.sql) ; valeurs et libellés dans RM (js/regles-municipales.js) */
+const MMODE = RM.MODES_PASSATION,
+  MMODEL = Object.fromEntries(RM.MODES_PASSATION),
   PCAT = ["Bâtiment", "Terrain", "Équipement", "Véhicule", "Mobilier", "Infrastructure", "Autre"],
   PET = { bon: "Bon état", moyen: "État moyen", mauvais: "Mauvais état", hors_service: "Hors service" },
   PTC = { bon: "ok", moyen: "or", mauvais: "rd", hors_service: "rd" },
@@ -306,6 +308,9 @@ const marches = () => {
               inp("mk_ob", "Objet", "text", ev("mar", "objet")) +
               sel("mk_mo", "Mode de passation", [["", "—"]].concat(MMODE), ev("mar", "mode")) +
               inp("mk_mt", "Montant (FCFA)", "number", ev("mar", "montant", 0), "", 'min="0"') +
+              inp("mk_sp", "Seuil de passation applicable (FCFA)", "number", ev("mar", "seuil_passation"), "", 'min="0" step="1"') +
+              inp("mk_rp", "Référence de publication de l’appel", "text", ev("mar", "ref_publication_appel"), "", 'maxlength="120"') +
+              inp("mk_ra", "Référence d’attribution de l’appel", "text", ev("mar", "ref_attribution_appel"), "", 'maxlength="120"') +
               inp("mk_at", "Attributaire", "text", ev("mar", "attributaire")) +
               inp("mk_sv", "Service demandeur", "text", ev("mar", "service")) +
               sel("mk_st", "Statut", Object.entries(MST), ev("mar", "statut", "preparation")) +
@@ -324,7 +329,7 @@ const marches = () => {
       "doc",
       L.map(x =>
         rw(
-          `<b>${esc(x.numero || "")} ${esc(x.objet)}</b><div class="mut" data-sty="font-size:13px">${esc(x.mode || "Mode non précisé")} · ${fmt(x.montant)} FCFA · ${esc(x.attributaire || "attributaire non désigné")}${x.date_fin ? " · fin prévue " + fdd(x.date_fin) : ""}</div>${x.observations ? `<div data-sty="font-size:14px">${esc(x.observations)}</div>` : ""}${histBox(x.id)}`,
+          `<b>${esc(x.numero || "")} ${esc(x.objet)}</b><div class="mut" data-sty="font-size:13px">${esc(MMODEL[x.mode] || "Mode non précisé")} · ${fmt(x.montant)} FCFA · ${esc(x.attributaire || "attributaire non désigné")}${x.date_fin ? " · fin prévue " + fdd(x.date_fin) : ""}</div>${x.observations ? `<div data-sty="font-size:14px">${esc(x.observations)}</div>` : ""}${histBox(x.id)}`,
           `<div data-sty="display:grid;gap:4px;justify-items:end">${st2(MST[x.statut], MTC[x.statut])}${act2((W ? `<button class="tg" data-a="edit" data-e="mar" data-id="${x.id}">Modifier</button>` : "") + `<button class="tg" data-a="hist" data-tb="marches" data-id="${x.id}">Historique</button>`)}</div>`
         )
       ).join("") || emp("Aucun marché enregistré.")
@@ -1101,6 +1106,9 @@ const MAC = {
         objet: g("mk_ob"),
         mode: g("mk_mo") || null,
         montant: +g("mk_mt") || 0,
+        seuil_passation: g("mk_sp") === "" ? null : +g("mk_sp"),
+        ref_publication_appel: g("mk_rp") || null,
+        ref_attribution_appel: g("mk_ra") || null,
         attributaire: g("mk_at") || null,
         service: g("mk_sv") || null,
         statut: g("mk_st"),
@@ -1110,6 +1118,8 @@ const MAC = {
         observations: g("mk_os") || null
       };
     if (!o.objet) throw new Error("L’objet du marché est obligatoire.");
+    const mb = RM.marcheBlocage(o);
+    if (mb) throw new Error(mb);
     await okq(e ? sb.from("marches").update(o).eq("id", S.ed.r.id) : sb.from("marches").insert({ ...o, commune_id: S.cid }));
     S.ed = {};
     await load(["marches"]);

@@ -1,6 +1,9 @@
 /* Fiscalité locale et domaine public (espace mairie > Finances > Fiscalité locale ; entrée dédiée pour le secrétariat).
    Tables et RPC : migration 20261203000200_lot15_fiscalite_locale.sql. Droits identiques côté base (RLS / RPC) :
    contribuables : maire, secretariat ; taxes : maire, finances ; générer / encaisser : finances.
+   Lot E (migration 20261208_marches_fiscalite.sql) : NINEA unique par commune (contribuables.ninea) ; recettes encaissées -> statut du versement au Trésor et référence
+   de quittance du Trésor (paiements_taxes.statut_tresor / ref_quittance_tresor, RPC enregistrer_quittance_tresor : service des finances = côté comptable public).
+   L'ordonnateur (Maire) engage et ordonnance ; le comptable public paie : voir js/budget.js (circuit des dépenses) et RM.engagementBlocage.
    Module encapsulé. Dépend de core.js, core-ui.js, adjoints.js (fdd), maire.js (st2), taxes.js : à charger après. */
 (() => {
   const TC = { particulier: "Particulier", entreprise: "Entreprise" },
@@ -11,7 +14,15 @@
     TO = { etal: "Étal", terrasse: "Terrasse", enseigne: "Enseigne" },
     OS = { active: "Active", suspendue: "Suspendue", terminee: "Terminée" },
     TABLES = ["contribuables", "taxes_locales", "roles_imposition", "occupations_domaine_public"],
-    DROITS = { fxcadd: ["maire", "secretariat"], fxtadd: ["maire", "finances"], fxgen: ["finances"], fxpay: ["finances"] },
+    TRS = { a_verser: "À verser au Trésor", verse: "Versé au Trésor", rapproche: "Rapproché par le Trésor" },
+    TRC = { a_verser: "or", verse: "bl", rapproche: "ok" },
+    DROITS = {
+      fxcadd: ["maire", "secretariat"],
+      fxtadd: ["maire", "finances"],
+      fxgen: ["finances"],
+      fxpay: ["finances"],
+      fxtres: RM.COMPTABLES
+    },
     peut = a => !S.sa && DROITS[a].includes(S.pr),
     ordre = { contribuables: "nom", taxes_locales: "libelle", roles_imposition: "created_at", occupations_domaine_public: "date_debut" };
   let busy = false,
@@ -45,7 +56,15 @@
               inp("fx_cpr", "Prénom", "text", "", "", 'maxlength="120"') +
               inp("fx_ctl", "Téléphone", "tel", "", "", 'maxlength="30"') +
               inp("fx_cad", "Adresse", "text", "", "", 'maxlength="300"') +
-              inp("fx_cif", "Identifiant fiscal (NINEA…)", "text", "", "", 'maxlength="40"')
+              inp(
+                "fx_cni",
+                "NINEA (obligatoire pour une entreprise, unique par commune)",
+                "text",
+                "",
+                "7 à 12 caractères",
+                'maxlength="14"'
+              ) +
+              inp("fx_cif", "Autre identifiant fiscal", "text", "", "", 'maxlength="40"')
           ) + bouton("fxcadd", "Ajouter")
         )
       : "") +
@@ -55,7 +74,7 @@
       D()
         .contribuables.map(c =>
           rw(
-            `<b>${esc(qui(c))}</b>${sous(esc(c.adresse || "adresse non précisée") + " · " + esc(c.telephone || "sans téléphone") + (c.identifiant_fiscal ? " · " + esc(c.identifiant_fiscal) : ""))}`,
+            `<b>${esc(qui(c))}</b>${sous(esc(c.adresse || "adresse non précisée") + " · " + esc(c.telephone || "sans téléphone") + (c.ninea ? " · NINEA " + esc(c.ninea) : "") + (c.identifiant_fiscal ? " · " + esc(c.identifiant_fiscal) : ""))}`,
             st2(TC[c.type] || c.type, "")
           )
         )
@@ -87,6 +106,22 @@
         )
         .join("") || emp("Aucune taxe définie.")
     );
+
+  /* Versement au Trésor d'un rôle encaissé : le paiement porte la référence « ROLE-<id du rôle> » (RPC payer_role_imposition) */
+  const paiementDe = r => (D().paiements_taxes || []).find(p => p.ref_recu == "ROLE-" + r.id),
+    tresor = r => {
+      if (r.statut != "payee") return "";
+      const p = paiementDe(r);
+      if (!p) return "";
+      const k = p.statut_tresor || "a_verser";
+      return (
+        st2(TRS[k] || k, TRC[k] || "") +
+        (p.ref_quittance_tresor
+          ? `<span class="mut" data-sty="font-size:13px">Quittance Trésor ${esc(p.ref_quittance_tresor)}</span>`
+          : "") +
+        (peut("fxtres") && k != "rapproche" ? `<button class="bo" data-m="fxtres" data-id="${esc(p.id)}">Quittance du Trésor</button>` : "")
+      );
+    };
 
   const vRoles = () => {
     const A = +T.slice(0, 4),
@@ -135,7 +170,7 @@
             const t = taxe(r.taxe_id);
             return rw(
               `<b>${esc(qui(contrib(r.contribuable_id)))}</b>${sous(esc(t ? t.libelle : "Taxe inconnue") + " · " + esc(r.annee) + (r.reference_avis ? " · " + esc(r.reference_avis) : ""))}`,
-              `<div data-sty="display:grid;gap:4px;justify-items:end"><b>${argent(r.montant_du)}</b>${st2(RS[r.statut] || r.statut, RC[r.statut] || "")}${["emise", "en_attente_paiement"].includes(r.statut) && peut("fxpay") ? `<button class="bt" data-m="fxpay" data-id="${esc(r.id)}">Encaisser</button>` : ""}</div>`
+              `<div data-sty="display:grid;gap:4px;justify-items:end"><b>${argent(r.montant_du)}</b>${st2(RS[r.statut] || r.statut, RC[r.statut] || "")}${["emise", "en_attente_paiement"].includes(r.statut) && peut("fxpay") ? `<button class="bt" data-m="fxpay" data-id="${esc(r.id)}">Encaisser</button>` : ""}${tresor(r)}</div>`
             );
           }).join("") || emp("Aucun rôle pour cette année."))
       )
@@ -197,7 +232,10 @@
   const refus = r => {
     if (!r.error) return r;
     if (r.error.code == "PGRST202" || r.error.code == "42P01" || r.error.code == "PGRST205")
-      throw new Error("Fiscalité locale non disponible sur le serveur : migration 20261203000200 à appliquer.");
+      throw new Error(
+        "Fiscalité locale non disponible sur le serveur : migration 20261203000200 (ou 20261208 pour le NINEA et le Trésor) à appliquer."
+      );
+    if (r.error.code == "23505" && /ninea/i.test(r.error.message || "")) throw new Error("Ce NINEA existe déjà pour cette commune.");
     throw new Error("Opération refusée : " + r.error.message);
   };
 
@@ -218,10 +256,14 @@
           prenom: g("fx_cpr") || null,
           telephone: g("fx_ctl") || null,
           adresse: g("fx_cad") || null,
+          ninea: RM.normNinea(g("fx_cni")) || null,
           identifiant_fiscal: g("fx_cif") || null
         };
         if (!TC[o.type]) throw new Error("Choisissez un type de contribuable.");
         if (!o.nom) throw new Error("Le nom est obligatoire.");
+        const nb = RM.contribuableBlocage(o);
+        if (nb) throw new Error(nb);
+        if (o.ninea && D().contribuables.some(c => c.ninea == o.ninea)) throw new Error("Ce NINEA existe déjà pour cette commune.");
         refus(await sb.from("contribuables").insert(o));
         recharger = ["contribuables"];
         message = "Contribuable enregistré.";
@@ -247,6 +289,27 @@
         S.tab.fisc_an = String(o.p_annee);
         recharger = ["roles_imposition"];
         message = "Rôle d’imposition généré.";
+      } else if (m == "fxtres") {
+        const p = (D().paiements_taxes || []).find(y => y.id == t.dataset.id);
+        if (!p || p.statut != "paye") throw new Error("Seul un paiement encaissé peut être versé au Trésor. Actualisez la liste.");
+        const ref = window.prompt(
+          "Référence de la quittance du Trésor (versement par le comptable public) :",
+          p.ref_quittance_tresor || ""
+        );
+        if (ref === null) {
+          busy = false;
+          return;
+        }
+        const statut = window.confirm(
+            "Le Trésor a-t-il rapproché ce versement ?\n\nOK = Rapproché · Annuler = Versé (en attente de rapprochement)"
+          )
+            ? "rapproche"
+            : "verse",
+          tb = RM.tresorBlocage(statut, ref);
+        if (tb) throw new Error(tb);
+        refus(await sb.rpc("enregistrer_quittance_tresor", { p_paiement_id: p.id, p_statut: statut, p_ref: ref.trim() }));
+        recharger = ["paiements_taxes"];
+        message = "Quittance du Trésor enregistrée.";
       } else {
         const x = D().roles_imposition.find(r => r.id == t.dataset.id);
         if (!x || !["emise", "en_attente_paiement"].includes(x.statut))

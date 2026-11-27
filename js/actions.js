@@ -423,8 +423,15 @@ document.addEventListener("click", async e => {
           if (!S.err) S.err = "Session programmée.";
         }
       } else if (a == "secv") {
-        await upd("sessions_conseil", { convocation_le: g("se_cv") || T, statut: "convoquee" }, sx.ses);
-        if (!S.err) S.err = "Convocations enregistrées.";
+        /* Délai légal : convocation au moins RM.CONVOCATION_MIN_JOURS jours avant la séance (même règle que la contrainte SQL du lot D) */
+        const ses = d.se.find(x => x.id == sx.ses),
+          dc = g("se_cv") || T,
+          dl = RM.delaiConvocation(ses && ses.jour, dc);
+        if (!dl.ok) S.err = dl.message;
+        else {
+          await upd("sessions_conseil", { convocation_le: dc, statut: "convoquee" }, sx.ses);
+          if (!S.err) S.err = "Convocations enregistrées.";
+        }
       } else if (a == "sedoc") {
         const u = await upa("se_dc", "conseil");
         if (!u) S.err = "Choisissez un document.";
@@ -433,11 +440,25 @@ document.addEventListener("click", async e => {
           await upd("sessions_conseil", { documents: (o.documents || []).concat(u.p) }, sx.ses);
         }
       } else if (a == "sepres") {
-        const rows = d.cn
-          .filter(x => x.actif)
-          .map(x => ({ session_id: sx.ses, conseiller_id: x.id, present: !!($("#pc_" + x.id) && $("#pc_" + x.id).checked) }));
-        if (rows.length) {
-          await run(sb.from("session_presences").upsert(rows, { onConflict: "session_id,conseiller_id" }));
+        /* Procurations (lot D) : un élu ne peut détenir qu'une seule procuration ; le mandataire doit être présent (règle RM.validerProcurations) */
+        const act = d.cn.filter(x => x.actif),
+          nouv = d.pr.some(x => "mandataire_id" in x),
+          rows = act.map(x => {
+            const pm = ($("#pm_" + x.id) || {}).value || "",
+              pc = !!($("#pc_" + x.id) && $("#pc_" + x.id).checked);
+            return pm
+              ? { session_id: sx.ses, conseiller_id: x.id, present: false, statut_presence: "procuration", mandataire_id: pm }
+              : { session_id: sx.ses, conseiller_id: x.id, present: pc, statut_presence: pc ? "present" : "absent", mandataire_id: null };
+          }),
+          err = RM.validerProcurations(rows, d.cn, id => {
+            const k = act.find(c => c.id == id);
+            return k ? k.prenom + " " + k.nom : "Conseiller";
+          });
+        if (err.length) S.err = err.join(" ");
+        else if (rows.length) {
+          const avecProc = nouv || rows.some(x => x.mandataire_id),
+            q = avecProc ? rows : rows.map(x => ({ session_id: x.session_id, conseiller_id: x.conseiller_id, present: x.present }));
+          await run(sb.from("session_presences").upsert(q, { onConflict: "session_id,conseiller_id" }));
           if (!S.err) S.err = "Présences enregistrées.";
         }
       } else if (a == "sepv") {

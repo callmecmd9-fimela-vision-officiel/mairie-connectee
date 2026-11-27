@@ -9,6 +9,8 @@
    Procès-verbal imprimable (maire, secrétariat) : gabarit #prt + window.print(), structure inspirée de ecDoc (js/etat-civil.js).
    Création d'une délibération : statut initial toujours « projet » (adoptée / rejetée uniquement par le vote).
    Fiche du votant : conseillers.user_id en priorité, e-mail = contact en dernier recours (migration 20261201000500_p1_gouvernance_fixes.sql).
+   Lot D (migration 20261207_budget_conseil.sql) : quorum = majorité des membres en exercice présents (règle RM.quorum, js/regles-municipales.js) ; sans quorum,
+   le vote et la clôture sont refusés (la base refuse aussi l'adoption / le rejet : trigger deliberations_garde_quorum). Les procurations comptent pour le vote, pas pour le quorum.
    Module encapsulé : aucun identifiant global déclaré.
    Dépend de core.js, core-ui.js, adjoints.js (fdd), secretariat.js (SES, SNAV, V), maire.js (st2) : à charger après maire.js. */
 (() => {
@@ -28,6 +30,8 @@
   let ouv = ""; /* id de la délibération dont le détail est ouvert */
   let votes = []; /* votes de la délibération ouverte */
   let cons = []; /* fiches de conseillers lisibles par l'utilisateur (id, actif, user_id, contact) */
+  let pres = []; /* présences de la session de la délibération ouverte (pour le quorum) */
+  let presOk = false; /* présences chargées */
   let pret = false; /* votes chargés */
   let lerr = ""; /* erreur de lecture des votes */
   let enCours = false; /* vote en cours d'envoi (anti double clic) */
@@ -90,13 +94,27 @@
     },
     inf = x =>
       `<b>${esc(x.objet)}</b><div class="mut" data-sty="font-size:13px">N° ${esc(x.numero)} · ${fdd(x.jour)}</div><div data-sty="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${st2(DL[x.statut] || x.statut || "—", DC[x.statut] || "")}${transmission(x)}</div>`,
+    /* Le quorum n'est calculé que si les fiches des conseillers sont lisibles (maire, secrétariat, cabinet) ; sinon la base reste l'autorité. */
+    quorumCalculable = x => !S.sa && !!x && !!x.session_id && ["maire", "secretariat", "cabinet"].includes(S.pr) && presOk,
+    quorumBloc = x => (quorumCalculable(x) ? RM.quorumBlocage(cons, pres) : ""),
+    quorumLigne = x => {
+      if (!x || !x.session_id) return rw("<b>Quorum</b>", st2("Hors session : non applicable", ""));
+      if (!quorumCalculable(x)) return rw("<b>Quorum</b>", st2("Contrôlé par le serveur", ""));
+      const q = RM.quorum(cons, pres);
+      return rw(
+        `<b>Quorum</b><div class="mut" data-sty="font-size:13px">Majorité des ${q.membres} membres en exercice : ${q.requis} présents requis${q.procurations ? " · " + q.procurations + " procuration(s) (comptées pour le vote, pas pour le quorum)" : ""}</div>`,
+        st2(q.presents + " présent(s) · " + (q.atteint ? "atteint" : "NON atteint"), q.atteint ? "ok" : "rd")
+      );
+    },
     bilan = () => {
       if (!pret) return emp(esc(lerr || "Chargement des résultats…"));
       const n = compte();
       return (
+        quorumLigne(delOuverte()) +
         Object.keys(VL)
           .map(k => rw(st2(VL[k], VC[k]), `<b>${n[k]}</b>`))
-          .join("") + rw("<b>Total des votes</b>", `<b>${n.pour + n.contre + n.abstention}</b>`)
+          .join("") +
+        rw("<b>Total des votes</b>", `<b>${n.pour + n.contre + n.abstention}</b>`)
       );
     },
     boutons = (x, off) =>
@@ -159,9 +177,21 @@
   };
 
   const chargerConseillers = async () => {
-    if (!votant()) return;
+    if (!lire()) return;
     const r = await sb.from("conseillers").select("*").eq("commune_id", S.cid);
-    cons = r.error ? [] : (r.data || []).map(k => ({ id: k.id, actif: k.actif, user_id: k.user_id, contact: k.contact }));
+    cons = r.error ? [] : (r.data || []).map(k => ({ id: k.id, actif: k.actif, user_id: k.user_id, contact: k.contact, statut: k.statut }));
+  };
+
+  const chargerPresences = async x => {
+    pres = [];
+    presOk = false;
+    if (!x || !x.session_id || !["maire", "secretariat", "cabinet"].includes(S.pr)) return;
+    const r = await sb.from("session_presences").select("*").eq("session_id", x.session_id);
+    if (x.id != ouv) return;
+    if (!r.error) {
+      pres = r.data || [];
+      presOk = true;
+    }
   };
 
   const arreter = () => {
@@ -214,7 +244,7 @@
     if (!id || !$("#gv_res") || enVol) return;
     enVol = true;
     try {
-      await Promise.all([chargerVotes(id), chargerConseillers()]);
+      await Promise.all([chargerVotes(id), chargerConseillers(), chargerPresences(delOuverte())]);
       pret = true;
       lerr = "";
     } catch (x) {
@@ -256,7 +286,10 @@
     enCours = true;
     try {
       await chargerVotes(x.id); /* relevé frais : on ne clôture jamais sur un décompte périmé */
+      await chargerPresences(x); /* idem pour les présences : le quorum se juge sur les données du jour */
       pret = true;
+      const qb = quorumBloc(x);
+      if (qb) throw new Error("Clôture impossible. " + qb);
       const n = compte(),
         tot = n.pour + n.contre + n.abstention;
       if (!tot) throw new Error("Aucun vote exprimé : la délibération ne peut pas être clôturée. Elle reste au statut « Projet ».");
@@ -379,6 +412,8 @@
         if (!votant() || !x || x.id != t.dataset.id || !Object.prototype.hasOwnProperty.call(VL, v) || enCours) return;
         if (x.statut != "projet") throw new Error("Le vote est clos : la délibération n’est plus au statut « Projet ».");
         if (!c) throw new Error("Aucune fiche de conseiller actif n’est rattachée à votre compte.");
+        const qb = quorumBloc(x);
+        if (qb) throw new Error("Vote impossible. " + qb);
         enCours = true;
         try {
           const r = await sb.from("votes_deliberations").insert({ commune_id: S.cid, deliberation_id: x.id, conseiller_id: c, vote: v });

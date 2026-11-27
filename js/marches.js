@@ -2,6 +2,7 @@
    tableau de bord des marchés non clos + formulaire d'ajout (maire, finances)
    + vue « Détail du marché » : informations de base, avenants (public.marches_avenants) et ordres de service (public.ordres_service),
    avec saisie d'un avenant / émission d'un ordre de service (maire, finances ; RLS identique côté base).
+   Lot E (migration 20261208_marches_fiscalite.sql) : mode de passation = enum PostgreSQL (valeurs : RM.MODES_PASSATION), seuil_passation, ref_publication_appel, ref_attribution_appel.
    Table public.marches (colonnes reference et type_marche ajoutées par la migration 20261202000200_lot10_marches.sql).
    Module encapsulé : aucun identifiant global déclaré, car maire.js déclare déjà `const marches` (écran Finances > Marchés publics).
    Dépend de core.js, core-ui.js, adjoints.js (ev), maire.js (MST, MTC, MMODE, st2) : à charger après maire.js. */
@@ -15,6 +16,7 @@
       ["prestations_intellectuelles", "Prestations intellectuelles"]
     ],
     TL = Object.fromEntries(TYPES),
+    MMODEL = Object.fromEntries(MMODE),
     OST = { emis: "Émis", notifie: "Notifié", execute: "Exécuté", annule: "Annulé" },
     OTC = { emis: "or", notifie: "bl", execute: "ok", annule: "rd" },
     ACTIONS = /^mp(new|cancel|save|det|back|avnew|avcancel|avsave|osnew|oscancel|ossave)$/,
@@ -41,6 +43,9 @@
           inp("mp_ob", "Objet", "text", "", "", 'maxlength="300" required') +
           sel("mp_ty", "Type de marché", [["", "—"]].concat(TYPES)) +
           sel("mp_mo", "Mode de passation", [["", "—"]].concat(MMODE)) +
+          inp("mp_sp", "Seuil de passation applicable (FCFA)", "number", "", "", 'min="0" step="1"') +
+          inp("mp_rp", "Référence de publication de l’appel", "text", "", "Obligatoire pour un appel d’offres lancé", 'maxlength="120"') +
+          inp("mp_ra", "Référence d’attribution de l’appel", "text", "", "Obligatoire pour un appel d’offres attribué", 'maxlength="120"') +
           inp("mp_mt", "Montant (FCFA)", "number", 0, "", 'min="0" step="1"') +
           inp("mp_at", "Attributaire", "text", "", "", 'maxlength="200"') +
           sel("mp_st", "Statut", Object.entries(MST), "preparation")
@@ -115,7 +120,10 @@
         info("Référence", esc(x.reference || x.numero || "Sans référence")) +
           info("Objet", esc(x.objet)) +
           info("Type de marché", esc(TL[x.type_marche] || "Non précisé")) +
-          info("Mode de passation", esc(x.mode || "Non précisé")) +
+          info("Mode de passation", esc(MMODEL[x.mode] || "Non précisé")) +
+          info("Seuil de passation", x.seuil_passation != null ? esc(fmt(x.seuil_passation)) + " FCFA" : "Non précisé") +
+          info("Publication de l’appel", esc(x.ref_publication_appel || "—")) +
+          info("Attribution de l’appel", esc(x.ref_attribution_appel || "—")) +
           info("Attributaire", esc(x.attributaire || "Non désigné")) +
           info("Service", esc(x.service || "Non précisé")) +
           info("Statut", st2(MST[x.statut] || x.statut || "—", MTC[x.statut] || "")) +
@@ -258,12 +266,17 @@
             objet: g("mp_ob"),
             type_marche: g("mp_ty") || null,
             mode: g("mp_mo") || null,
+            seuil_passation: g("mp_sp") === "" ? null : +g("mp_sp"),
+            ref_publication_appel: g("mp_rp") || null,
+            ref_attribution_appel: g("mp_ra") || null,
             montant: +g("mp_mt") || 0,
             attributaire: g("mp_at") || null,
             statut: g("mp_st") || "preparation"
           };
         if (!o.objet) throw new Error("L’objet du marché est obligatoire.");
         if (o.montant < 0) throw new Error("Le montant ne peut pas être négatif.");
+        const mb = RM.marcheBlocage(o);
+        if (mb) throw new Error(mb);
         const r = await sb.from("marches").insert(o);
         if (r.error)
           throw new Error(
