@@ -1,6 +1,9 @@
-const C="mc-v12";
+const C="mc-v13";
 /* Auto-test : si fetch() du SW est bloqué (CSP) ou le réseau KO, l'installation échoue et le SW n'est jamais activé : l'app reste utilisable sans SW. */
-self.addEventListener("install",e=>e.waitUntil(caches.open(C).then(c=>fetch("/js/guard.js",{cache:"reload"}).then(r=>{if(!r.ok)throw 0;return c.put("/js/guard.js",r)})).then(()=>self.skipWaiting())));
+/* Shell mairie préchargé à l'installation (hors-ligne) : /mairie (= mairie.html) + les /js/ et /css/ qu'il référence, avec leur ?v= exact lu dans la page (jamais figé ici).
+   Meilleur effort : un échec du préchargement n'empêche pas l'installation. Les appels Supabase ne sont jamais interceptés ni mis en cache (cf. fetch : même origine uniquement). */
+const shell=c=>fetch("/mairie.html",{cache:"reload"}).then(r=>{if(!r.ok)return;const k=r.clone();return c.put("/mairie",r).then(()=>k.text()).then(t=>{const u=[];t.replace(/(?:src|href)="(\/(?:js|css)\/[^"]+)"/g,(m,x)=>{u.push(x);return m});return Promise.all(u.map(x=>fetch(x,{cache:"reload"}).then(y=>{if(y.ok)return c.put(x,y)}).catch(()=>{})))})}).catch(()=>{});
+self.addEventListener("install",e=>e.waitUntil(caches.open(C).then(c=>fetch("/js/guard.js",{cache:"reload"}).then(r=>{if(!r.ok)throw 0;return c.put("/js/guard.js",r)}).then(()=>shell(c))).then(()=>self.skipWaiting())));
 self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
 /* Réseau d'abord (mises à jour immédiates), cache en secours hors-ligne. Uniquement fichiers statiques du site ; Supabase/Turnstile jamais interceptés. */
 self.addEventListener("fetch",e=>{const r=e.request,u=new URL(r.url);
