@@ -1,1 +1,17 @@
-
+# LOT 2 (D/E/F) — migrations 20261207 / 20261208 / 20261209
+- Appliqué en prod : 2026-11-27 (une transaction, COMMIT OK).
+- Versions : 20261207 budget_conseil · 20261208 marches_fiscalite · 20261209 urbanisme.
+- Verdict dry-run : GO 92/92 (B03 → SQLSTATE 23514 ; G07 → reset JWT maire dans dr_t).
+- Écart : le SQL exécuté = supabase/proposed/*.sql sans commentaires d'en-tête ; code identique. En-têtes : LOT2_EN-TETES.md.
+- Contraintes CHECK NOT VALID (10), à `alter table … validate constraint …` après régularisation :
+  - budgets.budgets_dob_avant_vote_chk
+  - budgets.budgets_tutelle_avant_approbation_chk
+  - budgets.budgets_transmission_apres_dob_chk
+  - sessions_conseil.sessions_conseil_delai_convocation_chk
+  - session_presences.session_presences_procuration_chk
+  - marches.marches_appel_publication_chk
+  - marches.marches_appel_attribution_chk
+  - contribuables.contribuables_entreprise_ninea_chk
+  - engagements.engagements_ordonnancement_chk
+  - engagements.engagements_paiement_tresor_chk
+- 03_REGULARISATION inutile tant que les données historiques sont conformes.
