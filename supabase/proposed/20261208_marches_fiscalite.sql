@@ -1,9 +1,3 @@
--- LOT E : Marchés publics (mode de passation en enum, références de l'appel) et Fiscalité / Trésor
--- (NINEA, circuit ordonnateur -> comptable public, quittance du Trésor).
--- ÉTAT : PROPOSÉE, NON APPLIQUÉE. Idempotente. À appliquer après 20261202000200 (marchés), 20261203000200 (fiscalité) et 20261207.
--- Aucune politique RLS existante n'est modifiée. Contraintes CHECK créées NOT VALID (nouvelles écritures contrôlées, historique conservé).
--- Tables existantes, non recréées : marches, contribuables, paiements_taxes, engagements.
-
 -- ======================================================================================================
 -- 1) MARCHÉS : mode de passation -> enum PostgreSQL
 -- ======================================================================================================

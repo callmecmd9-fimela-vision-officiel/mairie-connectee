@@ -1,10 +1,3 @@
--- LOT F : Urbanisme — permis de construire (workflow d'instruction strict, délai d'instruction de 3 mois, silence de l'administration).
--- ÉTAT : PROPOSÉE, NON APPLIQUÉE. Idempotente. Nouvelle table : public.permis_construire (la démarche générique « Autorisation d'urbanisme »
--- du catalogue citoyen reste le point d'entrée du citoyen ; l'instruction communale se fait ici).
--- Workflow : depot -> instruction_services_techniques -> avis_commission -> decision_maire -> delivrance (sans saut, sans retour).
--- Un refus du Maire reste enregistré à l'étape decision_maire (decision_maire = 'refuse') : le dossier n'est pas délivré.
--- Isolation : private.my_commune() ; mêmes garde-fous que les autres tables (anonymes, maintenance, super_admin sans écriture, audit).
-
 create table if not exists public.permis_construire(
   id uuid primary key default gen_random_uuid(),
   commune_id uuid not null default private.my_commune() references public.communes(id) on delete cascade,
