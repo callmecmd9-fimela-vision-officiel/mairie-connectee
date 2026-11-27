@@ -20,7 +20,7 @@ function mk({rows=[],tar=[],conf=true,promptV='Pièce illisible',rpcErr=null}={}
  ok('sous-menus Tarifs + Demandes avec droits',t.ctx.SP.finances.subs.some(s=>s[0]=='tarifs')&&t.ctx.SP.finances.subs.some(s=>s[0]=='dempay')&&t.ctx.RP.tarifs.includes('finances')&&!t.ctx.RP.tarifs.includes('agent'));
  ok('échappement + alerte rouge si date limite dépassée',/Extrait &lt;b&gt;naissance/.test(h)&&/border-left/.test(h)&&/Délai dépassé/.test(h)&&(h.match(/Délai dépassé/g)||[]).length==1);
  ok('Encaisser seulement si non payé et non clos',(h.match(/data-m="dpenc"/g)||[]).length==1&&/data-id="a"/.test(h));
- ok('Valider et délivrer : bloqué tant que non payé, actif si payé, absent si rejeté',/Valider et délivrer \(paiement requis\)/.test(h)&&(h.match(/data-dpdel="b"/g)||[]).length==1&&!/data-dpdel="c"/.test(h)&&!/data-dpdel="a"/.test(h));
+ ok('Valider et délivrer : « Encaisser et délivrer » si non payé, actif si payé, absent si rejeté',/Encaisser et délivrer/.test(h)&&(h.match(/data-dpdel=\"b\"/g)||[]).length==1&&(h.match(/data-dpdel=\"a\"/g)||[]).length==1&&!/data-dpdel=\"c\"/.test(h));
  ok('Rejet proposé sauf dossier clos',(h.match(/data-m="dprej"/g)||[]).length==2);
  t.ctx.S.dpf='rejetee';ok('filtre par statut',!/FIM-0001/.test(t.ctx.SUB.dempay())&&/FIM-0003/.test(t.ctx.SUB.dempay()));
  t.ctx.S.dpf='retard';ok('filtre retard',/FIM-0001/.test(t.ctx.SUB.dempay())&&!/FIM-0002/.test(t.ctx.SUB.dempay()));
@@ -31,7 +31,8 @@ function mk({rows=[],tar=[],conf=true,promptV='Pièce illisible',rpcErr=null}={}
  t=mk({rows:R});await t.click('dprej',{id:'a'});ok('rejet avec motif',t.rpcs[0][0]=='rejeter_demande'&&t.rpcs[0][1].p_motif=='Pièce illisible');
  t=mk({rows:R});await t.change('b',[{type:'application/pdf',size:1000}]);ok('délivrance : PDF dans le dossier de la commune puis RPC',t.ups[0][0]=='documents-delivres'&&t.ups[0][1]=='c1/11111111-1111-4111-8111-111111111111.pdf'&&t.rpcs[0][0]=='delivrer_demande'&&t.rpcs[0][1].p_path==t.ups[0][1]);
  t=mk({rows:R});await t.change('b',[{type:'image/png',size:10}]);ok('non-PDF refusé',t.ups.length==0&&/PDF/.test(t.ctx.S.err));
- t=mk({rows:R});await t.change('a',[{type:'application/pdf',size:10}]);ok('non payé : aucun envoi',t.ups.length==0&&/Paiement requis/.test(t.ctx.S.err));
+ t=mk({rows:R,conf:false});await t.change('a',[{type:'application/pdf',size:10}]);ok('non payé, encaissement refusé : aucun envoi ni écriture',t.ups.length==0&&t.rpcs.length==0);
+ t=mk({rows:R});await t.change('a',[{type:'application/pdf',size:10}]);ok('non payé confirmé : encaissement puis délivrance',t.rpcs[0][0]=='encaisser_demande'&&t.rpcs[1][0]=='delivrer_demande'&&t.ups.length==1);
  t=mk({rows:R});t.ctx.S.sa=true;await t.click('dpenc',{id:'a'});ok('super-admin : aucune écriture',t.rpcs.length==0);
  t=mk({tar:[{id:'t1',type_service:'État civil',montant:1500}]});const g=t.ctx.SUB.tarifs();
  ok('tarifs : lignes existantes + démarches sans tarif',/État civil/.test(g)&&/Extrait de naissance/.test(g)&&/Sans tarif/.test(g));
