@@ -56,7 +56,8 @@ function carte(slugActif, o) {
     assert.equal(st.opts.zoom, g.zoom, sl + " : zoom"); assert.deepEqual(JSON.parse(JSON.stringify(st.opts.maxBounds)), [[w, s], [e, n]], sl + " : maxBounds [[ouest,sud],[est,nord]]");
     const rc = st.ctrls.find(c => c[1] == "top-left"); assert.ok(rc, sl + " : contrôle « Recentrer sur ma commune »");
     h.recentrer(); assert.deepEqual(JSON.parse(JSON.stringify(st.fit[0])), [[w, s], [e, n]], sl + " : fitBounds(maxBounds)");
-    const l = g.localites[0]; h.goto(l.lat, l.lng, 16); assert.deepEqual([...st.fly.center], [l.lng, l.lat]); assert.equal(st.fly.zoom, 16);
+    h.goto(g.localites[0].lat, g.localites[0].lng, 16); assert.equal(st.fly, null, sl + " : localité sans coordonnées, goto sans effet");
+    h.goto(g.center[0], g.center[1], 16); assert.deepEqual([...st.fly.center], [g.center[1], g.center[0]]); assert.equal(st.fly.zoom, 16);
   }
   assert.deepEqual([...(await carte("fimela")).st.opts.center], [-16.659, 14.133]); assert.deepEqual([...(await carte("fatick")).st.opts.center], [-16.416, 14.316]);
   const adm = await carte("fimela", { centre: [-16.5, 14.1], zoom: 9, pts: [] }); assert.deepEqual([...adm.st.opts.center], [-16.5, 14.1], "centre configuré par la mairie prioritaire"); assert.equal(adm.st.opts.zoom, 9);
@@ -64,7 +65,7 @@ function carte(slugActif, o) {
   // Portail citoyen : sigGeo / sigDansBbox extraits de citoyen.js.
   const cz = vm.createContext({ sigSlug: () => "fatick" }); vm.runInContext(geoSrc, cz);
   vm.runInContext(src.match(/function sigGeo\(\)[\s\S]*?\n}\n/)[0] + src.match(/function sigDansBbox[^\n]*\n/)[0] + ";this.sigGeo=sigGeo;this.sigDansBbox=sigDansBbox;", cz);
-  const gf = cz.sigGeo(); assert.deepEqual([...gf.centre], [-16.416, 14.316]); assert.equal(gf.localites.length, 5);
+  const gf = cz.sigGeo(); assert.deepEqual([...gf.centre], [-16.416, 14.316]); assert.equal(gf.localites.length, 11);
   assert.equal(cz.sigDansBbox(14.316, -16.416, gf.bbox), true); assert.equal(cz.sigDansBbox(14.9, -16.416, gf.bbox), false); assert.equal(cz.sigDansBbox(14.316, -15.9, gf.bbox), false);
   assert.match(src, /Vous êtes hors du périmètre de la commune, voulez-vous continuer \?/); assert.match(src, /window\.confirm\(/);
   assert.match(src, /Aller à un village\/quartier/); assert.match(read("js/signalements.js"), /Aller à un village\/quartier/); assert.match(read("js/signalements.js"), /goto\(l\.lat, l\.lng, 16\)/);
