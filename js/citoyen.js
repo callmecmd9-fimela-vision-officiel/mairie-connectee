@@ -2833,7 +2833,7 @@ function sigOpen() {
   setTimeout(async () => {
     if (SIG.map) { SIG.map.resize(); if (SIG.ready) sigRefresh().catch(() => {}); return; }
     try { await sigLib(); } catch (e) { sigMsg("Carte indisponible.", "err"); return; }
-    if (!SIG.map) sigInit();
+    if (!SIG.map) { try { sigInit(); } catch (e) { SIG.map = null; sigMsg("Carte indisponible : " + (e.message || e), "err"); } }
   }, 50);
 }
 function sigClose() { const d = $("#sig"); if (d) d.hidden = true; document.body.style.overflow = ""; }
