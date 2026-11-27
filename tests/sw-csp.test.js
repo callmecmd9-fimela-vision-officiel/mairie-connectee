@@ -13,6 +13,7 @@ async function sim(selfAllowed){const ls={},store={};
 (async()=>{let f=0;const ok=(n,c)=>{console.log(c?'OK  ':'FAIL',n);if(!c)f++};
  const real=dir('connect-src').concat(dir('connect-src').length?[]:dir('default-src')).includes("'self'");
  ok("CSP déployée : connect-src contient 'self' (fetch du SW)",real);
+ ok("CSP : plus de service QR externe (api.qrserver.com)",!/qrserver/.test(csp)&&!dir('img-src').some(x=>/qrserver/.test(x)));
  const a=await sim(real);ok("SW avec la CSP déployée : app servie (pas de Response.error)",!a.installed||a.res!=='ERR');
  const b=await sim(false);ok("SW + CSP bloquante : installation refusée (SW jamais actif)",!b.installed);
  console.log(f?'ECHECS: '+f:'TOUS OK');process.exit(f?1:0)})();

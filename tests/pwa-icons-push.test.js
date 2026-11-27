@@ -21,7 +21,7 @@ assert.match(ct, /method:"HEAD"/); assert.match(ct, /icones-pwa\/"\+S\.cid\+"\/"
 assert.match(ct, /apple-touch-icon/);
 // --- push : service worker, client, Edge Function, migration proposée (non appliquée)
 const sw = rd("sw.js");
-assert.match(sw, /addEventListener\("push"/); assert.match(sw, /notificationclick/); assert.match(sw, /mc-v12/);
+assert.match(sw, /addEventListener\("push"/); assert.match(sw, /notificationclick/); assert.match(sw, /mc-v13/);
 assert.match(rd("index.html"), /<meta name="mc-vapid" content="">/, "clé VAPID vide par défaut : push désactivé tant que non provisionné");
 assert.match(ct, /pushOk/); assert.match(ct, /userVisibleOnly:true/);
 const fn = rd("supabase/functions/push-send/index.ts");
