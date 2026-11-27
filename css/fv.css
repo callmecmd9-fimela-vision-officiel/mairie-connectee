@@ -1,0 +1,20 @@
+/* Recherche et notifications */
+:root{--fv-bg:#fff;--fv-tx:#14231A;--fv-mut:#5B6B62;--fv-ln:#E3E9E1;--fv-on:#EAF3EC}
+:root[data-theme="dark"]{--fv-bg:#17211B;--fv-tx:#EAF1EC;--fv-mut:#A7B5AC;--fv-ln:#2C3A31;--fv-on:#233229}
+.fv-btn{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 12px;border:1px solid var(--fv-ln);border-radius:20px;background:var(--fv-bg);color:var(--fv-tx);cursor:pointer}
+@media (max-width:760px){.fv-btn span{display:none}}
+.fv-ov{position:fixed;inset:0;z-index:9000;background:rgba(5,20,10,.5);display:flex;justify-content:center;align-items:flex-start;padding:calc(env(safe-area-inset-top,0px) + 6vh) 10px 10px}
+.fv-pal{width:100%;max-width:620px;max-height:80vh;display:flex;flex-direction:column;background:var(--fv-bg);color:var(--fv-tx);border-radius:14px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.fv-top{display:flex;gap:8px;padding:10px;border-bottom:1px solid var(--fv-ln)}
+.fv-top input{flex:1;min-width:0;font-size:16px;padding:10px;border:1px solid var(--fv-ln);border-radius:8px;background:var(--fv-bg);color:var(--fv-tx)}
+.fv-x,.fv-t button{border:0;background:none;color:var(--fv-mut);cursor:pointer}
+.fv-list{overflow:auto;padding:6px}
+.fv-g{padding:8px 10px 2px;font-size:12px;font-weight:700;color:var(--fv-mut)}
+.fv-r{display:block;width:100%;text-align:left;border:0;background:none;color:var(--fv-tx);padding:8px 10px;border-radius:8px;cursor:pointer}
+.fv-r span,.fv-tm span{display:block;font-size:13px;color:var(--fv-mut)}
+.fv-r:hover,.fv-r.on{background:var(--fv-on)}
+.fv-flash{outline:3px solid #F2B705;outline-offset:2px;border-radius:6px}
+#fv-toasts{position:fixed;z-index:8900;right:12px;top:calc(env(safe-area-inset-top,0px) + 12px);width:min(360px,calc(100vw - 24px));display:flex;flex-direction:column;gap:8px}
+.fv-t{background:var(--fv-bg);color:var(--fv-tx);border:1px solid var(--fv-ln);border-left:5px solid #0B5A2E;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.22);padding:8px}
+.fv-t .fv-tm{display:block;width:100%;text-align:left;color:var(--fv-tx);padding:2px 4px}
+.fv-t div{display:flex;gap:6px;justify-content:flex-end;font-size:13px}
