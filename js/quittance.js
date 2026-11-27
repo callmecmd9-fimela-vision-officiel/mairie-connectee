@@ -1,4 +1,4 @@
-/* Page /quittance?ref=… : quittance imprimable avec QR Code (api.qrserver.com) menant à /verifier.html?ref=… */
+/* Page /quittance?ref=… : quittance imprimable avec QR Code (js/qr-local.js) menant à /verifier.html?ref=… */
 (function () {
   var sb = supabase.createClient("https://aiqegpijisspankpkwfj.supabase.co", "sb_publishable__Zc0adl_eD_PyMkaR5ACzA_-_yjwmbI", {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
@@ -48,15 +48,16 @@
       dl.appendChild(el("dt", "", "Référence"));
       dl.appendChild(rd);
       box.appendChild(dl);
-      var q = el("div", "qr"),
-        im = new Image();
-      im.alt = "QR Code de vérification de la quittance";
-      im.width = 180;
-      im.height = 180;
-      im.src =
-        "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" +
-        encodeURIComponent(location.origin + "/verifier.html?ref=" + encodeURIComponent(ref));
-      q.appendChild(im);
+      var q = el("div", "qr");
+      try {
+        q.insertAdjacentHTML(
+          "beforeend",
+          window.qrSvg(location.origin + "/verifier.html?ref=" + encodeURIComponent(ref), {
+            size: 180,
+            label: "QR Code de vérification de la quittance"
+          })
+        );
+      } catch (e) {}
       q.appendChild(el("p", "mut", "Scannez pour vérifier l’authenticité de cette quittance."));
       box.appendChild(q);
       if (x.source == "en_ligne_simule") box.appendChild(el("p", "sim", "Paiement en ligne simulé : document de démonstration."));

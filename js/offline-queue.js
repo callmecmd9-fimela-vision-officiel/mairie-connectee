@@ -15,7 +15,8 @@
      queueAction({ table: "x", op: "upsert", data: {...}, onConflict: "id" })
      queueAction({ rpc: "ma_fonction", args: {...} })
    `autoId: true` (insert) ajoute un `id` uuid généré côté client : si la requête avait en fait abouti avant la coupure, le rejeu tombe sur une
-   clé déjà existante (23505), traitée comme un succès, donc pas de doublon. À n'activer que si la table a une colonne `id` uuid.
+   clé déjà existante (23505). Le rejeu VÉRIFIE alors par select id = id client : ligne présente → succès (pas de doublon) ; absente → conflit réel
+   (autre contrainte unique, ex. numéro d'acte déjà pris) : l'action reste en file, marquée « conflit » (failed + conflit), jamais perdue ni rejouée. À n'activer que si la table a une colonne `id` uuid.
    `queueAction` renvoie une promesse { queued: true, qid } (ou rejette si l'action est invalide ou si le stockage est impossible). */
 (() => {
   "use strict";
@@ -145,7 +146,7 @@
   };
   const info = async () => {
     const a = await store.all();
-    return { pending: a.filter(x => !x.failed).length, failed: a.filter(x => x.failed).length };
+    return { pending: a.filter(x => !x.failed).length, failed: a.filter(x => x.failed).length, conflicts: a.filter(x => x.conflit).length };
   };
   const notify = async () => {
     try {
@@ -234,12 +235,26 @@
     if (!e) return "ok";
     const s = r.status | 0 || 0,
       code = String(e.code || "");
-    if (a.autoId && code == "23505") return "ok";
+    if (a.autoId && a.op == "insert" && code == "23505") return "verif";
     if (s == 401 || code == "PGRST301" || /jwt/i.test(e.message || "")) return "auth";
     if (s == 0 || s == 408 || s == 429 || s >= 500) return "retry";
     return "fail";
   };
 
+  /* 23505 sur insert à id client : la ligne existe-t-elle sous CET id ? oui = notre envoi précédent a abouti ; non = conflit réel */
+  const verifier = async (c, it) => {
+    try {
+      for (const d of Array.isArray(it.data) ? it.data : [it.data]) {
+        if (!d || d.id === undefined) return "conflit";
+        const r = await c.from(it.table).select("id").eq("id", d.id).maybeSingle();
+        if (r.error) return "retry";
+        if (!r.data) return "conflit";
+      }
+      return "ok";
+    } catch (e) {
+      return "retry";
+    }
+  };
   let cur = null,
     timer = null,
     tries = 0;
@@ -287,7 +302,8 @@
         } catch (e) {
           r = { error: { message: String((e && e.message) || e) }, status: 0 };
         }
-        const k = classer(r, it);
+        let k = classer(r, it);
+        if (k == "verif") k = await verifier(c, it);
         if (k == "ok") {
           await store.del(it.qid);
           tries = 0;
@@ -298,9 +314,10 @@
           const rr = await c.auth.refreshSession().catch(() => ({ error: 1 }));
           if (!rr || !rr.error) continue; /* un seul nouvel essai avec le JWT renouvelé */
         }
-        if (k == "fail") {
+        if (k == "fail" || k == "conflit") {
           it.failed = true;
-          it.err = String((r.error && (r.error.message || r.error.code)) || "refusée").slice(0, 300);
+          it.conflit = k == "conflit";
+          it.err = (k == "conflit" ? "Conflit : " : "") + String((r.error && (r.error.message || r.error.code)) || "refusée").slice(0, 300);
           await store.put(it);
         } else stop = true; /* réseau, serveur ou session : on garde cette action et les suivantes (ordre conservé) */
         break;
@@ -364,7 +381,7 @@
     list: () => store.all(),
     /* actions refusées définitivement : les relancer (retryFailed) ou les abandonner (discard) */
     retryFailed: async () => {
-      for (const x of await store.all()) if (x.failed) await store.put(Object.assign(x, { failed: false, err: "" }));
+      for (const x of await store.all()) if (x.failed) await store.put(Object.assign(x, { failed: false, conflit: false, err: "" }));
       tries = 0;
       return flush();
     },
