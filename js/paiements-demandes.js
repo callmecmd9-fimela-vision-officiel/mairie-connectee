@@ -13,7 +13,8 @@ LG.dem_pay = [
     S.db.dem_pay = r || [];
   }
 ];
-const DPC = ["traitee", "rejetee", "cloturee"],
+const DPC = ["traitee", "rejetee", "cloturee", "pret_a_retirer", "retire"],
+  DPA = x => (!DPC.includes(x.statut) && !x.document_url) || (x.statut == "pret_a_retirer" && x.statut_paiement == "non_paye"),
   DPF = n => (+n || 0).toLocaleString("fr-FR") + " FCFA",
   DPD = x => {
     const d = x ? new Date(x) : null;
@@ -22,17 +23,19 @@ const DPC = ["traitee", "rejetee", "cloturee"],
   DPL = x => !!x.date_limite && new Date(x.date_limite) < new Date() && !DPC.includes(x.statut) && !x.document_url,
   DPP = { non_paye: ["À encaisser", "or"], paye: ["Payé", "ok"], gratuit: ["Gratuit", "bl"] },
   DPT = [
-    ["all", "Toutes"],
+    ["all", "En cours"],
     ["non_paye", "À encaisser"],
+    ["fin", "Terminées"],
     ["paye", "Payées"],
     ["retard", "En retard"],
     ["rejetee", "Rejetées"],
     ["delivree", "Délivrées"]
   ],
   DPM = (x, f) =>
-    f == "all" ||
-    (f == "non_paye" && x.statut_paiement == "non_paye") ||
-    (f == "paye" && x.statut_paiement == "paye") ||
+    (f == "all" && DPA(x)) ||
+    (f == "fin" && !DPA(x)) ||
+    (f == "non_paye" && x.statut_paiement == "non_paye" && DPA(x)) ||
+    (f == "paye" && x.statut_paiement == "paye" && DPA(x)) ||
     (f == "retard" && DPL(x)) ||
     (f == "rejetee" && x.statut == "rejetee") ||
     (f == "delivree" && !!x.document_url);
@@ -53,14 +56,14 @@ const dempay = () => {
         return rw(
           `<div${lt ? ' data-sty="border-left:4px solid #B91C1C;padding-left:8px"' : ""}><b>${esc(x.objet || x.type || "Demande")}</b> · ${esc(DPF(x.montant))}<div class="mut">${esc(x.nom || "")} · ${esc(x.telephone || "tél. non renseigné")} · N° ${esc(x.numero)}</div><div class="mut">Déposée le ${esc(DPD(x.created_at))} · Date limite : ${esc(DPD(x.date_limite))} ${lt ? st2("Délai dépassé", "rd") : ""}</div>${x.statut == "rejetee" && x.reponse ? `<div class="mut">Motif : ${esc(x.reponse)}</div>` : ""}</div>`,
           `<span data-sty="display:grid;gap:6px;justify-items:end">${st2(p[0], p[1])}${x.document_url ? st2("Document délivré", "ok") : ""}${
-            x.statut_paiement == "non_paye" && !closed
+            x.statut_paiement == "non_paye" && (!closed || x.statut == "pret_a_retirer") && !["rejetee", "cloturee", "retire"].includes(x.statut)
               ? `<button class="bt" data-m="dpenc" data-id="${esc(x.id)}">Encaisser espèces</button>`
               : ""
           }${
             closed
               ? ""
               : x.statut_paiement == "non_paye"
-                ? `<button class="bo" disabled>Valider et délivrer (paiement requis)</button>`
+                ? `<label class="bo" data-sty="cursor:pointer">Encaisser et délivrer (PDF)<input type="file" accept="application/pdf" hidden data-dpdel="${esc(x.id)}"></label>`
                 : `<label class="bt" data-sty="cursor:pointer">Valider et délivrer (PDF)<input type="file" accept="application/pdf" hidden data-dpdel="${esc(x.id)}"></label>`
           }${closed ? "" : `<button class="bo" data-m="dprej" data-id="${esc(x.id)}">Rejeter</button>`}</span>`
         );
@@ -115,6 +118,7 @@ document.addEventListener("click", async e => {
     e.target &&
     e.target.closest &&
     (e.target.closest("[data-m=dpf]") ||
+      e.target.closest("[data-m=dfin]") ||
       e.target.closest("[data-m=dpenc]") ||
       e.target.closest("[data-m=dprej]") ||
       e.target.closest("[data-m=tfsave]") ||
@@ -123,6 +127,11 @@ document.addEventListener("click", async e => {
   const m = t.dataset.m;
   S.err = "";
   try {
+    if (m == "dfin") {
+      S.dfin = t.dataset.v == "1" ? "1" : "0";
+      render();
+      return;
+    }
     if (m == "dpf") {
       S.dpf = t.dataset.v || "all";
       render();
@@ -173,9 +182,17 @@ document.addEventListener("change", async e => {
   let path = "";
   try {
     if (!x || !f) return;
-    if (x.statut_paiement == "non_paye") throw new Error("Paiement requis avant la délivrance.");
     if (f.type != "application/pdf") throw new Error("Le document final doit être un fichier PDF.");
     if (f.size > 5242880) throw new Error("PDF trop volumineux (5 Mo maximum).");
+    if (x.statut_paiement == "non_paye") {
+      if (!confirm("Paiement non enregistré. Encaisser " + DPF(x.montant) + " en espèces pour le dossier " + x.numero + " puis délivrer le document ?")) {
+        i.value = "";
+        return;
+      }
+      const p = await sb.rpc("encaisser_demande", { p_demande: x.id });
+      if (p.error) throw new Error("Encaissement refusé : " + p.error.message);
+      x.statut_paiement = "paye";
+    }
     path = S.cid + "/" + crypto.randomUUID() + ".pdf";
     const u = await sb.storage.from("documents-delivres").upload(path, f, { contentType: "application/pdf" });
     if (u.error) throw new Error("Envoi du PDF impossible : " + u.error.message);
@@ -184,9 +201,11 @@ document.addEventListener("change", async e => {
       await sb.storage.from("documents-delivres").remove([path]);
       throw new Error("Délivrance refusée : " + r.error.message);
     }
-    await dpDone("Document délivré : le citoyen peut le télécharger depuis son suivi.", ["dem_pay", "demandes"]);
+    await dpDone("Document délivré : le citoyen peut le télécharger depuis son suivi.", ["dem_pay", "demandes", "paiements_taxes"]);
   } catch (z) {
+    i.value = "";
     S.err = z.message || "Erreur réseau.";
+    await load(["dem_pay"]);
     render();
     window.scrollTo(0, 0);
   }

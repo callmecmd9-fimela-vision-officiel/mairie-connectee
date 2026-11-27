@@ -690,7 +690,9 @@ const LG = {
         t: x.type,
         w: x.nom,
         m: x.message,
-        st: RS[RC.indexOf(x.statut)],
+        st: RS[RC.indexOf(x.statut)] || x.statut,
+        sk: x.statut,
+        pay: x.statut_paiement,
         c: x.created_at,
         o: x.objet,
         ct: x.contact,
@@ -1357,13 +1359,24 @@ const dpanel = r => {
 <label for="dpc">Pi\u00e8ce manquante \u00e0 demander au citoyen</label><textarea id="dpc" rows="2" maxlength="1000" placeholder="Ex. Copie de la pi\u00e8ce d\u2019identit\u00e9, titre foncier\u2026">${esc(r.pd || "")}</textarea><p data-sty="margin-top:6px"><button class="bo" data-a="dact" data-s="en_attente_pieces" data-pc="1">Demander une pi\u00e8ce</button></p><label for="dmr">Motif du rejet</label><textarea id="dmr" rows="2" maxlength="1000" placeholder="Ex. Dossier hors comp\u00e9tence de la commune">${esc(r.mr || "")}</textarea><p data-sty="margin-top:6px"><button class="bo" data-a="dact" data-s="rejetee" data-mr="1">Rejeter</button></p><p data-sty="margin-top:6px">${S.sa ? "" : `<button class="bo" data-m="ntwa" data-id="${esc(r.id)}">Notifier le citoyen par WhatsApp</button>`}</p><p data-sty="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="bo" data-a="dact" data-s="en_cours">Prendre en charge</button><button class="bo" data-a="dact" data-s="a_valider" data-r="1">Soumettre \u00e0 validation</button>${v ? `<button class="tg" data-a="dact" data-s="cloturee">Cl\u00f4turer</button><button class="bt" data-a="dact" data-s="traitee" data-r="1">Valider et cl\u00f4turer</button>` : ""}<button class="bo" data-a="dact" data-s="acceptee">Accepter la demande</button><button class="bo" data-a="dact" data-s="pret_a_retirer" data-r="1">Document pr\u00eat \u00e0 retirer</button><button class="bo" data-a="dact" data-s="redirigee" data-r="1">R\u00e9orienter vers l\u2019organisme comp\u00e9tent</button></p>
 <h3 data-sty="font-size:15px">Historique</h3>${S.dh.map(h => `<div class="mut" data-sty="font-size:13px">${fdt(h.created_at)} : ${esc(RS[RC.indexOf(h.statut)] || h.statut)}${h.service ? " \u2014 " + esc(svn(h.service)) : ""}</div>`).join("") || emp("Aucun historique.")}</div></div>`;
 };
+const RFIN = ["traitee", "rejetee", "cloturee", "pret_a_retirer", "retire"],
+  RACT = r => !RFIN.includes(r.sk) || (r.sk == "pret_a_retirer" && r.pay == "non_paye");
 const dem = f => {
-  const l = D()
+  const fin = S.dfin == "1",
+    l0 = D()
       .req.map((r, i) => [r, i])
       .filter(x => !f || [].concat(f).includes(x[0].t)),
+    l = l0.filter(x => (fin ? !RACT(x[0]) : RACT(x[0]))),
+    tb = `<div class="tabs">${[
+      ["0", "En cours (" + l0.filter(x => RACT(x[0])).length + ")"],
+      ["1", "Terminées (" + l0.filter(x => !RACT(x[0])).length + ")"]
+    ]
+      .map(t => `<button class="tb2${(fin ? "1" : "0") == t[0] ? " on" : ""}" data-m="dfin" data-v="${t[0]}">${t[1]}</button>`)
+      .join("")}</div>`,
     s0 = D().req.find(x => x.id == S.dd);
   return (
     (s0 ? dpanel(s0) : "") +
+    tb +
     (l
       .map(
         ([r, i]) =>
