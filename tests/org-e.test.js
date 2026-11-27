@@ -22,7 +22,7 @@ c=mk('agent');E(c,'S.sa=true;S.orgMy=new Set(["valider|paie"])');ok('super-admin
 {const c2=vm.createContext({console});vm.runInContext(`var S={sa:false,pr:"agent",orgMy:new Set(["valider|paie"])};var SUB={paie(){throw new Error("x")}};`,c2);vm.runInContext(src,c2);
 let thrown=false;try{E(c2,'SUB.paie()')}catch(e){thrown=true}ok('exception pendant le rendu : propagée et S.pr restauré',thrown&&E(c2,'S.pr')==='agent')}
 // ---- Partie 2 (vrais écrans)
-const FILES=['core','core-ui','adjoints','secretariat','superadmin','maire','demarches','org','org-d','org-e','actions'];
+const FILES=['core','core-ui','regles-municipales','adjoints','secretariat','superadmin','maire','demarches','org','org-d','org-e','actions'];
 if(!FILES.every(x=>fs.existsSync(path.join(R,'js',x+'.js')))){console.log('Partie 2 ignorée : arbre js/ incomplet');console.log(f?'ECHECS: '+f:'TOUS OK (partie 1)');process.exit(f?1:0)}
 const chain=()=>new Proxy(function(){},{get:(t,p)=>p==='then'?(res)=>res({data:[],error:null}):chain(),apply:()=>chain()});
 const el=()=>new Proxy({innerHTML:'',value:'',files:[],dataset:{},children:[],style:{},checked:false,classList:{add(){},remove(){}},addEventListener(){},appendChild(){},remove(){},click(){}},{get:(t,p)=>p in t?t[p]:()=>el()});

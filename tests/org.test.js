@@ -6,7 +6,7 @@ function ctx(sbx){const s={console,setTimeout:()=>0,setInterval:()=>0,clearTimeo
  s.handlers=[];s.document={querySelector:()=>el(),getElementById:()=>el(),createElement:()=>el(),addEventListener:(n,fn)=>s.handlers.push(fn),body:el(),hidden:false,documentElement:el()};
  s.supabase={createClient:()=>sbx||chain()};s.window=s;s.self=s;s.addEventListener=()=>{};s.removeEventListener=()=>{};s.Promise=Promise;s.Date=Date;s.Math=Math;return vm.createContext(s)}
 const run=(c,l)=>l.forEach(x=>vm.runInContext(fs.readFileSync(path.join(R,'js',x+'.js'),'utf8'),c,{filename:x}));
-const FILES=['core','core-ui','adjoints','secretariat','superadmin','maire','demarches','org','actions'];
+const FILES=['core','core-ui','regles-municipales','adjoints','secretariat','superadmin','maire','demarches','org','actions'];
 (async()=>{
  const calls=[],tb={org_roles:[{code:'resp_finances',nom:'Responsable finances',actif:true},{code:'agent_polyvalent',nom:'Agent polyvalent',actif:true}],org_postes:[{code:'maire',nom:'Maire',role_code:'resp_finances',actif:true},{code:'resp_finances',nom:'Responsable finances',role_code:'resp_finances',parent_code:'maire',actif:true}],org_affectations:[{id:'a1',user_id:'u2',poste_code:'resp_finances',debut:'2026-01-01',actif:true}],org_delegations_droits:[{id:'g1',de_user:'u1',a_user:'u2',module:'budget',action:'valider',debut:'2026-11-01T00:00:00Z',fin:'2099-01-01T00:00:00Z'}],profiles:[{id:'u2',nom:'Awa Diop',role:'finances',actif:true}],org_role_droits:[{role_code:'resp_finances',module:'budget',action:'consulter'}]};
  const q=t=>{const b={select(){return b},order(){return b},limit(){return b},range(){return b},eq(){return b},in(){return b},then(r,j){return Promise.resolve({data:tb[t]||[],error:null}).then(r,j)}};return b};
