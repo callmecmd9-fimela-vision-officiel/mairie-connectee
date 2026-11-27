@@ -18,3 +18,9 @@
 .fv-t{background:var(--fv-bg);color:var(--fv-tx);border:1px solid var(--fv-ln);border-left:5px solid #0B5A2E;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.22);padding:8px}
 .fv-t .fv-tm{display:block;width:100%;text-align:left;color:var(--fv-tx);padding:2px 4px}
 .fv-t div{display:flex;gap:6px;justify-content:flex-end;font-size:13px}
+.fv-top strong{flex:1;align-self:center}
+.fv-r.new{background:var(--fv-on)}
+.fv-all{display:block;margin:0 0 6px auto;border:0;background:none;color:#16803C;font-weight:700;cursor:pointer}
+.fv-empty{padding:10px;color:var(--fv-mut)}
+.pn .fv-r{border-bottom:1px solid var(--fv-ln)}
+#fv-bell{position:fixed;z-index:8800;left:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);min-width:48px;height:48px;padding:0 12px;border-radius:24px;border:2px solid #0B5A2E;background:var(--fv-bg);color:var(--fv-tx);font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.2)}
