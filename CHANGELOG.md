@@ -385,3 +385,4 @@ Production : **lecture seule uniquement** (aucune écriture, aucun déploiement)
 ## 2026-11-27 — Recherche mairie et notifications en direct
 - Recherche (Ctrl+K, « / », bouton) : js/recherche.js. Notifications mairie / citoyen / SaaS : js/notif-live.js, css/fv.css.
 - Migration à appliquer : 20261209000100_notifications_realtime.sql (sans elle : relève toutes les 30 s).
+- Notifications : liste unique (pastille = éléments non lus), cliquable, sur toutes les interfaces.
