@@ -2672,7 +2672,7 @@ async function sigFetch() {
   const q = await sb.from("signalements_citoyens").select("id,categorie,statut,latitude,longitude,created_at").eq("commune_id", sigCid()).limit(1000);
   return !q.error && Array.isArray(q.data) ? q.data : null;
 }
-function sigGeo(rows) {
+function sigFeat(rows) {
   const f = [];
   (rows || []).forEach(x => {
     if (!x || x.latitude == null || x.longitude == null) return;
@@ -2689,7 +2689,7 @@ function sigGeo(rows) {
 function sigDraw(fit) {
   const m = SIG.map, src = m && SIG.ready && m.getSource("sig-src");
   if (!src) return;
-  const g = sigGeo(SIG.rows);
+  const g = sigFeat(SIG.rows);
   src.setData(g);
   if (fit && !SIG.fit && !SIG.geo && g.features.length) {
     SIG.fit = true;
@@ -2724,7 +2724,7 @@ function sigBuildings(m) {
 function sigLayers(m) {
   const stat = ["get", "statut"], col = ["match", stat, "nouveau", SIG_COL.nouveau, "en_cours", SIG_COL.en_cours, "resolu", SIG_COL.resolu, SIG_COL.nouveau];
   m.addSource("sig-src", {
-    type: "geojson", data: sigGeo([]), cluster: true, clusterRadius: MBX.cluster, clusterMaxZoom: MBX.clusterMax,
+    type: "geojson", data: sigFeat([]), cluster: true, clusterRadius: MBX.cluster, clusterMaxZoom: MBX.clusterMax,
     clusterProperties: { n: ["+", ["case", ["==", stat, "nouveau"], 1, 0]], e: ["+", ["case", ["==", stat, "en_cours"], 1, 0]] }
   });
   m.addLayer({
