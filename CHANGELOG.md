@@ -386,3 +386,4 @@ Production : **lecture seule uniquement** (aucune écriture, aucun déploiement)
 - Recherche (Ctrl+K, « / », bouton) : js/recherche.js. Notifications mairie / citoyen / SaaS : js/notif-live.js, css/fv.css.
 - Migration à appliquer : 20261209000100_notifications_realtime.sql (sans elle : relève toutes les 30 s).
 - Notifications : liste unique (pastille = éléments non lus), cliquable, sur toutes les interfaces.
+- Formulaires/détails ouverts à l’endroit cliqué : js/form-inline.js (exclu de Prettier, à formater).
