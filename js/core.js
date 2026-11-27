@@ -1206,7 +1206,11 @@ function initMap() {
 }
 /* coque */
 /* Pastille de la cloche : nombre d'éléments à traiter (pas de catégories) ; l'information « prochain rendez-vous » ne compte pas */
-const badgeN = () => alerts().reduce((s, x) => s + (x.n || 0), 0) + D().nt.filter(n => !n.lu).length;
+/* js/notif-live.js : la pastille compte exactement les éléments non lus de la liste (repli ci-dessous pour le super admin) */
+const badgeN = () =>
+  !S.sa && typeof ntItems == "function"
+    ? ntItems().filter(x => !x.read).length
+    : alerts().reduce((s, x) => s + (x.n || 0), 0) + D().nt.filter(n => !n.lu).length;
 /* Met à jour la pastille sans refaire l'écran (aucune perte de saisie) */
 const majBadge = () => {
   const b = document.querySelector(".tb .bl");
