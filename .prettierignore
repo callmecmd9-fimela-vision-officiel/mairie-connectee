@@ -10,3 +10,7 @@ js/carte3d.js
 js/citoyen.js
 js/communes-geo.js
 js/signalements.js
+
+# Temporaire : à formater avec prettier@3.10.1 puis retirer ces deux lignes
+js/notif-live.js
+js/recherche.js
