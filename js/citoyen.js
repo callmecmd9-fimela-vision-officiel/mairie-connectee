@@ -2767,6 +2767,20 @@ function sigPick(lng, lat) {
   if (f) { f.hidden = false; try { f.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) {} }
   sigMsg("");
 }
+/* Coordonnées d'une localité : lat/lng connus, sinon géocodage Mapbox borné à la commune (mis en cache). */
+const SIG_LOC = {};
+async function sigLocate(x, geo) {
+  if (x.lat != null && x.lng != null) return [x.lng, x.lat];
+  const k = sigSlug() + "|" + x.nom;
+  if (SIG_LOC[k]) return SIG_LOC[k];
+  try {
+    const [[w, s], [e, n]] = geo.maxBounds, c = geo.centre;
+    const u = "https://api.mapbox.com/search/geocode/v6/forward?q=" + encodeURIComponent(x.nom) + "&country=sn&limit=1&bbox=" + [w, s, e, n].join(",") + "&proximity=" + c.join(",") + "&access_token=" + encodeURIComponent(sigToken());
+    const r = await fetch(u), j = await r.json(), f = j && j.features && j.features[0];
+    if (f && f.geometry && f.geometry.coordinates) return (SIG_LOC[k] = f.geometry.coordinates);
+  } catch (err) {}
+  return null;
+}
 /* Menu « Aller à un village/quartier » au-dessus de la carte (DOM, texte uniquement). */
 function sigLocMenu(m, geo) {
   const el = $("#sig-map"), old = $("#sig-loc-wrap");
@@ -2776,7 +2790,17 @@ function sigLocMenu(m, geo) {
   w.id = "sig-loc-wrap"; l.htmlFor = sl.id = "sig-loc"; l.textContent = "Aller à un village/quartier "; o0.value = ""; o0.textContent = "— Choisir —"; sl.appendChild(o0);
   sl.style.maxWidth = "100%";
   geo.localites.forEach((x, i) => { const o = document.createElement("option"); o.value = String(i); o.textContent = x.nom + (x.type ? " (" + x.type + ")" : ""); sl.appendChild(o); });
-  sl.addEventListener("change", () => { const x = geo.localites[+sl.value]; if (x && sl.value !== "") m.flyTo({ center: [x.lng, x.lat], zoom: 16, pitch: MBX.pitch }); });
+  sl.addEventListener("change", async () => {
+    const x = geo.localites[+sl.value];
+    if (!x || sl.value === "") return;
+    sigMsg("Recherche de " + x.nom + "…");
+    const c = await sigLocate(x, geo);
+    if (!c) { m.flyTo({ center: geo.centre, zoom: Math.max(geo.zoom, 14), pitch: MBX.pitch }); sigMsg("Position exacte de « " + x.nom + " » introuvable : carte centrée sur la commune. Touchez la carte pour placer le point.", "err"); return; }
+    if (SIG.loc) SIG.loc.setLngLat(c); else SIG.loc = new mapboxgl.Marker({ color: "#0B5A2E" }).setLngLat(c).addTo(m);
+    SIG.loc.setPopup(new mapboxgl.Popup({ offset: 24, closeButton: false }).setText(x.nom)).togglePopup();
+    m.flyTo({ center: c, zoom: 16, pitch: MBX.pitch });
+    sigMsg(x.nom + (x.type ? " (" + x.type + ")" : "") + " affiché sur la carte. Touchez la carte pour signaler.", "ok");
+  });
   w.appendChild(l); w.appendChild(sl); el.parentNode.insertBefore(w, el);
 }
 /* Contrôle « Recentrer sur ma commune » : fitBounds(maxBounds). */
@@ -2828,7 +2852,7 @@ function sigOpen() {
   /* Commune changée depuis la dernière ouverture : on reconstruit la carte (centre, limites, menu). */
   if (SIG.map && SIG.slug !== sigSlug()) {
     try { SIG.map.remove(); } catch (e) {}
-    SIG.map = SIG.mk = SIG.pos = null; SIG.ready = false; SIG.fit = false;
+    SIG.map = SIG.mk = SIG.pos = SIG.loc = null; SIG.ready = false; SIG.fit = false;
   }
   setTimeout(async () => {
     if (SIG.map) { SIG.map.resize(); if (SIG.ready) sigRefresh().catch(() => {}); return; }
