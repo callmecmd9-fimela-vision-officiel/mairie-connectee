@@ -1,5 +1,11 @@
 # TASKS — état au 2026-11-25
 
+## Audit lot 2 — Budget, Conseil, Marchés, Fiscalité, Urbanisme (2026-11-27)
+- [ ] Appliquer dans l'ordre `proposed/20261207_budget_conseil.sql`, `20261208_marches_fiscalite.sql`, `20261209_urbanisme.sql` (après 20261202000300 / 000900 / 000200 et 20261203000200), puis `VERIFY_ALL.sql` et les tests d'isolation.
+- [ ] Régulariser l'historique avant `validate constraint` : budgets déjà votés sans DOB, présences `procuration` sans mandataire, entreprises sans NINEA, marchés AO sans références.
+- [ ] Déployer `js/regles-municipales.js`, `js/urbanisme.js`, `mairie.html` et les JS modifiés ; vider le cache / PWA.
+- [ ] Les écrans lot 2 dépendent des migrations : sans elles, message explicite (champs absents / table absente), aucun effet sur l'existant.
+
 ## Chantier 2 — « Mon Espace » et paiement des taxes (2026-11-26)
 - [ ] **Activer le fournisseur SMS** dans Supabase (Authentication > Providers > Phone) : sans lui l'écran affiche « pas encore disponible ».
 - [ ] Appliquer `supabase/migrations/20261204000100_lot18_citoyen_rpc_par_tel.sql`, puis tester : compte vérifié +221 77… → ses rôles ; autre numéro → liste vide ; `anon` → permission refusée.
