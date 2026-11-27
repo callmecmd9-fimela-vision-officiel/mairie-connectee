@@ -166,8 +166,9 @@ const ecSigned = a => !!(a && a.signe_le),
   ecMentions = id => (D().ec_mentions || []).filter(m => m.acte_id == id),
   ecMen = m =>
     [
-      m.texte || m.mention || m.contenu || m.motif || m.libelle || "",
-      m.juridiction ? "Jugement n° " + (m.jugement_numero || "—") + " du " + ecD(m.jugement_date) + " (" + m.juridiction + ")" : ""
+      m.type_mention == "rectification" ? "Rectification" : m.type_mention || "",
+      m.motif || "",
+      m.juridiction ? "jugement n° " + (m.jugement_numero || "—") + " du " + ecD(m.jugement_date) + " (" + m.juridiction + ")" : ""
     ]
       .filter(Boolean)
       .join(" — ") + (m.created_at ? " [" + ecD(m.created_at) + "]" : ""),
@@ -319,21 +320,59 @@ const ecForm = () => {
   );
 };
 /* ---------- Registre ---------- */
+/* Champs rectifiables (liste blanche de rectifier_acte p_champs) selon le type d'acte */
+const ecRF = t =>
+  [
+    ["nom", "Nom", "text"],
+    ["prenom", "Prénom(s)", "text"],
+    t == "naissance" ? ["sexe", "Sexe", "sexe"] : null,
+    ["date_evenement", "Date de l’évènement", "date"],
+    ["lieu_evenement", "Lieu de l’évènement", "text"],
+    t != "naissance" ? ["date_naissance", "Date de naissance", "date"] : null,
+    t != "naissance" ? ["lieu_naissance", "Lieu de naissance", "text"] : null,
+    t != "naissance" ? ["profession", "Profession", "text"] : null,
+    ["pere_nom", "Père", "text"],
+    ["mere_nom", "Mère", "text"],
+    t != "naissance" ? ["conjoint_nom", "Nom du conjoint / de l’épouse", "text"] : null,
+    t != "naissance" ? ["conjoint_prenom", "Prénom(s) du conjoint / de l’épouse", "text"] : null,
+    t == "mariage" ? ["conjoint_date_naissance", "Date de naissance de l’épouse", "date"] : null,
+    t == "mariage" ? ["conjoint_pere_nom", "Père de l’épouse", "text"] : null,
+    t == "mariage" ? ["conjoint_mere_nom", "Mère de l’épouse", "text"] : null
+  ].filter(Boolean);
 const ecRectBox = () => {
   const a = D().actes_ec.find(x => x.id == EC.rect);
   if (!a) return "";
-  const r = k => EC.rd[k] || "";
+  const r = k => EC.rd[k] || "",
+    fv = c => (EC.rd["ec_rf_" + c] !== undefined ? EC.rd["ec_rf_" + c] : a[c] == null ? "" : a[c]);
   return pn(
     "Rectifier l’acte n° " + a.numero_acte + "/" + a.annee_acte + " (jugement)",
     "doc",
     frm(
-      inp("ec_rj", "Juridiction", "text", r("ec_rj"), "Ex. Tribunal d’instance de Thiès", 'maxlength="120" required') +
+      inp("ec_rj", "Juridiction", "text", r("ec_rj"), "Ex. Tribunal d’instance de Thiès", 'maxlength="160" required') +
         inp("ec_rn", "N° du jugement", "text", r("ec_rn"), "", 'maxlength="60" required') +
         inp("ec_rd", "Date du jugement", "date", r("ec_rd"), "", 'max="' + ecToday() + '" required') +
-        fl("ec_rm", "Motif de la rectification", `<textarea id="ec_rm" rows="3" maxlength="1000" required>${ecE(r("ec_rm"))}</textarea>`)
+        fl("ec_rm", "Motif de la rectification", `<textarea id="ec_rm" rows="3" maxlength="1000" required>${ecE(r("ec_rm"))}</textarea>`) +
+        ecRF(a.type_acte)
+          .map(f =>
+            f[2] == "sexe"
+              ? sel(
+                  "ec_rf_sexe",
+                  f[1],
+                  [
+                    ["", "—"],
+                    ["M", "Masculin"],
+                    ["F", "Féminin"]
+                  ],
+                  fv("sexe")
+                )
+              : inp("ec_rf_" + f[0], f[1], f[2], fv(f[0]), "", 'maxlength="120"' + (f[2] == "date" ? ' max="' + ecToday() + '"' : ""))
+          )
+          .join("")
     ) +
       `<p><button class="bt" data-m="ecrectgo" data-id="${ecE(a.id)}">Enregistrer la rectification</button> <button class="bo" data-m="ecrectx">Annuler</button></p>` +
-      emp("La rectification s’ajoute en mention marginale ; l’acte d’origine n’est jamais effacé. Connexion requise.")
+      emp(
+        "Modifiez uniquement les champs à corriger (les autres restent inchangés). La rectification s’ajoute en mention marginale ; l’acte d’origine n’est jamais effacé. Connexion requise."
+      )
   );
 };
 const ecList = () => {
@@ -559,6 +598,7 @@ const ecPayload = () => {
     if (jd > ecToday()) throw new Error("La date du jugement ne peut pas être dans le futur.");
   }
   if (dd && dd > ecToday()) throw new Error("La date de déclaration ne peut pas être dans le futur.");
+  if (dd && dd < de) throw new Error("La date de déclaration ne peut pas précéder la date de l’évènement.");
   if (t == "mariage" && (ecv("cn").length < 2 || ecv("cp").length < 2)) throw new Error("Nom et prénom(s) de l’épouse obligatoires.");
   return {
     type_acte: t,
@@ -711,16 +751,35 @@ document.addEventListener("click", async e => {
     } else if (m == "ecrectgo") {
       ecOnly("Rectification");
       const id = t.dataset.id,
+        a = D().actes_ec.find(x => x.id == id),
         v = k => (($("#" + k) || {}).value || "").trim(),
         jur = v("ec_rj"),
         jn = v("ec_rn"),
         jd = v("ec_rd"),
         mo = v("ec_rm");
+      if (!a) return;
       EC.rd = { ec_rj: jur, ec_rn: jn, ec_rd: jd, ec_rm: mo };
+      const champs = {};
+      ecRF(a.type_acte).forEach(f => {
+        const nv = v("ec_rf_" + f[0]);
+        EC.rd["ec_rf_" + f[0]] = nv;
+        if (nv != (a[f[0]] == null ? "" : String(a[f[0]]))) champs[f[0]] = nv || null;
+      });
       if (jur.length < 2 || !jn || !jd || mo.length < 3)
-        throw new Error("Rectification : juridiction, n° et date du jugement, et motif obligatoires.");
+        throw new Error("Rectification : juridiction, n° et date du jugement, et motif (3 caractères min.) obligatoires.");
       if (jd > ecToday()) throw new Error("La date du jugement ne peut pas être dans le futur.");
-      const r = await sb.rpc("rectifier_acte", { p_acte: id, p_juridiction: jur, p_jugement_numero: jn, p_jugement_date: jd, p_motif: mo });
+      if (!Object.keys(champs).length) throw new Error("Aucune correction : modifiez au moins un champ.");
+      if (("nom" in champs && !champs.nom) || ("prenom" in champs && !champs.prenom)) throw new Error("Nom et prénom(s) obligatoires.");
+      if (champs.date_evenement && champs.date_evenement > ecToday())
+        throw new Error("La date de l’évènement ne peut pas être dans le futur.");
+      const r = await sb.rpc("rectifier_acte", {
+        p_acte: id,
+        p_champs: champs,
+        p_juridiction: jur,
+        p_jugement_numero: jn,
+        p_jugement_date: jd,
+        p_motif: mo
+      });
       if (r.error) throw new Error("Rectification refusée : " + r.error.message);
       EC.rect = null;
       EC.rd = {};
@@ -800,7 +859,7 @@ document.addEventListener("change", e => {
   if (i.id == "ec_type" || i.id == "ec_mode") {
     ecCap();
     render();
-  } else if (/^ec_r[jndm]$/.test(i.id)) {
+  } else if (/^ec_r(?:[jndm]|f_\w+)$/.test(i.id)) {
     EC.rd[i.id] = i.value;
   } else if (i.id == "ec_xa") {
     EC.xa = i.value;
