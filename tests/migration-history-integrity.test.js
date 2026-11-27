@@ -101,7 +101,9 @@ const pendingFiles = [
   // LOT 18 : « Mon Espace » — RPC mes_roles_imposition_par_tel / mes_demandes_par_tel (téléphone vérifié par SMS) — PROPOSÉE, non appliquée.
   '20261204000100_lot18_citoyen_rpc_par_tel.sql',
   // Photo par utilisateur (profiles.photo, RPC sa_set_profil_photo / sa_profils_photos / mon_profil_photo) — PROPOSÉE, non appliquée.
-  '20261204000200_photo_profil_utilisateur.sql'
+  '20261204000200_photo_profil_utilisateur.sql',
+  // Realtime des notifications (2026-11-27) : publication notifications / citoyen_notifications — PROPOSÉE, non appliquée.
+  '20261209000100_notifications_realtime.sql'
 ];
 const actualSqlFiles = fs.readdirSync(migrationDir).filter(name => name.endsWith('.sql')).sort();
 const expectedSqlFiles = [...historicalFiles, ...pendingFiles].sort();
