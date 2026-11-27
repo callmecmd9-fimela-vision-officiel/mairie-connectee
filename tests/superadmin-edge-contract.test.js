@@ -35,7 +35,7 @@ assert.match(edge, /inviteUserByEmail\(email/);
 assert.match(edge, /if\(action==="reinit_mdp"\)/);
 assert.match(edge, /captchaToken/);
 assert.match(edge, /resetPasswordForEmail/);
-assert.match(html, /\/js\/superadmin\.js\?v=20261123\.1/);
+assert.match(html, /<script src="\/js\/superadmin\.js\?v=\d{8}(?:\.\d+)?"><\/script>/, "superadmin.js chargé avec un paramètre de cache-bust ?v=AAAAMMJJ[.n]");
 
 console.log("OK  création de compte alignée sur l’action serveur inviter");
 console.log("OK  réinitialisation alignée sur reset e-mail + Turnstile");
