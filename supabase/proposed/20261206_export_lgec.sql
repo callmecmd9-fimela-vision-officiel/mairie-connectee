@@ -1,4 +1,6 @@
 -- LOT C : interopérabilité LGEC / ANEC. Idempotent. Aucune API ANEC n'est supposée : export fichier (jsonb) uniquement.
+-- APPLIQUÉ en production (projet aiqegpijisspankpkwfj) le 2026-11-27 via apply_migration « export_lgec_registre_ec » ; testé avant par dry-run annulé (signature, rectification, export, audit, doublon, unicité).
+-- Vérifié sur la base de production (2026-11-27) : actes_mentions_marginales(acte_id, type_mention, juridiction, jugement_*, motif, avant, apres, created_at), audit_log(commune_id,user_id,action,table_name,row_id).
 -- Hypothèse : le format de l'identifiant national n'est pas figé ici (contrôle générique : 1 à 64 caractères A-Z a-z 0-9 / . _ -).
 
 -- 1. Identifiant national (unique par commune quand renseigné). Aucun GRANT colonne : alimenté par import serveur, jamais modifiable depuis l'interface (acte signé = figé).
@@ -30,7 +32,7 @@ begin
    'conjoint_nom',a.conjoint_nom,'conjoint_prenom',a.conjoint_prenom,'conjoint_date_naissance',a.conjoint_date_naissance,
    'conjoint_pere_nom',a.conjoint_pere_nom,'conjoint_mere_nom',a.conjoint_mere_nom,'officier_etat_civil',a.officier_etat_civil,
    'observations',a.observations,'signe_le',a.signe_le,'signature_reprise',a.signature_reprise,
-   'mentions_marginales',(select coalesce(jsonb_agg(to_jsonb(m) order by to_jsonb(m)->>'created_at'),'[]'::jsonb) from public.actes_mentions_marginales m where to_jsonb(m)->>'acte_id'=a.id::text)
+   'mentions_marginales',(select coalesce(jsonb_agg(jsonb_build_object('type_mention',m.type_mention,'juridiction',m.juridiction,'jugement_numero',m.jugement_numero,'jugement_date',m.jugement_date,'motif',m.motif,'avant',m.avant,'apres',m.apres,'date',m.created_at) order by m.created_at),'[]'::jsonb) from public.actes_mentions_marginales m where m.acte_id=a.id)
   ) order by a.type_acte,a.numero_acte),'[]'::jsonb),count(*)
   into v_actes,v_nb
   from public.actes_etat_civil a where a.commune_id=v_cid and a.annee_acte=p_annee and (p_type is null or a.type_acte=p_type) and a.signe_le is not null;
