@@ -64,6 +64,8 @@ jobs:
         run: bash tests/postgres/org-kpi-integration.sh
       - name: PostgreSQL 17 — notifications push et SMS
         run: bash tests/postgres/notifications-sms-integration.sh
+      - name: PostgreSQL 17 — conformité données personnelles (isolation communes)
+        run: bash tests/postgres/conformite-donnees-integration.sh
 
   browser-ui:
     name: Navigateur (Playwright) — Super Admin et Admin mairie
