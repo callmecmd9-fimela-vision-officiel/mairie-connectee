@@ -27,7 +27,7 @@ async function boot({user=true,prof={prenom:'Awa',nom:'Diop',village:'Mbodiène'
  await t.click({a:'cat',c:'Sport, culture et associations'});
  ok('profil complet : nom et téléphone non redemandés',!/id="fn"/.test(t.H())&&!/id="ft"/.test(t.H())&&/Demande au nom de Awa Diop/.test(t.H())&&/\+221771234567/.test(t.H()));
  ok('connecté : pas de widget anti-spam inutile',!/id="ts"/.test(t.H()));
- t.els['#ff']={files:[]};t.els['#fo']={value:'Objet'};t.els['#fm']={value:'Bonjour'};
+ t.els['#ff']={files:[]};t.els['#fo']={value:'Objet'};t.els['#fm']={value:'Bonjour'};t.els['#fcons']={checked:true};
  await t.click({a:'send'});
  const cd=t.rpcs.filter(x=>x[0]=='creer_demande')[0];
  ok('envoi : nom et téléphone repris du compte',cd&&cd[1].p_nom=='Awa Diop'&&cd[1].p_contact=='+221771234567'&&cd[1].p_commune=='fimela');

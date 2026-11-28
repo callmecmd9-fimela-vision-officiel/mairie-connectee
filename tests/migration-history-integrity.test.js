@@ -107,7 +107,9 @@ const pendingFiles = [
   // Interrupteur réversible de fonctionnalités (registre état civil, budget) — PROPOSÉE, non appliquée.
   '20261210000100_interrupteur_fonctionnalites.sql',
   // Présence requise en mairie + documents à apporter — PROPOSÉE, non appliquée.
-  '20261210000200_demandes_presence_requise.sql'
+  '20261210000200_demandes_presence_requise.sql',
+  // Conformité données personnelles (consentements, export / suppression du compte, durées de conservation + purge) — PROPOSÉE, non appliquée.
+  '20261211000100_conformite_donnees_personnelles.sql'
 ];
 const actualSqlFiles = fs.readdirSync(migrationDir).filter(name => name.endsWith('.sql')).sort();
 const expectedSqlFiles = [...historicalFiles, ...pendingFiles].sort();

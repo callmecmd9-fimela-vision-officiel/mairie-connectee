@@ -26,7 +26,7 @@ async function boot({user=true,stat='pret_a_retirer'}={}){
  t.els['#eca']={value:'1990'};await t.click({a:'ecrev'});
  ok('récapitulatif affiché (n°, année, nom, demandeur du compte)',/Vérifiez votre demande/.test(t.H())&&/123/.test(t.H())&&/1990/.test(t.H())&&/Fatou Sarr/.test(t.H())&&/Awa Diop/.test(t.H()));
  await t.click({a:'ecedit'});ok('Modifier : retour au formulaire avec valeurs conservées',/value="Fatou Sarr"/.test(t.H())&&/value="123"/.test(t.H()));
- await t.click({a:'ecrev'});await t.click({a:'send'});
+ t.els['#fcons']={checked:true};await t.click({a:'ecrev'});await t.click({a:'send'});
  const c=t.rpcs.filter(x=>x[0]=='creer_demande')[0];
  ok('envoi méthode 1 : type État civil, message structuré, aucune pièce',c&&c[1].p_type=='État civil'&&/N° d’acte : 123/.test(c[1].p_message)&&/Année : 1990/.test(c[1].p_message)&&/Fatou Sarr/.test(c[1].p_message)&&c[1].p_pieces.length==0&&c[1].p_commune=='fimela'&&c[1].p_objet=='Extrait d’acte de naissance');
  ok('numéro de suivi affiché, récapitulatif quitté',/FIM-0009-ABCD1234/.test(t.H())&&!t.S().rec);
@@ -36,13 +36,13 @@ async function boot({user=true,stat='pret_a_retirer'}={}){
  t.els['#ecp']={value:'Moussa Ndiaye'};t.els['#ff']={files:[]};await t.click({a:'ecrev'});ok('sans fichier : refusé',/Joignez la photo/.test(t.H()));
  t.els['#ff']={files:[{name:'ancien.pdf',type:'application/pdf',size:1000}]};await t.click({a:'ecrev'});
  ok('récapitulatif méthode 2 : pièce listée',/ancien\.pdf/.test(t.H())&&/Extrait d’acte de décès/.test(t.H()));
- await t.click({a:'send'});const c2=t.rpcs.filter(x=>x[0]=='creer_demande')[0];
+ t.els['#fcons']={checked:true};await t.click({a:'send'});const c2=t.rpcs.filter(x=>x[0]=='creer_demande')[0];
  ok('envoi méthode 2 : pièce téléversée dans le dossier de la commune',t.ups.length==1&&t.ups[0].startsWith('cid1/')&&c2&&c2[1].p_pieces.length==1&&/Ancien extrait joint/.test(c2[1].p_message));
  // sans compte : anti-spam exigé
  t=await boot({user:false});await t.click({a:'cat',c:'État civil et documents'});await t.click({a:'rc',r:'Demander un extrait de mariage'});
  t.els['#ecp']={value:'A B'};t.els['#ecn']={value:'5'};t.els['#eca']={value:'2001'};t.els['#fn']={value:'Demandeur Test'};t.els['#ft']={value:'77 123 45 67'};
  await t.click({a:'ecrev'});ok('sans compte : récapitulatif avec widget anti-spam',/id="ts"/.test(t.H()));
- await t.click({a:'send'});ok('sans compte : envoi bloqué sans vérification anti-spam',/anti-spam/.test(t.H())&&!t.rpcs.some(x=>x[0]=='creer_demande'));
+ t.els['#fcons']={checked:true};await t.click({a:'send'});ok('sans compte : envoi bloqué sans vérification anti-spam',/anti-spam/.test(t.H())&&!t.rpcs.some(x=>x[0]=='creer_demande'));
  // statut prêt à retirer
  t=await boot();await t.click({a:'open',n:'FIM-0001-AAAA1111'});
  ok('prêt à retirer : libellé, explication, lieu/modalités, horaires réels, pas de téléchargement',/Document prêt à retirer/.test(t.H())&&/Il se retire en mairie/.test(t.H())&&/Guichet 2, le matin/.test(t.H())&&/08h - 17h/.test(t.H())&&/ne se télécharge pas/.test(t.H()));
