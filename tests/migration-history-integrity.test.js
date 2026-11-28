@@ -103,7 +103,11 @@ const pendingFiles = [
   // Photo par utilisateur (profiles.photo, RPC sa_set_profil_photo / sa_profils_photos / mon_profil_photo) — PROPOSÉE, non appliquée.
   '20261204000200_photo_profil_utilisateur.sql',
   // Realtime des notifications (2026-11-27) : publication notifications / citoyen_notifications — PROPOSÉE, non appliquée.
-  '20261209000100_notifications_realtime.sql'
+  '20261209000100_notifications_realtime.sql',
+  // Interrupteur réversible de fonctionnalités (registre état civil, budget) — PROPOSÉE, non appliquée.
+  '20261210000100_interrupteur_fonctionnalites.sql',
+  // Présence requise en mairie + documents à apporter — PROPOSÉE, non appliquée.
+  '20261210000200_demandes_presence_requise.sql'
 ];
 const actualSqlFiles = fs.readdirSync(migrationDir).filter(name => name.endsWith('.sql')).sort();
 const expectedSqlFiles = [...historicalFiles, ...pendingFiles].sort();
