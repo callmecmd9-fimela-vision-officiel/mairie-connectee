@@ -1161,6 +1161,13 @@ const tfOf = () => {
    aucun argent n'est débité. À l'ouverture des comptes : renseigner "marchand", brancher l'API via une Edge Function, puis passer simulation à false. */
 const PAYCFG = { simulation: true, operateurs: [{ id: "wave", nom: "Wave", marchand: "" }, { id: "om", nom: "Orange Money", marchand: "" }] };
 const payOpNom = id => (PAYCFG.operateurs.find(o => o.id == id) || {}).nom || "";
+/* Conformité (loi 2008-12) : consentement explicite avant tout dépôt. Case jamais pré-cochée (jamais mémorisée d’un écran à l’autre) ; refus = aucun envoi. */
+const CONS_FINALITE = "depot_demande",
+  CONS_VERSION = "2026-12-11";
+const consBlock = () =>
+  `<p class="c-mt12"><label for="fcons"><input type="checkbox" id="fcons"> J’accepte que mes données soient utilisées pour traiter ma demande. <a href="/confidentialite.html" target="_blank" rel="noopener">Politique de confidentialité</a></label></p>`;
+const consRpc = accorde =>
+  sb.rpc("enregistrer_consentement", { p_commune: S.slug, p_finalite: CONS_FINALITE, p_version: CONS_VERSION, p_accorde: accorde });
 const payBlock = () => {
   const m = tfOf();
   if (!(m > 0)) return "";
@@ -1322,7 +1329,7 @@ const ecRec = () => {
     d = S.d,
     m = d.ecm || "n",
     row = (a, b) => (b ? `<div class="rw c-cdf"><span class="mu">${a}</span><b class="c-tar">${esc(b)}</b></div>` : "");
-  return `${head()}<main id="mc" class="mn nh">${msgs()}<div class="cd"><button class="lk c-cg" data-a="ecedit">${tr("u_modifier")}</button><h1>${tr("u_verifiez_votre_demande")}</h1>${row("Document", "Extrait d’acte de " + ECL[k])}${row(tr("v_personne_concernee"), d.ecp)}${row("Conjoint", d.ecc)}${m == "n" ? row("N° d’acte", d.ecn) + row(tr("v_annee"), d.eca) : row(tr("v_pieces_jointes"), (d.files || []).map(f => f.name).join(", "))}${row("Demandeur", d.fn)}${row(tr("v_telephone"), d.ft)}<p class="mu sm">Le document se retire en mairie. ${S.user ? tr("v_vous_serez_prevenu_dans") : tr("v_gardez_le_numero_de")}</p>${S.user ? "" : '<div id="ts"></div>'}${payBlock()}<p><button class="bt" id="sd" data-a="send">${tr("u_envoyer_ma_demande")}</button> <button class="bo" data-a="ecedit">${tr("u_modifier2")}</button></p></div></main>`;
+  return `${head()}<main id="mc" class="mn nh">${msgs()}<div class="cd"><button class="lk c-cg" data-a="ecedit">${tr("u_modifier")}</button><h1>${tr("u_verifiez_votre_demande")}</h1>${row("Document", "Extrait d’acte de " + ECL[k])}${row(tr("v_personne_concernee"), d.ecp)}${row("Conjoint", d.ecc)}${m == "n" ? row("N° d’acte", d.ecn) + row(tr("v_annee"), d.eca) : row(tr("v_pieces_jointes"), (d.files || []).map(f => f.name).join(", "))}${row("Demandeur", d.fn)}${row(tr("v_telephone"), d.ft)}<p class="mu sm">Le document se retire en mairie. ${S.user ? tr("v_vous_serez_prevenu_dans") : tr("v_gardez_le_numero_de")}</p>${S.user ? "" : '<div id="ts"></div>'}${payBlock()}${consBlock()}<p><button class="bt" id="sd" data-a="send">${tr("u_envoyer_ma_demande")}</button> <button class="bo" data-a="ecedit">${tr("u_modifier2")}</button></p></div></main>`;
 };
 /* Lot 4 : formulaires par modèle (identite, legalisation, foncier, social ; libre = formulaire générique) */
 const MD = {
@@ -1448,7 +1455,7 @@ const modRec = () => {
     m = MD[x.modele],
     d = S.d,
     row = (a, b) => (b ? `<div class="rw c-cdf"><span class="mu">${esc(a)}</span><b class="c-tar">${esc(b)}</b></div>` : "");
-  return `${head()}<main id="mc" class="mn nh">${msgs()}<div class="cd"><button class="lk c-cg" data-a="medit">${tr("u_modifier")}</button><h1>${tr("u_verifiez_votre_demande")}</h1>${row(tr("u_demarche"), x.titre)}${m.f.map(f => row(f[1], d.mf[f[0]])).join("")}${row(tr("v_pieces_jointes"), (d.files || []).map(f => f.name).join(", "))}${row("Frais", frX(x))}${row("Service", svOf(x))}${row("Demandeur", d.fn)}${row(tr("v_telephone"), d.ft)}${x.retrait ? `<p class="mu sm">${esc(x.retrait)}</p>` : ""}${S.user ? "" : '<div id="ts"></div>'}${payBlock()}<p><button class="bt" id="sd" data-a="send">${tr("u_envoyer_ma_demande")}</button> <button class="bo" data-a="medit">${tr("u_modifier2")}</button></p></div></main>`;
+  return `${head()}<main id="mc" class="mn nh">${msgs()}<div class="cd"><button class="lk c-cg" data-a="medit">${tr("u_modifier")}</button><h1>${tr("u_verifiez_votre_demande")}</h1>${row(tr("u_demarche"), x.titre)}${m.f.map(f => row(f[1], d.mf[f[0]])).join("")}${row(tr("v_pieces_jointes"), (d.files || []).map(f => f.name).join(", "))}${row("Frais", frX(x))}${row("Service", svOf(x))}${row("Demandeur", d.fn)}${row(tr("v_telephone"), d.ft)}${x.retrait ? `<p class="mu sm">${esc(x.retrait)}</p>` : ""}${S.user ? "" : '<div id="ts"></div>'}${payBlock()}${consBlock()}<p><button class="bt" id="sd" data-a="send">${tr("u_envoyer_ma_demande")}</button> <button class="bo" data-a="medit">${tr("u_modifier2")}</button></p></div></main>`;
 };
 /* Lot 6 : rendez-vous. Le citoyen propose une date ; le service confirme (jamais automatique). */
 const RVS = lk("rvs_");
@@ -1678,7 +1685,7 @@ ${
       : ""
 }${idBlock(d)}<label for="fo">${tr("u_objet_de_la_demande")}</label><input id="fo" maxlength="200" value="${esc(d.fo)}"><label for="fm">${tr("u_votre_message")}</label><textarea id="fm" rows="5" maxlength="2000">${esc(d.fm)}</textarea>
 <label for="ff">${tr("u_pieces_justificatives_3_maximum")}</label><input id="ff" type="file" multiple accept="image/*,application/pdf">
-<p class="mu sm c-mt12">${tr("u_toutes_les_demandes_ne")}</p>${S.user ? "" : '<div id="ts"></div>'}${payBlock()}<p><button class="bt" id="sd" data-a="send">${tr("u_envoyer_ma_demande")}</button></p></div></main>`;
+<p class="mu sm c-mt12">${tr("u_toutes_les_demandes_ne")}</p>${S.user ? "" : '<div id="ts"></div>'}${payBlock()}${consBlock()}<p><button class="bt" id="sd" data-a="send">${tr("u_envoyer_ma_demande")}</button></p></div></main>`;
 };
 /* Connexion « Mon Espace » par téléphone + code SMS (OTP). Si le fournisseur SMS de Supabase n'est pas activé, otp() affiche « pas encore disponible » (aucun faux succès). Mettre false pour fermer l'espace. */
 const SMS_ON = true;
@@ -2085,6 +2092,14 @@ async function send() {
       fo: g("fo"),
       fm: g("fm")
     };
+  if (!($("#fcons") || {}).checked) {
+    if (S.user)
+      try {
+        await consRpc(false);
+      } catch (e) {}
+    S.err = "Pour envoyer votre demande, vous devez accepter l’utilisation de vos données (case à cocher ci-dessus).";
+    return;
+  }
   if (!S.d.fn || !S.d.fm) {
     S.err = tr("u_indiquez_votre_nom_et");
     return;
@@ -2130,6 +2145,8 @@ async function send() {
   try {
     const cid = S.cid,
       paths = [];
+    const cr = await consRpc(true);
+    if (cr.error) throw new Error("Votre consentement n’a pas pu être enregistré : la demande n’a pas été envoyée. Réessayez.");
     for (const bl of blobs) {
       const p =
           cid +
