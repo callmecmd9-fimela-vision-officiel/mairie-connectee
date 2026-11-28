@@ -61,3 +61,4 @@ admin-comptes v10, bright-worker v4 (inerte, conservé), ia-texte v9, purge-piec
 
 | 20261210000100_interrupteur_fonctionnalites.sql | — | **PROPOSÉE, non appliquée** (suspension registre état civil [lecture seule] et budget ; OBFiLoc/GFILOC, ANEC). |
 | 20261210000200_demandes_presence_requise.sql | — | **PROPOSÉE, non appliquée** (présence requise + documents à apporter ; suivre_demande, v_suivi_public). |
+| 20261211000100_conformite_donnees_personnelles.sql | — | **PROPOSÉE, non appliquée** (consentements, exporter_mes_donnees / supprimer_mes_donnees, durees_conservation + purge-conservation). |
