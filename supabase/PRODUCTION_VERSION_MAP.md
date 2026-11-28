@@ -59,3 +59,5 @@ Les instructions des migrations appliquées ont été compactées par l'outil d'
 admin-comptes v10, bright-worker v4 (inerte, conservé), ia-texte v9, purge-pieces v2 (`verify_jwt=false`, secret vérifié par RPC), **sa-admin v18** (activation : e-mail confirmé par le super admin ; rôle `conseiller` autorisé, redéployée le 2026-11-25), **saas-admin v4**. `push-send` et `sms-dispatch` : non déployées. Les sources du dépôt de `sa-admin` et `saas-admin` portent les mêmes marqueurs fonctionnels que les versions déployées (admin_mairie, `affecter_admin_mairie`, `saas_preparer_admin_mairie`, `org_sync_user_affectations`).
 
 
+| 20261210000100_interrupteur_fonctionnalites.sql | — | **PROPOSÉE, non appliquée** (suspension registre état civil [lecture seule] et budget ; OBFiLoc/GFILOC, ANEC). |
+| 20261210000200_demandes_presence_requise.sql | — | **PROPOSÉE, non appliquée** (présence requise + documents à apporter ; suivre_demande, v_suivi_public). |
