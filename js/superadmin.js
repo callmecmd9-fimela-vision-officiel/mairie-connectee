@@ -131,6 +131,7 @@ async function loadSys(cid) {
       S.pu[x.cle] = x.autorise;
     });
     S.mod = S.sys.modules || {};
+    if (typeof ffLoad == "function") await ffLoad();
   } catch (e) {}
 }
 async function saLoad() {

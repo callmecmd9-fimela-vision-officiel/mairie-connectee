@@ -207,6 +207,11 @@ async function loadAll() {
   } catch (e) {
     S.ar = {};
   }
+  try {
+    S.ff = (await sb.from("fonctionnalites_plateforme").select("code,libelle,suspendue,motif").order("code")).data || [];
+  } catch (e) {
+    S.ff = [];
+  }
   S.d = a;
   S.m = b;
   S.pl = c.data || [];
@@ -519,6 +524,19 @@ const V = {
     return tabs + b;
   },
   modules: () =>
+    pn(
+      "Fonctionnalités nationales (toutes les mairies)",
+      "alert",
+      (S.ff || [])
+        .map(f =>
+          rw(
+            `<b>${esc(f.libelle)}</b><div class="mut">${esc(f.motif || "")}</div>`,
+            `<label class="sx-sw"><input type="checkbox" id="ff_${f.code}"${f.suspendue ? "" : " checked"}><span>Activée</span></label>`
+          )
+        )
+        .join("") +
+        `<div class="sa-ac"><button class="bt" data-a="ffsave">Enregistrer</button></div><p class="mut">Suspendue : grisée et verrouillée côté serveur pour tous. Les demandes citoyennes ne changent pas.</p>`
+    ) +
     pn(
       "Modules d’une mairie",
       `<div class="fr"><div><label for="m_c">Mairie</label><select id="m_c"><option value="">Choisir…</option>${S.m.map(x => `<option value="${x.id}"${S.mc == x.id ? " selected" : ""}>${esc(x.nom)}</option>`).join("")}</select></div></div>` +
@@ -848,6 +866,15 @@ const A = {
     S.ep = null;
     await loadAll();
     S.ok = "Offre enregistrée.";
+  },
+  async ffsave() {
+    for (const f of S.ff || []) {
+      const on = $("#ff_" + f.code).checked;
+      if (on == !f.suspendue) continue;
+      await rpc("saas_fonctionnalite_set", { p_code: f.code, p_suspendue: !on, p_motif: null });
+      f.suspendue = !on;
+    }
+    S.ok = "Fonctionnalités enregistrées.";
   },
   async msave() {
     const o = {};

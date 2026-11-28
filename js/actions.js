@@ -196,6 +196,10 @@ document.addEventListener("click", async e => {
           u.pieces_demandees = g("dpc") || null;
           u.reponse = u.pieces_demandees;
         }
+        if (t.dataset.pr) {
+          u.presence_requise = t.dataset.pr == "1";
+          u.presence_pieces = u.presence_requise ? g("dpr") || null : null;
+        }
         if (t.dataset.mr) {
           u.motif_rejet = g("dmr") || null;
           u.reponse = u.motif_rejet;
