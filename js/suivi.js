@@ -66,7 +66,10 @@
     box.appendChild(ok);
     box.appendChild(row("Statut", ST[st] || "En cours de traitement", true));
     if (st === "a_payer" && du > 0) box.appendChild(row("Montant dû", du.toLocaleString("fr-FR") + " FCFA", true));
-    if (x.presence_requise) box.appendChild(row("Présence requise", "En mairie. À apporter : " + (x.presence_pieces ? String(x.presence_pieces) : "selon les indications de la mairie"), true));
+    if (x.presence_requise) {
+      var pp = x.presence_pieces ? String(x.presence_pieces) : "selon les indications de la mairie";
+      box.appendChild(row("Présence requise", "En mairie. À apporter : " + pp, true));
+    }
     box.appendChild(row("Lieu de retrait", x.lieu_retrait ? String(x.lieu_retrait) : "À préciser par la mairie"));
     box.appendChild(row("Dernière mise à jour", fmtDate(x.date_maj)));
     if (st === "a_payer")
